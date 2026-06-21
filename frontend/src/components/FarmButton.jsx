@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import FloatingReward from './FloatingReward';
 
 function formatMs(ms) {
   const totalSec = Math.ceil(ms / 1000);
@@ -12,6 +13,8 @@ export default function FarmButton({ onFarmed }) {
   const [cooldownMs, setCooldownMs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [floatId, setFloatId] = useState(0);
+  const [floatReward, setFloatReward] = useState(null);
 
   useEffect(() => {
     if (cooldownMs <= 0) return;
@@ -27,6 +30,8 @@ export default function FarmButton({ onFarmed }) {
     try {
       const data = await api.farm();
       setMessage(`+${data.reward} brainrot points!`);
+      setFloatReward(data.reward);
+      setFloatId((id) => id + 1);
       onFarmed(data.user);
     } catch (err) {
       if (err.status === 429) {
@@ -44,9 +49,12 @@ export default function FarmButton({ onFarmed }) {
 
   return (
     <div className="farm-section">
-      <button className="farm-button" onClick={handleFarm} disabled={disabled}>
-        {cooldownMs > 0 ? `Recharging ${formatMs(cooldownMs)}` : '🧠 Farm Braincells'}
-      </button>
+      <div className="farm-button-wrap">
+        <button className="farm-button" onClick={handleFarm} disabled={disabled}>
+          {cooldownMs > 0 ? `Recharging ${formatMs(cooldownMs)}` : '🧠 Farm Braincells'}
+        </button>
+        <FloatingReward key={floatId} reward={floatReward} />
+      </div>
       {message && <div className="farm-message">{message}</div>}
     </div>
   );

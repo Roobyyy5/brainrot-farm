@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { initTelegram, getStartParam } from './telegram';
+import Header from './components/Header';
+import Onboarding from './components/Onboarding';
 import Balance from './components/Balance';
 import FarmButton from './components/FarmButton';
 import DailyReward from './components/DailyReward';
@@ -27,7 +29,8 @@ export default function App() {
 
   return (
     <div className="app">
-      <h1 className="app-title">🧠 Brainrot Farm</h1>
+      <Header user={user} />
+      <Onboarding />
       <Balance user={user} />
       <FarmButton onFarmed={setUser} />
       <DailyReward onClaimed={setUser} />
