@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: brainrot-farm-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: MINI_APP_URL
+        sync: false
+      - key: SKIP_TELEGRAM_AUTH
+        value: "false"
