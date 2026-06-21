@@ -7,10 +7,13 @@ async function startBot() {
   if (!process.env.MINI_APP_URL) {
     throw new Error('MINI_APP_URL is missing in .env');
   }
+  if (!process.env.MINI_APP_URL.startsWith('https://')) {
+    throw new Error(`MINI_APP_URL must start with https:// (got "${process.env.MINI_APP_URL}") — Telegram rejects non-HTTPS web_app buttons`);
+  }
 
   const bot = new Bot(process.env.BOT_TOKEN);
 
-  bot.command('start', (ctx) => {
+  bot.command('start', async (ctx) => {
     // If the user reached the bot via a deep link (t.me/Bot?start=<code>),
     // grammY exposes the payload in ctx.match. We forward it as a query param
     // so the Mini App can still pick up a referral code if it wasn't opened
@@ -20,7 +23,10 @@ async function startBot() {
 
     const keyboard = new InlineKeyboard().webApp('🧠 Open Brainrot Farm', appUrl);
 
-    ctx.reply(
+    // Awaiting (rather than fire-and-forget) means a rejection — e.g. Telegram
+    // rejecting a non-HTTPS web_app URL — surfaces through bot.catch() instead
+    // of becoming an unhandled rejection that crashes the whole process.
+    await ctx.reply(
       'Welcome to Brainrot Farm! Farm braincells, climb from NPC to Gigachad, and invite friends for bonus points.',
       { reply_markup: keyboard }
     );
