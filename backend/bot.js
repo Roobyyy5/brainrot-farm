@@ -1,6 +1,6 @@
 const { Bot, InlineKeyboard } = require('grammy');
 
-function startBot() {
+async function startBot() {
   if (!process.env.BOT_TOKEN) {
     throw new Error('BOT_TOKEN is missing in .env');
   }
@@ -30,14 +30,21 @@ function startBot() {
     console.error('Bot error:', err);
   });
 
-  bot.start();
-  console.log('Brainrot Farm bot is polling for updates...');
+  // bot.init() resolves once the token has been validated against the
+  // Telegram API, so a bad token surfaces here instead of failing silently
+  // inside the fire-and-forget polling loop started by bot.start().
+  await bot.init();
+  bot.start().catch((err) => console.error('Bot polling crashed:', err));
+  console.log(`Brainrot Farm bot @${bot.botInfo.username} is polling for updates...`);
   return bot;
 }
 
 if (require.main === module) {
   require('dotenv').config();
-  startBot();
+  startBot().catch((err) => {
+    console.error('Failed to start bot:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = { startBot };

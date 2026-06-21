@@ -13,7 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const botStatus = { configured: false, started: false, error: null };
+
 app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/bot-status', (req, res) => res.json(botStatus));
 
 app.use('/leaderboard', leaderboardRoute); // public, no auth
 
@@ -31,8 +34,17 @@ app.listen(PORT, () => {
 // background workers are a paid add-on. Running the bot's long-polling loop
 // inside the same process keeps the whole stack on one free service.
 if (process.env.BOT_TOKEN && process.env.MINI_APP_URL) {
+  botStatus.configured = true;
   const { startBot } = require('./bot');
-  startBot();
+  startBot()
+    .then(() => {
+      botStatus.started = true;
+    })
+    .catch((err) => {
+      botStatus.error = err.message;
+      console.error('Failed to start bot:', err);
+    });
 } else {
+  botStatus.error = 'BOT_TOKEN/MINI_APP_URL not set';
   console.log('BOT_TOKEN/MINI_APP_URL not set — skipping in-process bot startup.');
 }
