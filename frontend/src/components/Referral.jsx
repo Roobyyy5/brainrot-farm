@@ -39,7 +39,7 @@ export default function Referral({ user }) {
       </div>
       {copied && <div className="referral-copied">Copied!</div>}
       <button className="referral-share-button" onClick={handleShare}>
-        📤 Share with friends
+        Share with friends
       </button>
       <div className="referral-stats">
         Total: {info.totalReferrals} · Active: {info.activeReferrals}

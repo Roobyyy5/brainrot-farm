@@ -62,7 +62,7 @@ export default function DailyReward({ user, onClaimed, onAchievements }) {
     <div className="daily-section">
       <div className="farm-button-wrap">
         <button className="daily-button" onClick={handleClaim} disabled={loading || cooldownMs > 0}>
-          {cooldownMs > 0 ? `🎁 Claimed — back in ${formatRemaining(cooldownMs)}` : '🎁 Claim Daily Reward'}
+          {cooldownMs > 0 ? `Claimed — back in ${formatRemaining(cooldownMs)}` : 'Claim Daily Reward'}
         </button>
         <FloatingReward key={floatId} reward={floatReward} />
       </div>

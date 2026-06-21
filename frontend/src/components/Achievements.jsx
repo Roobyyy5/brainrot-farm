@@ -12,7 +12,7 @@ export default function Achievements({ refreshKey }) {
 
   return (
     <div className="achievements-section">
-      <div className="achievements-title">🎖️ Achievements</div>
+      <div className="achievements-title">Achievements</div>
       <div className="achievements-grid">
         {list.map((a) => (
           <div key={a.key} className={a.unlocked ? 'achievement-badge unlocked' : 'achievement-badge'}>

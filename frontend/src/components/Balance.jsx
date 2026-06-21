@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 const LEVELS = [
   { name: 'NPC', minCoins: 0, emoji: '🗿' },
   { name: 'Sigma', minCoins: 1000, emoji: '😎' },
@@ -21,14 +23,43 @@ function getLevelProgress(coins) {
   return { current, next, pct };
 }
 
+// Animates the displayed balance counting up to the real value instead of
+// jumping instantly — a small premium touch with no animation library.
+function useCountUp(target) {
+  const [displayed, setDisplayed] = useState(target);
+  const prevRef = useRef(target);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = target;
+    if (from === to) return;
+    prevRef.current = to;
+
+    const duration = 500;
+    const start = performance.now();
+
+    let frame;
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setDisplayed(Math.round(from + (to - from) * progress));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target]);
+
+  return displayed;
+}
+
 export default function Balance({ user }) {
+  const displayedCoins = useCountUp(user?.coins ?? 0);
   if (!user) return null;
   const { current, next, pct } = getLevelProgress(user.coins);
 
   return (
     <div className="balance-card">
       <div className="balance-label">Brainrot Points</div>
-      <div className="balance-value">{user.coins.toLocaleString()}</div>
+      <div className="balance-value">{displayedCoins.toLocaleString()}</div>
       <div className="balance-level">
         <span className="balance-level-emoji">{current.emoji}</span> {current.name}
       </div>

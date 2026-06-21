@@ -86,13 +86,13 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
     <div className="farm-section">
       <div className="farm-button-wrap">
         <button className="farm-button" onClick={handleFarm} disabled={disabled}>
-          {cooldownMs > 0 ? `Recharging ${formatMs(cooldownMs)}` : '🧠 Farm Braincells'}
+          {cooldownMs > 0 ? `Recharging ${formatMs(cooldownMs)}` : 'Farm Braincells'}
         </button>
         <FloatingReward key={floatId} reward={floatReward} />
       </div>
       {cooldownMs > 0 && (
         <button className="boost-button" onClick={handleBoost} disabled={!canBoost || boosting}>
-          ⚡ Boost for {BOOST_COST} pts
+          Boost · {BOOST_COST} pts
         </button>
       )}
       {message && <div className="farm-message">{message}</div>}
