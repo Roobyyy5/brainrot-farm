@@ -8,11 +8,15 @@ import FarmButton from './components/FarmButton';
 import DailyReward from './components/DailyReward';
 import Referral from './components/Referral';
 import Leaderboard from './components/Leaderboard';
+import Achievements from './components/Achievements';
+import AchievementToast from './components/AchievementToast';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [achievementQueue, setAchievementQueue] = useState([]);
+  const [achievementsRefreshKey, setAchievementsRefreshKey] = useState(0);
 
   useEffect(() => {
     initTelegram();
@@ -24,6 +28,15 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleAchievements = (unlocked) => {
+    setAchievementQueue((q) => [...q, ...unlocked]);
+    setAchievementsRefreshKey((k) => k + 1);
+  };
+
+  const dismissAchievementToast = () => {
+    setAchievementQueue((q) => q.slice(1));
+  };
+
   if (loading) return <div className="loading-screen">Loading brainrot...</div>;
   if (error) return <div className="error-screen">Error: {error}</div>;
 
@@ -31,10 +44,12 @@ export default function App() {
     <div className="app">
       <Header user={user} />
       <Onboarding />
+      <AchievementToast achievement={achievementQueue[0] || null} onDone={dismissAchievementToast} />
       <Balance user={user} />
-      <FarmButton user={user} onFarmed={setUser} />
-      <DailyReward onClaimed={setUser} />
+      <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
+      <DailyReward onClaimed={setUser} onAchievements={handleAchievements} />
       <Referral user={user} />
+      <Achievements refreshKey={achievementsRefreshKey} />
       <Leaderboard currentUserId={user?.telegram_id} />
     </div>
   );

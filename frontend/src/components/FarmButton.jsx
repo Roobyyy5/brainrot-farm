@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { haptic } from '../telegram';
 import FloatingReward from './FloatingReward';
 
 const BOOST_COST = 25; // keep in sync with backend gameConfig.BOOST_COST
@@ -11,7 +12,7 @@ function formatMs(ms) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export default function FarmButton({ user, onFarmed }) {
+export default function FarmButton({ user, onFarmed, onAchievements }) {
   const [cooldownMs, setCooldownMs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [boosting, setBoosting] = useState(false);
@@ -28,6 +29,7 @@ export default function FarmButton({ user, onFarmed }) {
   }, [cooldownMs]);
 
   const handleFarm = async () => {
+    haptic('medium');
     setLoading(true);
     setMessage('');
     try {
@@ -36,6 +38,7 @@ export default function FarmButton({ user, onFarmed }) {
       setFloatReward(data.reward);
       setFloatId((id) => id + 1);
       onFarmed(data.user);
+      if (data.unlockedAchievements?.length) onAchievements?.(data.unlockedAchievements);
     } catch (err) {
       if (err.status === 429) {
         setCooldownMs(err.data.retryAfterMs);
@@ -49,6 +52,7 @@ export default function FarmButton({ user, onFarmed }) {
   };
 
   const handleBoost = async () => {
+    haptic('light');
     setBoosting(true);
     setMessage('');
     try {

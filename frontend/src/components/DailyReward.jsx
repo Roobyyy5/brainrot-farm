@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { haptic } from '../telegram';
 import FloatingReward from './FloatingReward';
 
-export default function DailyReward({ onClaimed }) {
+export default function DailyReward({ onClaimed, onAchievements }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [floatId, setFloatId] = useState(0);
   const [floatReward, setFloatReward] = useState(null);
 
   const handleClaim = async () => {
+    haptic('medium');
     setLoading(true);
     setMessage('');
     try {
@@ -17,6 +19,7 @@ export default function DailyReward({ onClaimed }) {
       setFloatReward(data.reward);
       setFloatId((id) => id + 1);
       onClaimed(data.user);
+      if (data.unlockedAchievements?.length) onAchievements?.(data.unlockedAchievements);
     } catch (err) {
       if (err.status === 429) {
         setMessage('Already claimed today. Come back later, Sigma.');

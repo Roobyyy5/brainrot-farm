@@ -14,6 +14,19 @@ module.exports = {
 
   BOOST_COST: 25,
 
+  SEASON_DURATION_MS: 7 * 24 * 60 * 60 * 1000,
+
+  // Checked against live user state (coins, farm_count, daily_streak, ...)
+  // each time a relevant action happens. `check` must be cheap and pure.
+  ACHIEVEMENTS: [
+    { key: 'first_farm', name: 'First Farm', emoji: '🌱', reward: 20, check: (u) => u.farm_count >= 1 },
+    { key: 'dedicated_farmer', name: 'Dedicated Farmer', emoji: '🚜', reward: 50, check: (u) => u.farm_count >= 10 },
+    { key: 'farm_veteran', name: 'Farm Veteran', emoji: '🏆', reward: 200, check: (u) => u.farm_count >= 100 },
+    { key: 'week_streak', name: 'Week Streak', emoji: '🔥', reward: 150, check: (u) => u.daily_streak >= 7 },
+    { key: 'networker', name: 'Networker', emoji: '🤝', reward: 50, check: (u, ctx) => ctx.totalReferrals >= 1 },
+    { key: 'recruiter', name: 'Recruiter', emoji: '📢', reward: 300, check: (u, ctx) => ctx.activeReferrals >= 5 },
+  ],
+
   LEVELS: [
     { name: 'NPC', minCoins: 0 },
     { name: 'Sigma', minCoins: 1000 },

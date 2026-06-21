@@ -28,6 +28,7 @@ export const api = {
   farm: () => request('/farm', { method: 'POST' }),
   boost: () => request('/boost', { method: 'POST' }),
   daily: () => request('/daily', { method: 'POST' }),
-  leaderboard: () => request('/leaderboard'),
+  leaderboard: (period) => request(`/leaderboard${period === 'weekly' ? '?period=weekly' : ''}`),
   referral: () => request('/referral'),
+  achievements: () => request('/achievements'),
 };

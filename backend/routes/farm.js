@@ -2,6 +2,7 @@ const express = require('express');
 const { pool, withTransaction } = require('../db');
 const { FARM_COOLDOWN_MS, FARM_MIN_REWARD, FARM_MAX_REWARD, levelForCoins, REFERRAL_ACTIVE_BONUS } = require('../gameConfig');
 const { logEvent } = require('../events');
+const { checkAndGrantAchievements } = require('../achievements');
 
 const router = express.Router();
 
@@ -27,9 +28,10 @@ router.post('/', async (req, res) => {
 
   await withTransaction(async (client) => {
     await client.query(
-      `UPDATE users SET coins = $1, level = $2, last_farm_at = $3, has_farmed_once = TRUE, farm_reminder_sent = FALSE
-       WHERE telegram_id = $4`,
-      [newCoins, newLevel, now, telegramId]
+      `UPDATE users SET coins = $1, weekly_coins = weekly_coins + $2, level = $3, last_farm_at = $4,
+              has_farmed_once = TRUE, farm_reminder_sent = FALSE, farm_count = farm_count + 1
+       WHERE telegram_id = $5`,
+      [newCoins, reward, newLevel, now, telegramId]
     );
 
     // Pay the referrer an "active friend" bonus the first time this user farms.
@@ -39,7 +41,7 @@ router.post('/', async (req, res) => {
         [telegramId]
       );
       if (refRow.rows[0]) {
-        await client.query('UPDATE users SET coins = coins + $1 WHERE telegram_id = $2', [
+        await client.query('UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2', [
           REFERRAL_ACTIVE_BONUS,
           refRow.rows[0].referrer_id,
         ]);
@@ -53,7 +55,13 @@ router.post('/', async (req, res) => {
   if (referralBonusPaidTo) logEvent(referralBonusPaidTo, 'referral_active');
 
   const updated = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  res.json({ reward, user: updated.rows[0] });
+  const unlockedAchievements = await checkAndGrantAchievements(telegramId, updated.rows[0]);
+
+  const final = unlockedAchievements.length
+    ? await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])
+    : updated;
+
+  res.json({ reward, user: final.rows[0], unlockedAchievements });
 });
 
 module.exports = router;

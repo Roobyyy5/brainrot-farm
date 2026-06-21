@@ -28,3 +28,18 @@ export function initTelegram() {
     tg.expand();
   }
 }
+
+export function haptic(style = 'light') {
+  const tg = getTelegram();
+  tg?.HapticFeedback?.impactOccurred(style);
+}
+
+export function shareLink(url, text) {
+  const tg = getTelegram();
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  if (tg) {
+    tg.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, '_blank');
+  }
+}

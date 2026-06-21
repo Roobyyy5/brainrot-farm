@@ -12,6 +12,7 @@ const boostRoute = require('./routes/boost');
 const leaderboardRoute = require('./routes/leaderboard');
 const referralRoute = require('./routes/referral');
 const adminRoute = require('./routes/admin');
+const achievementsRoute = require('./routes/achievements');
 
 const app = express();
 app.use(cors());
@@ -25,7 +26,7 @@ const actionLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use(['/register', '/farm', '/daily', '/boost', '/referral'], actionLimiter);
+app.use(['/register', '/farm', '/daily', '/boost', '/referral', '/achievements'], actionLimiter);
 
 const botStatus = { configured: false, started: false, error: null };
 
@@ -40,9 +41,13 @@ app.use('/farm', telegramAuthMiddleware, farmRoute);
 app.use('/daily', telegramAuthMiddleware, dailyRoute);
 app.use('/boost', telegramAuthMiddleware, boostRoute);
 app.use('/referral', telegramAuthMiddleware, referralRoute);
+app.use('/achievements', telegramAuthMiddleware, achievementsRoute);
 
 async function main() {
   await db.init();
+
+  const { startSeasonScheduler } = require('./seasons');
+  startSeasonScheduler();
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {

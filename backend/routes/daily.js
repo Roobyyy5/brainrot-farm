@@ -9,6 +9,7 @@ const {
   levelForCoins,
 } = require('../gameConfig');
 const { logEvent } = require('../events');
+const { checkAndGrantAchievements } = require('../achievements');
 
 const router = express.Router();
 
@@ -36,15 +37,22 @@ router.post('/', async (req, res) => {
   const newLevel = levelForCoins(newCoins);
 
   await pool.query(
-    `UPDATE users SET coins = $1, level = $2, last_daily_at = $3, daily_streak = $4, daily_reminder_sent = FALSE
-     WHERE telegram_id = $5`,
-    [newCoins, newLevel, now, newStreak, telegramId]
+    `UPDATE users SET coins = $1, weekly_coins = weekly_coins + $2, level = $3, last_daily_at = $4,
+            daily_streak = $5, daily_reminder_sent = FALSE
+     WHERE telegram_id = $6`,
+    [newCoins, reward, newLevel, now, newStreak, telegramId]
   );
 
   logEvent(telegramId, 'daily');
 
   const updated = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  res.json({ reward, streak: newStreak, user: updated.rows[0] });
+  const unlockedAchievements = await checkAndGrantAchievements(telegramId, updated.rows[0]);
+
+  const final = unlockedAchievements.length
+    ? await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])
+    : updated;
+
+  res.json({ reward, streak: newStreak, user: final.rows[0], unlockedAchievements });
 });
 
 module.exports = router;
