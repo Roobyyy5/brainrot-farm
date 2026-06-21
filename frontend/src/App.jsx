@@ -42,7 +42,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header user={user} />
+      <Header />
       <Onboarding />
       <AchievementToast achievement={achievementQueue[0] || null} onDone={dismissAchievementToast} />
       <Balance user={user} />

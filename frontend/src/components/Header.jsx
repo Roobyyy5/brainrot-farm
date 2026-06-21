@@ -1,4 +1,4 @@
-export default function Header({ user }) {
+export default function Header() {
   return (
     <div className="header-bar">
       <div className="header-logo">
@@ -8,7 +8,6 @@ export default function Header({ user }) {
         <div className="header-title">Brainrot Farm</div>
         <div className="header-subtitle">Farm. Flex. Recruit NPCs.</div>
       </div>
-      {user && <div className="header-coins">{user.coins.toLocaleString()} 🪙</div>}
     </div>
   );
 }
