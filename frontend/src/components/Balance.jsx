@@ -2,6 +2,8 @@ const LEVELS = [
   { name: 'NPC', minCoins: 0, emoji: '🗿' },
   { name: 'Sigma', minCoins: 1000, emoji: '😎' },
   { name: 'Gigachad', minCoins: 10000, emoji: '💪' },
+  { name: 'Ohio Rizzler', minCoins: 50000, emoji: '🚿' },
+  { name: 'Skibidi Legend', minCoins: 200000, emoji: '🐐' },
 ];
 
 function getLevelProgress(coins) {

@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users (
   created_at      BIGINT NOT NULL
 );
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS farm_reminder_sent BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_reminder_sent BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE TABLE IF NOT EXISTS referrals (
   id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   referrer_id       TEXT NOT NULL REFERENCES users(telegram_id),
@@ -21,5 +24,14 @@ CREATE TABLE IF NOT EXISTS referrals (
   created_at        BIGINT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS events (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT,
+  event_type  TEXT NOT NULL,
+  created_at  BIGINT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_coins ON users(coins DESC);
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_events_type_time ON events(event_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_events_telegram_id ON events(telegram_id);

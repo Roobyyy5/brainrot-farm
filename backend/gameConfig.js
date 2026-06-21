@@ -12,10 +12,14 @@ module.exports = {
   REFERRAL_SIGNUP_BONUS: 100,
   REFERRAL_ACTIVE_BONUS: 200,
 
+  BOOST_COST: 25,
+
   LEVELS: [
     { name: 'NPC', minCoins: 0 },
     { name: 'Sigma', minCoins: 1000 },
     { name: 'Gigachad', minCoins: 10000 },
+    { name: 'Ohio Rizzler', minCoins: 50000 },
+    { name: 'Skibidi Legend', minCoins: 200000 },
   ],
 
   levelForCoins(coins) {

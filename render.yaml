@@ -17,3 +17,5 @@ services:
         sync: false
       - key: SKIP_TELEGRAM_AUTH
         value: "false"
+      - key: ADMIN_KEY
+        sync: false

@@ -32,7 +32,7 @@ export default function App() {
       <Header user={user} />
       <Onboarding />
       <Balance user={user} />
-      <FarmButton onFarmed={setUser} />
+      <FarmButton user={user} onFarmed={setUser} />
       <DailyReward onClaimed={setUser} />
       <Referral user={user} />
       <Leaderboard currentUserId={user?.telegram_id} />

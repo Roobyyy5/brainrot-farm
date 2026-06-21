@@ -26,6 +26,7 @@ async function request(path, { method = 'GET', body } = {}) {
 export const api = {
   register: (ref) => request('/register', { method: 'POST', body: { ref } }),
   farm: () => request('/farm', { method: 'POST' }),
+  boost: () => request('/boost', { method: 'POST' }),
   daily: () => request('/daily', { method: 'POST' }),
   leaderboard: () => request('/leaderboard'),
   referral: () => request('/referral'),

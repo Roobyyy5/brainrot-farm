@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
-const LEVEL_EMOJI = { NPC: '🗿', Sigma: '😎', Gigachad: '💪' };
+const LEVEL_EMOJI = { NPC: '🗿', Sigma: '😎', Gigachad: '💪', 'Ohio Rizzler': '🚿', 'Skibidi Legend': '🐐' };
 
 export default function Leaderboard({ currentUserId }) {
   const [rows, setRows] = useState([]);

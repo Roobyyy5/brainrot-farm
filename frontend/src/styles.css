@@ -345,6 +345,28 @@ body {
   filter: brightness(1.07);
 }
 
+.boost-button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Baloo 2', sans-serif;
+  border: 1px solid rgba(255, 216, 107, 0.4);
+  border-radius: 99px;
+  cursor: pointer;
+  color: #ffd86b;
+  background: rgba(255, 216, 107, 0.1);
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.boost-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.boost-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .farm-message,
 .daily-message {
   font-size: 13px;
