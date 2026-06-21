@@ -1,17 +1,17 @@
 const express = require('express');
-const db = require('../db');
+const { pool } = require('../db');
 
 const router = express.Router();
 
 // Public endpoint — no auth required.
-router.get('/', (req, res) => {
-  const top = db.prepare(`
+router.get('/', async (req, res) => {
+  const result = await pool.query(`
     SELECT telegram_id, username, coins, level
     FROM users
     ORDER BY coins DESC
     LIMIT 50
-  `).all();
-  res.json({ leaderboard: top });
+  `);
+  res.json({ leaderboard: result.rows });
 });
 
 module.exports = router;

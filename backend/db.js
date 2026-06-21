@@ -1,26 +1,39 @@
-const path = require('path');
 const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite');
+const path = require('path');
+const { Pool, types } = require('pg');
 
-const dbPath = path.join(__dirname, 'brainrot.db');
-const db = new DatabaseSync(dbPath);
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is missing in .env');
+}
 
-db.exec('PRAGMA journal_mode = WAL');
+// node-postgres returns BIGINT (oid 20) as strings to avoid silent precision
+// loss above 2^53. Our bigint columns (coins, timestamps) never get that
+// large, so parse them back to JS numbers for arithmetic/JSON convenience.
+types.setTypeParser(20, (val) => parseInt(val, 10));
 
-const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-db.exec(schema);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false },
+});
 
-// better-sqlite3-style helper: runs fn inside BEGIN/COMMIT, rolls back on error.
-db.transaction = (fn) => (...args) => {
-  db.exec('BEGIN');
+async function init() {
+  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  await pool.query(schema);
+}
+
+async function withTransaction(fn) {
+  const client = await pool.connect();
   try {
-    const result = fn(...args);
-    db.exec('COMMIT');
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
     return result;
   } catch (err) {
-    db.exec('ROLLBACK');
+    await client.query('ROLLBACK');
     throw err;
+  } finally {
+    client.release();
   }
-};
+}
 
-module.exports = db;
+module.exports = { pool, init, withTransaction };

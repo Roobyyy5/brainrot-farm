@@ -1,27 +1,24 @@
 CREATE TABLE IF NOT EXISTS users (
   telegram_id     TEXT PRIMARY KEY,
   username        TEXT,
-  coins           INTEGER NOT NULL DEFAULT 0,
+  coins           BIGINT NOT NULL DEFAULT 0,
   level           TEXT NOT NULL DEFAULT 'NPC',
-  last_farm_at    INTEGER NOT NULL DEFAULT 0,
-  last_daily_at   INTEGER NOT NULL DEFAULT 0,
+  last_farm_at    BIGINT NOT NULL DEFAULT 0,
+  last_daily_at   BIGINT NOT NULL DEFAULT 0,
   daily_streak    INTEGER NOT NULL DEFAULT 0,
   referral_code   TEXT UNIQUE NOT NULL,
-  referred_by     TEXT,
-  has_farmed_once INTEGER NOT NULL DEFAULT 0,
-  created_at      INTEGER NOT NULL,
-  FOREIGN KEY (referred_by) REFERENCES users(telegram_id)
+  referred_by     TEXT REFERENCES users(telegram_id),
+  has_farmed_once BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS referrals (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  referrer_id     TEXT NOT NULL,
-  referred_id     TEXT NOT NULL UNIQUE,
-  signup_bonus_paid  INTEGER NOT NULL DEFAULT 0,
-  active_bonus_paid  INTEGER NOT NULL DEFAULT 0,
-  created_at      INTEGER NOT NULL,
-  FOREIGN KEY (referrer_id) REFERENCES users(telegram_id),
-  FOREIGN KEY (referred_id) REFERENCES users(telegram_id)
+  id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  referrer_id       TEXT NOT NULL REFERENCES users(telegram_id),
+  referred_id       TEXT NOT NULL UNIQUE REFERENCES users(telegram_id),
+  signup_bonus_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  active_bonus_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at        BIGINT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_coins ON users(coins DESC);

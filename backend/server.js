@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
+const db = require('./db');
 const { telegramAuthMiddleware } = require('./telegramAuth');
 const registerRoute = require('./routes/register');
 const farmRoute = require('./routes/farm');
@@ -25,26 +26,35 @@ app.use('/farm', telegramAuthMiddleware, farmRoute);
 app.use('/daily', telegramAuthMiddleware, dailyRoute);
 app.use('/referral', telegramAuthMiddleware, referralRoute);
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Brainrot Farm backend running on http://localhost:${PORT}`);
-});
+async function main() {
+  await db.init();
 
-// On free hosting tiers (e.g. Render) only a single Web Service is free —
-// background workers are a paid add-on. Running the bot's long-polling loop
-// inside the same process keeps the whole stack on one free service.
-if (process.env.BOT_TOKEN && process.env.MINI_APP_URL) {
-  botStatus.configured = true;
-  const { startBot } = require('./bot');
-  startBot()
-    .then(() => {
-      botStatus.started = true;
-    })
-    .catch((err) => {
-      botStatus.error = err.message;
-      console.error('Failed to start bot:', err);
-    });
-} else {
-  botStatus.error = 'BOT_TOKEN/MINI_APP_URL not set';
-  console.log('BOT_TOKEN/MINI_APP_URL not set — skipping in-process bot startup.');
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => {
+    console.log(`Brainrot Farm backend running on http://localhost:${PORT}`);
+  });
+
+  // On free hosting tiers (e.g. Render) only a single Web Service is free —
+  // background workers are a paid add-on. Running the bot's long-polling loop
+  // inside the same process keeps the whole stack on one free service.
+  if (process.env.BOT_TOKEN && process.env.MINI_APP_URL) {
+    botStatus.configured = true;
+    const { startBot } = require('./bot');
+    startBot()
+      .then(() => {
+        botStatus.started = true;
+      })
+      .catch((err) => {
+        botStatus.error = err.message;
+        console.error('Failed to start bot:', err);
+      });
+  } else {
+    botStatus.error = 'BOT_TOKEN/MINI_APP_URL not set';
+    console.log('BOT_TOKEN/MINI_APP_URL not set — skipping in-process bot startup.');
+  }
 }
+
+main().catch((err) => {
+  console.error('Fatal startup error:', err);
+  process.exit(1);
+});

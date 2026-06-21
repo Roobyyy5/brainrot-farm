@@ -1,12 +1,13 @@
 const express = require('express');
-const db = require('../db');
+const { pool, withTransaction } = require('../db');
 const { FARM_COOLDOWN_MS, FARM_MIN_REWARD, FARM_MAX_REWARD, levelForCoins, REFERRAL_ACTIVE_BONUS } = require('../gameConfig');
 
 const router = express.Router();
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { id: telegramId } = req.tgUser;
-  const user = db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(telegramId);
+  const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+  const user = result.rows[0];
   if (!user) return res.status(404).json({ error: 'User not found. Call /register first.' });
 
   const now = Date.now();
@@ -22,28 +23,31 @@ router.post('/', (req, res) => {
   const newCoins = user.coins + reward;
   const newLevel = levelForCoins(newCoins);
 
-  const tx = db.transaction(() => {
-    db.prepare(`
-      UPDATE users SET coins = ?, level = ?, last_farm_at = ?, has_farmed_once = 1
-      WHERE telegram_id = ?
-    `).run(newCoins, newLevel, now, telegramId);
+  await withTransaction(async (client) => {
+    await client.query(
+      `UPDATE users SET coins = $1, level = $2, last_farm_at = $3, has_farmed_once = TRUE
+       WHERE telegram_id = $4`,
+      [newCoins, newLevel, now, telegramId]
+    );
 
     // Pay the referrer an "active friend" bonus the first time this user farms.
     if (!user.has_farmed_once && user.referred_by) {
-      const refRow = db.prepare(`
-        SELECT * FROM referrals WHERE referred_id = ? AND active_bonus_paid = 0
-      `).get(telegramId);
-      if (refRow) {
-        db.prepare('UPDATE users SET coins = coins + ? WHERE telegram_id = ?')
-          .run(REFERRAL_ACTIVE_BONUS, refRow.referrer_id);
-        db.prepare('UPDATE referrals SET active_bonus_paid = 1 WHERE id = ?').run(refRow.id);
+      const refRow = await client.query(
+        'SELECT * FROM referrals WHERE referred_id = $1 AND active_bonus_paid = FALSE',
+        [telegramId]
+      );
+      if (refRow.rows[0]) {
+        await client.query('UPDATE users SET coins = coins + $1 WHERE telegram_id = $2', [
+          REFERRAL_ACTIVE_BONUS,
+          refRow.rows[0].referrer_id,
+        ]);
+        await client.query('UPDATE referrals SET active_bonus_paid = TRUE WHERE id = $1', [refRow.rows[0].id]);
       }
     }
   });
-  tx();
 
-  const updated = db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(telegramId);
-  res.json({ reward, user: updated });
+  const updated = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+  res.json({ reward, user: updated.rows[0] });
 });
 
 module.exports = router;

@@ -7,6 +7,10 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSL
+        value: "true"
       - key: BOT_TOKEN
         sync: false
       - key: MINI_APP_URL

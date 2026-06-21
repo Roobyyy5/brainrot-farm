@@ -5,3 +5,5 @@ backend/brainrot.db-wal
 backend/brainrot.db-shm
 frontend/dist/
 *.log
+
+.vercel
