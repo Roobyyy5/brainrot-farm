@@ -19,6 +19,19 @@ const botStatus = { configured: false, started: false, error: null };
 app.get('/health', (req, res) => res.json({ ok: true }));
 app.get('/bot-status', (req, res) => res.json(botStatus));
 
+// TEMPORARY — identifies exactly which Postgres instance this deploy is
+// talking to, to debug a local-vs-prod data mismatch. Remove after.
+app.get('/debug/db', async (req, res) => {
+  try {
+    const result = await db.pool.query(
+      "SELECT current_database() as db, inet_server_addr()::text as addr, inet_server_port() as port, (SELECT count(*) FROM users) as user_count"
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/leaderboard', leaderboardRoute); // public, no auth
 
 app.use('/register', telegramAuthMiddleware, registerRoute);
