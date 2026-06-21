@@ -11,9 +11,21 @@ if (!process.env.DATABASE_URL) {
 // large, so parse them back to JS numbers for arithmetic/JSON convenience.
 types.setTypeParser(20, (val) => parseInt(val, 10));
 
+// Supabase's pooler terminates TLS with a cert chain rooted at Supabase's own
+// CA, which isn't in Node's default trust store, so plain rejectUnauthorized
+// would either fail or require disabling validation entirely. Pinning to
+// Supabase's actual intermediate+root CA (fetched once via openssl s_client
+// and committed below — these are public certs, not secrets) gets us full
+// chain validation without that tradeoff: only certs Supabase itself issued
+// are trusted, which is narrower than trusting the whole public CA list.
+// PGSSL=false is only for a local Postgres with no TLS at all.
+const caCertPath = path.join(__dirname, 'certs', 'supabase-ca.pem');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false },
+  ssl:
+    process.env.PGSSL === 'false'
+      ? false
+      : { rejectUnauthorized: true, ca: fs.readFileSync(caCertPath, 'utf8') },
 });
 
 async function init() {
