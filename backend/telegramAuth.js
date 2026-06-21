@@ -17,6 +17,12 @@ function verifyInitData(initData, botToken) {
 
   if (computedHash !== hash) return null;
 
+  // Reject stale initData so a captured/leaked payload can't be replayed
+  // indefinitely. Telegram regenerates initData each time the Mini App opens.
+  const authDate = parseInt(params.get('auth_date'), 10);
+  const MAX_AGE_SECONDS = 24 * 60 * 60;
+  if (!authDate || Date.now() / 1000 - authDate > MAX_AGE_SECONDS) return null;
+
   const userJson = params.get('user');
   if (!userJson) return null;
   return JSON.parse(userJson);

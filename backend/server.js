@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 const db = require('./db');
 const { telegramAuthMiddleware } = require('./telegramAuth');
@@ -20,13 +20,17 @@ app.use(express.json());
 
 // Anti-cheat: server-side cooldowns are the main defense, this is a backstop
 // against scripted abuse hammering the API faster than any human could.
+// Keyed by Telegram user id (set by telegramAuthMiddleware, which always
+// runs first) rather than IP — Mini App traffic is frequently NAT-shared
+// across many real users on the same mobile carrier, so per-IP limiting
+// would punish unrelated people sharing a network.
 const actionLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => req.tgUser?.id || ipKeyGenerator(req.ip),
 });
-app.use(['/register', '/farm', '/daily', '/boost', '/referral', '/achievements'], actionLimiter);
 
 const botStatus = { configured: false, started: false, error: null };
 
@@ -36,12 +40,20 @@ app.get('/bot-status', (req, res) => res.json(botStatus));
 app.use('/leaderboard', leaderboardRoute); // public, no auth
 app.use('/admin', adminRoute); // protected by its own x-admin-key check
 
-app.use('/register', telegramAuthMiddleware, registerRoute);
-app.use('/farm', telegramAuthMiddleware, farmRoute);
-app.use('/daily', telegramAuthMiddleware, dailyRoute);
-app.use('/boost', telegramAuthMiddleware, boostRoute);
-app.use('/referral', telegramAuthMiddleware, referralRoute);
-app.use('/achievements', telegramAuthMiddleware, achievementsRoute);
+app.use('/register', telegramAuthMiddleware, actionLimiter, registerRoute);
+app.use('/farm', telegramAuthMiddleware, actionLimiter, farmRoute);
+app.use('/daily', telegramAuthMiddleware, actionLimiter, dailyRoute);
+app.use('/boost', telegramAuthMiddleware, actionLimiter, boostRoute);
+app.use('/referral', telegramAuthMiddleware, actionLimiter, referralRoute);
+app.use('/achievements', telegramAuthMiddleware, actionLimiter, achievementsRoute);
+
+// Global error handler — every route is wrapped in asyncHandler so thrown
+// errors land here instead of becoming an unhandled rejection that would
+// crash the whole process for every connected user.
+app.use((err, req, res, next) => {
+  console.error('Request error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 async function main() {
   await db.init();
@@ -79,4 +91,12 @@ async function main() {
 main().catch((err) => {
   console.error('Fatal startup error:', err);
   process.exit(1);
+});
+
+// Last-resort net for errors outside the request lifecycle (background
+// reminder/season checks, fire-and-forget event logging). Node >=15 crashes
+// the process on an unhandled rejection by default — log instead so a
+// transient DB blip doesn't take the whole service down.
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
 });

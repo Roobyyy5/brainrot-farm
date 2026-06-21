@@ -4,6 +4,7 @@ import { haptic } from '../telegram';
 import FloatingReward from './FloatingReward';
 
 const BOOST_COST = 25; // keep in sync with backend gameConfig.BOOST_COST
+const FARM_COOLDOWN_MS = 5 * 60 * 1000; // keep in sync with backend gameConfig.FARM_COOLDOWN_MS
 
 function formatMs(ms) {
   const totalSec = Math.ceil(ms / 1000);
@@ -19,6 +20,16 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
   const [message, setMessage] = useState('');
   const [floatId, setFloatId] = useState(0);
   const [floatReward, setFloatReward] = useState(null);
+
+  // Initialize the cooldown from the user's actual last_farm_at as soon as
+  // it's known (e.g. right after the app loads an existing account) so the
+  // button doesn't look falsely ready until a wasted tap proves otherwise.
+  useEffect(() => {
+    if (!user?.last_farm_at) return;
+    const remaining = FARM_COOLDOWN_MS - (Date.now() - user.last_farm_at);
+    if (remaining > 0) setCooldownMs(remaining);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.telegram_id]);
 
   useEffect(() => {
     if (cooldownMs <= 0) return;
@@ -37,6 +48,7 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
       setMessage(`+${data.reward} brainrot points!`);
       setFloatReward(data.reward);
       setFloatId((id) => id + 1);
+      setCooldownMs(FARM_COOLDOWN_MS);
       onFarmed(data.user);
       if (data.unlockedAchievements?.length) onAchievements?.(data.unlockedAchievements);
     } catch (err) {

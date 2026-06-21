@@ -10,49 +10,72 @@ const {
 } = require('../gameConfig');
 const { logEvent } = require('../events');
 const { checkAndGrantAchievements } = require('../achievements');
+const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post(
+  '/',
+  asyncHandler(async (req, res) => {
   const { id: telegramId } = req.tgUser;
-  const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  const user = result.rows[0];
-  if (!user) return res.status(404).json({ error: 'User not found. Call /register first.' });
-
   const now = Date.now();
-  const elapsed = now - user.last_daily_at;
 
-  if (elapsed < DAILY_COOLDOWN_MS) {
+  // The streak/reward math has to happen atomically against the row's
+  // pre-update state (same lost-update hazard as /farm — see comment there).
+  // `daily_streak` and `last_daily_at` on the right-hand side of SET refer to
+  // the row's value before this statement, so the CASE expressions are safe
+  // to evaluate against a concurrently-arriving second request: Postgres
+  // serializes via the row lock and the WHERE re-check fails for the loser.
+  const updateResult = await pool.query(
+    `UPDATE users SET
+       daily_streak = CASE WHEN $1 - last_daily_at > $2 THEN 1 ELSE daily_streak + 1 END,
+       last_daily_at = $1,
+       daily_reminder_sent = FALSE
+     WHERE telegram_id = $3 AND $1 - last_daily_at >= $4
+     RETURNING *`,
+    [now, DAILY_STREAK_RESET_MS, telegramId, DAILY_COOLDOWN_MS]
+  );
+
+  if (!updateResult.rows[0]) {
+    const existing = await pool.query('SELECT last_daily_at FROM users WHERE telegram_id = $1', [telegramId]);
+    if (!existing.rows[0]) return res.status(404).json({ error: 'User not found. Call /register first.' });
+    const elapsed = now - existing.rows[0].last_daily_at;
     return res.status(429).json({
       error: 'Daily reward already claimed',
       retryAfterMs: DAILY_COOLDOWN_MS - elapsed,
     });
   }
 
-  const streakBroken = elapsed > DAILY_STREAK_RESET_MS;
-  const newStreak = streakBroken ? 1 : user.daily_streak + 1;
+  let user = updateResult.rows[0];
+  const newStreak = user.daily_streak;
   const streakBonus = Math.min((newStreak - 1) * DAILY_STREAK_STEP, DAILY_STREAK_MAX_BONUS);
   const reward = DAILY_BASE_REWARD + streakBonus;
-  const newCoins = user.coins + reward;
-  const newLevel = levelForCoins(newCoins);
 
-  await pool.query(
-    `UPDATE users SET coins = $1, weekly_coins = weekly_coins + $2, level = $3, last_daily_at = $4,
-            daily_streak = $5, daily_reminder_sent = FALSE
-     WHERE telegram_id = $6`,
-    [newCoins, reward, newLevel, now, newStreak, telegramId]
+  const rewarded = await pool.query(
+    'UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2 RETURNING *',
+    [reward, telegramId]
   );
+  user = rewarded.rows[0];
+
+  const newLevel = levelForCoins(user.coins);
+  if (newLevel !== user.level) {
+    const leveled = await pool.query('UPDATE users SET level = $1 WHERE telegram_id = $2 RETURNING *', [
+      newLevel,
+      telegramId,
+    ]);
+    user = leveled.rows[0];
+  }
 
   logEvent(telegramId, 'daily');
 
-  const updated = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  const unlockedAchievements = await checkAndGrantAchievements(telegramId, updated.rows[0]);
+  const unlockedAchievements = await checkAndGrantAchievements(telegramId, user);
+  if (unlockedAchievements.length) {
+    const final = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+    user = final.rows[0];
+  }
 
-  const final = unlockedAchievements.length
-    ? await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])
-    : updated;
-
-  res.json({ reward, streak: newStreak, user: final.rows[0], unlockedAchievements });
-});
+    res.json({ reward, streak: newStreak, user, unlockedAchievements });
+  })
+);
 
 module.exports = router;

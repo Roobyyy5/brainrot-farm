@@ -1,67 +1,87 @@
 const express = require('express');
-const { pool, withTransaction } = require('../db');
+const { pool } = require('../db');
 const { FARM_COOLDOWN_MS, FARM_MIN_REWARD, FARM_MAX_REWARD, levelForCoins, REFERRAL_ACTIVE_BONUS } = require('../gameConfig');
 const { logEvent } = require('../events');
 const { checkAndGrantAchievements } = require('../achievements');
+const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post(
+  '/',
+  asyncHandler(async (req, res) => {
   const { id: telegramId } = req.tgUser;
-  const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  const user = result.rows[0];
-  if (!user) return res.status(404).json({ error: 'User not found. Call /register first.' });
-
   const now = Date.now();
-  const elapsed = now - user.last_farm_at;
-  if (elapsed < FARM_COOLDOWN_MS) {
+  const reward = Math.floor(Math.random() * (FARM_MAX_REWARD - FARM_MIN_REWARD + 1)) + FARM_MIN_REWARD;
+
+  // Single atomic UPDATE guarded by the cooldown condition. Postgres takes a
+  // row lock for the duration of the UPDATE, so two concurrent farm requests
+  // for the same user can't both pass the cooldown check and both apply —
+  // the second one re-evaluates WHERE against the first one's committed
+  // result and correctly fails. Using `coins = coins + $reward` (relative)
+  // rather than a value computed from a separately-read snapshot avoids a
+  // lost-update anomaly where the second writer overwrites the first.
+  const updateResult = await pool.query(
+    `UPDATE users
+     SET coins = coins + $1, weekly_coins = weekly_coins + $1, last_farm_at = $2,
+         has_farmed_once = TRUE, farm_reminder_sent = FALSE, farm_count = farm_count + 1
+     WHERE telegram_id = $3 AND $2 - last_farm_at >= $4
+     RETURNING *`,
+    [reward, now, telegramId, FARM_COOLDOWN_MS]
+  );
+
+  if (!updateResult.rows[0]) {
+    const existing = await pool.query('SELECT last_farm_at FROM users WHERE telegram_id = $1', [telegramId]);
+    if (!existing.rows[0]) return res.status(404).json({ error: 'User not found. Call /register first.' });
+    const elapsed = now - existing.rows[0].last_farm_at;
     return res.status(429).json({
       error: 'Farming on cooldown',
       retryAfterMs: FARM_COOLDOWN_MS - elapsed,
     });
   }
 
-  const reward = Math.floor(Math.random() * (FARM_MAX_REWARD - FARM_MIN_REWARD + 1)) + FARM_MIN_REWARD;
-  const newCoins = user.coins + reward;
-  const newLevel = levelForCoins(newCoins);
+  let user = updateResult.rows[0];
+
+  const newLevel = levelForCoins(user.coins);
+  if (newLevel !== user.level) {
+    const leveled = await pool.query('UPDATE users SET level = $1 WHERE telegram_id = $2 RETURNING *', [
+      newLevel,
+      telegramId,
+    ]);
+    user = leveled.rows[0];
+  }
+
+  // farm_count having just become 1 is a race-safe signal that this is this
+  // user's first-ever farm (the atomic increment above serializes concurrent
+  // attempts, so only one request can ever observe this transition).
   let referralBonusPaidTo = null;
-
-  await withTransaction(async (client) => {
-    await client.query(
-      `UPDATE users SET coins = $1, weekly_coins = weekly_coins + $2, level = $3, last_farm_at = $4,
-              has_farmed_once = TRUE, farm_reminder_sent = FALSE, farm_count = farm_count + 1
-       WHERE telegram_id = $5`,
-      [newCoins, reward, newLevel, now, telegramId]
+  if (user.farm_count === 1 && user.referred_by) {
+    const refRow = await pool.query(
+      `UPDATE referrals SET active_bonus_paid = TRUE
+       WHERE referred_id = $1 AND active_bonus_paid = FALSE
+       RETURNING referrer_id`,
+      [telegramId]
     );
-
-    // Pay the referrer an "active friend" bonus the first time this user farms.
-    if (!user.has_farmed_once && user.referred_by) {
-      const refRow = await client.query(
-        'SELECT * FROM referrals WHERE referred_id = $1 AND active_bonus_paid = FALSE',
-        [telegramId]
-      );
-      if (refRow.rows[0]) {
-        await client.query('UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2', [
-          REFERRAL_ACTIVE_BONUS,
-          refRow.rows[0].referrer_id,
-        ]);
-        await client.query('UPDATE referrals SET active_bonus_paid = TRUE WHERE id = $1', [refRow.rows[0].id]);
-        referralBonusPaidTo = refRow.rows[0].referrer_id;
-      }
+    if (refRow.rows[0]) {
+      referralBonusPaidTo = refRow.rows[0].referrer_id;
+      await pool.query('UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2', [
+        REFERRAL_ACTIVE_BONUS,
+        referralBonusPaidTo,
+      ]);
     }
-  });
+  }
 
   logEvent(telegramId, 'farm');
   if (referralBonusPaidTo) logEvent(referralBonusPaidTo, 'referral_active');
 
-  const updated = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-  const unlockedAchievements = await checkAndGrantAchievements(telegramId, updated.rows[0]);
+  const unlockedAchievements = await checkAndGrantAchievements(telegramId, user);
+  if (unlockedAchievements.length) {
+    const final = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+    user = final.rows[0];
+  }
 
-  const final = unlockedAchievements.length
-    ? await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])
-    : updated;
-
-  res.json({ reward, user: final.rows[0], unlockedAchievements });
-});
+    res.json({ reward, user, unlockedAchievements });
+  })
+);
 
 module.exports = router;

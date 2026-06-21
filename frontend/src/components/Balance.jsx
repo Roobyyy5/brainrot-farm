@@ -7,7 +7,12 @@ const LEVELS = [
 ];
 
 function getLevelProgress(coins) {
-  const idx = LEVELS.findLastIndex((lvl) => coins >= lvl.minCoins);
+  // Plain loop instead of Array.prototype.findLastIndex (ES2023) — some
+  // older Android system WebViews used inside Telegram don't support it yet.
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (coins >= LEVELS[i].minCoins) idx = i;
+  }
   const current = LEVELS[idx];
   const next = LEVELS[idx + 1];
   if (!next) return { current, next: null, pct: 100 };

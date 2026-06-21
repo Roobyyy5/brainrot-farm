@@ -47,7 +47,7 @@ export default function App() {
       <AchievementToast achievement={achievementQueue[0] || null} onDone={dismissAchievementToast} />
       <Balance user={user} />
       <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
-      <DailyReward onClaimed={setUser} onAchievements={handleAchievements} />
+      <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
       <Referral user={user} />
       <Achievements refreshKey={achievementsRefreshKey} />
       <Leaderboard currentUserId={user?.telegram_id} />
