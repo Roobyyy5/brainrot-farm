@@ -2,6 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { FARM_COOLDOWN_MS, FARM_MIN_REWARD, FARM_MAX_REWARD, levelForCoins, REFERRAL_ACTIVE_BONUS } = require('../gameConfig');
 const { logEvent } = require('../events');
+const { notifyOwner } = require('../notifyOwner');
 const { checkAndGrantAchievements } = require('../achievements');
 const { asyncHandler } = require('../asyncHandler');
 
@@ -72,12 +73,18 @@ router.post(
   }
 
   logEvent(telegramId, 'farm');
-  if (referralBonusPaidTo) logEvent(referralBonusPaidTo, 'referral_active');
+  if (referralBonusPaidTo) {
+    logEvent(referralBonusPaidTo, 'referral_active');
+    notifyOwner(`✅ Referral active: @${user.username || telegramId}'s invite just farmed for the first time`);
+  }
 
   const unlockedAchievements = await checkAndGrantAchievements(telegramId, user);
   if (unlockedAchievements.length) {
     const final = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
     user = final.rows[0];
+    for (const a of unlockedAchievements) {
+      notifyOwner(`🏅 @${user.username || telegramId} unlocked "${a.name}" (+${a.reward})`);
+    }
   }
 
     res.json({ reward, user, unlockedAchievements });

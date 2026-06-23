@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { pool, withTransaction } = require('../db');
 const { REFERRAL_SIGNUP_BONUS } = require('../gameConfig');
 const { logEvent } = require('../events');
+const { notifyOwner } = require('../notifyOwner');
 const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
@@ -68,7 +69,11 @@ router.post(
     const user = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
     if (inserted) {
       logEvent(telegramId, 'register');
-      if (referredBy) logEvent(referredBy, 'referral_signup');
+      notifyOwner(`🆕 New player: @${username || telegramId} (${telegramId})`);
+      if (referredBy) {
+        logEvent(referredBy, 'referral_signup');
+        notifyOwner(`🔗 Referral signup: @${username || telegramId} joined via referral`);
+      }
     }
     res.json({ user: user.rows[0], alreadyRegistered: !inserted });
   })

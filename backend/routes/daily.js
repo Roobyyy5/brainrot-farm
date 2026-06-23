@@ -9,6 +9,7 @@ const {
   levelForCoins,
 } = require('../gameConfig');
 const { logEvent } = require('../events');
+const { notifyOwner } = require('../notifyOwner');
 const { checkAndGrantAchievements } = require('../achievements');
 const { asyncHandler } = require('../asyncHandler');
 
@@ -72,6 +73,9 @@ router.post(
   if (unlockedAchievements.length) {
     const final = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
     user = final.rows[0];
+    for (const a of unlockedAchievements) {
+      notifyOwner(`🏅 @${user.username || telegramId} unlocked "${a.name}" (+${a.reward})`);
+    }
   }
 
     res.json({ reward, streak: newStreak, user, unlockedAchievements });
