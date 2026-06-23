@@ -21,7 +21,11 @@ async function startBot() {
     const refPayload = ctx.match;
     const appUrl = refPayload ? `${process.env.MINI_APP_URL}?ref=${encodeURIComponent(refPayload)}` : process.env.MINI_APP_URL;
 
-    const keyboard = new InlineKeyboard().webApp('🧠 Open Brainrot Farm', appUrl);
+    const channelUrl = process.env.CHANNEL_URL || 'https://t.me/figabrainnews';
+    const keyboard = new InlineKeyboard()
+      .webApp('🧠 Open Brainrot Farm', appUrl)
+      .row()
+      .url('📢 Join Channel', channelUrl);
 
     // Awaiting (rather than fire-and-forget) means a rejection — e.g. Telegram
     // rejecting a non-HTTPS web_app URL — surfaces through bot.catch() instead
