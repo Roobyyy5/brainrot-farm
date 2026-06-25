@@ -17,6 +17,15 @@ function getClient(): Redis {
   return _client;
 }
 
+/**
+ * Returns the raw ioredis client for adapters that need direct access
+ * (e.g. rate-limit-redis). Do not use for general key operations — use the
+ * exported helpers below so error handling is centralised.
+ */
+export function getRawClient(): Redis {
+  return getClient();
+}
+
 /** Returns true if Redis responds within the connection timeout. */
 export async function isRedisAvailable(): Promise<boolean> {
   try {

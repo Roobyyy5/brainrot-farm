@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, setAccessToken } from "../api/client";
+import { api, setAccessToken, setRefreshFn } from "../api/client";
 import type { UserProfile } from "../api/types";
 
 interface TelegramLoginPayload {
@@ -43,6 +43,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Register a lightweight refresh handler so apiFetch can silently recover
+    // from an expired access token without going through the full AuthContext.
+    // Uses raw fetch (not api.*) to avoid triggering another 401 retry loop.
+    setRefreshFn(async () => {
+      try {
+        const res = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+        if (!res.ok) {
+          setAccessToken(null);
+          setUser(null);
+          return null;
+        }
+        const { data } = (await res.json()) as { data: { accessToken: string } };
+        setAccessToken(data.accessToken);
+        return data.accessToken;
+      } catch {
+        setAccessToken(null);
+        setUser(null);
+        return null;
+      }
+    });
+
     refreshUser();
   }, [refreshUser]);
 
