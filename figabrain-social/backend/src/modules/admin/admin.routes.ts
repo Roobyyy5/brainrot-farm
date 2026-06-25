@@ -6,6 +6,7 @@ import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
 import { writeAuditLog } from "../../utils/logger.js";
 import { startSeason, endSeason } from "../seasons/seasons.service.js";
+import { computeSuspiciousScore } from "../antibot/antibot.service.js";
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -185,6 +186,113 @@ adminRouter.get(
   })
 );
 
+// ---- Reward dashboard ----
+
+adminRouter.get(
+  "/analytics/rewards",
+  asyncHandler(async (_req, res) => {
+    const since = new Date(Date.now() - 7 * 86_400_000);
+    const byAction = await prisma.rewardLedgerEntry.groupBy({
+      by: ["action"],
+      where: { createdAt: { gte: since } },
+      _sum: { amount: true },
+      _count: { _all: true },
+    });
+    res.json({
+      data: byAction.map((row) => ({
+        action: row.action,
+        totalAmount: Number(row._sum.amount ?? 0),
+        eventCount: row._count._all,
+      })),
+    });
+  })
+);
+
+// ---- Economy dashboard ----
+
+adminRouter.get(
+  "/analytics/economy",
+  asyncHandler(async (_req, res) => {
+    const [totalBrainPoints, totalXp, lootBoxesOpened, boostersActivated, tokenConversions, rankDistribution] = await Promise.all([
+      prisma.user.aggregate({ _sum: { brainPoints: true } }),
+      prisma.user.aggregate({ _sum: { xp: true } }),
+      prisma.userLootBox.count({ where: { opened: true } }),
+      prisma.userBooster.count(),
+      prisma.tokenConversionRequest.aggregate({ _sum: { brainPointsSpent: true, fgbTokenAmount: true }, _count: { _all: true } }),
+      prisma.user.groupBy({ by: ["rank"], _count: { _all: true } }),
+    ]);
+
+    res.json({
+      data: {
+        totalBrainPointsInCirculation: Number(totalBrainPoints._sum.brainPoints ?? 0),
+        totalXpEarned: totalXp._sum.xp ?? 0,
+        lootBoxesOpened,
+        boostersActivated,
+        tokenConversions: {
+          count: tokenConversions._count._all,
+          totalBrainPointsConverted: Number(tokenConversions._sum.brainPointsSpent ?? 0),
+          totalFgbIssued: Number(tokenConversions._sum.fgbTokenAmount ?? 0),
+        },
+        rankDistribution: rankDistribution.map((r) => ({ rank: r.rank, count: r._count._all })),
+      },
+    });
+  })
+);
+
+// ---- Retention dashboard ----
+
+adminRouter.get(
+  "/analytics/retention",
+  asyncHandler(async (_req, res) => {
+    const now = Date.now();
+    const [dau, wau, mau, streakDistribution] = await Promise.all([
+      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 86_400_000) } } }),
+      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 7 * 86_400_000) } } }),
+      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 30 * 86_400_000) } } }),
+      prisma.user.groupBy({ by: ["loginStreak"], _count: { _all: true }, orderBy: { loginStreak: "asc" } }),
+    ]);
+
+    res.json({
+      data: {
+        dailyActiveUsers: dau,
+        weeklyActiveUsers: wau,
+        monthlyActiveUsers: mau,
+        streakDistribution: streakDistribution.map((s) => ({ streak: s.loginStreak, count: s._count._all })),
+      },
+    });
+  })
+);
+
+// ---- Engagement dashboard ----
+
+adminRouter.get(
+  "/analytics/engagement",
+  asyncHandler(async (_req, res) => {
+    const [userCount, postCount, commentCount, likeCount, repostCount, missionsCompleted, achievementsUnlocked] = await Promise.all([
+      prisma.user.count(),
+      prisma.post.count(),
+      prisma.comment.count(),
+      prisma.like.count(),
+      prisma.repost.count(),
+      prisma.userMission.count({ where: { completed: true } }),
+      prisma.userAchievement.count(),
+    ]);
+
+    const safeUserCount = Math.max(userCount, 1);
+
+    res.json({
+      data: {
+        postsPerUser: postCount / safeUserCount,
+        commentsPerUser: commentCount / safeUserCount,
+        likesPerUser: likeCount / safeUserCount,
+        repostsPerUser: repostCount / safeUserCount,
+        missionsCompleted,
+        achievementsUnlocked,
+      },
+    });
+  })
+);
+
 // ---- Fraud detection dashboard ----
 
 adminRouter.get(
@@ -197,6 +305,13 @@ adminRouter.get(
       having: { deviceFingerprint: { _count: { gt: 1 } } },
     });
     res.json({ data: grouped });
+  })
+);
+
+adminRouter.get(
+  "/fraud/suspicious-score/:userId",
+  asyncHandler(async (req, res) => {
+    res.json({ data: await computeSuspiciousScore(req.params.userId) });
   })
 );
 

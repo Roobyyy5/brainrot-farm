@@ -7,12 +7,7 @@ import { recordMissionProgress } from "../missions/missions.service.js";
 import { MISSION_ACTION_BY_REWARD_ACTION } from "../missions/missions.config.js";
 import { checkAndGrantAchievements } from "../achievements/achievements.service.js";
 import { recordSeasonProgress } from "../seasons/seasons.service.js";
-
-export class RewardAbuseError extends Error {
-  constructor(message: string, public reason: string) {
-    super(message);
-  }
-}
+import { evaluateAndAutoShadowBan } from "../antibot/antibot.service.js";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -105,19 +100,7 @@ export async function grantReward(
 
   await checkAndGrantAchievements(userId);
   await recordSeasonProgress(userId, amount, xpGained);
+  await evaluateAndAutoShadowBan(userId);
 
   return { granted: true, amount: Number(amount), xp: xpGained };
-}
-
-/**
- * Reward-abuse heuristic: more than 60 reward-earning events for one user
- * within a 5-minute window is far outside organic usage patterns and is
- * flagged for review rather than silently rewarded.
- */
-export async function detectRewardAbuse(userId: string): Promise<boolean> {
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60_000);
-  const count = await prisma.rewardLedgerEntry.count({
-    where: { userId, createdAt: { gte: fiveMinutesAgo } },
-  });
-  return count > 60;
 }
