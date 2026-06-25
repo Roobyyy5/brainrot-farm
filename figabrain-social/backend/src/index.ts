@@ -9,6 +9,8 @@ import YAML from "yamljs";
 import { env } from "./lib/env.js";
 import { globalRateLimiter } from "./middleware/rateLimit.js";
 import { requireNotBanned } from "./middleware/antibot.js";
+import * as redis from "./lib/redis.js";
+import { prisma } from "./lib/prisma.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
@@ -45,8 +47,27 @@ app.use(cookieParser());
 app.use(globalRateLimiter);
 app.use(requireNotBanned);
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "figabrain-social-backend", time: new Date().toISOString() });
+app.get("/health", async (_req, res) => {
+  const checks: Record<string, boolean> = { db: false, redis: false };
+
+  try {
+    await prisma.$executeRaw`SELECT 1`;
+    checks.db = true;
+  } catch { /* db unreachable */ }
+
+  try {
+    await redis.setex("health:ping", 5, "1");
+    checks.redis = true;
+  } catch { /* redis unreachable */ }
+
+  // DB is required; Redis is fail-open so we only degrade on DB failure.
+  const ok = checks.db;
+  res.status(ok ? 200 : 503).json({
+    status: ok ? "ok" : "degraded",
+    service: "figabrain-social-backend",
+    checks,
+    time: new Date().toISOString(),
+  });
 });
 
 try {

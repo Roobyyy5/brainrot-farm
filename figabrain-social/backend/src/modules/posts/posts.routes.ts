@@ -236,3 +236,30 @@ postsRouter.post(
     res.status(201).json({ data: { reposted: true }, reward });
   })
 );
+
+const reportPostSchema = z.object({
+  reason: z.string().min(1).max(500),
+});
+
+postsRouter.post(
+  "/:id/report",
+  requireAuth,
+  writeActionRateLimiter,
+  validateBody(reportPostSchema),
+  asyncHandler(async (req, res) => {
+    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+    if (!post) throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
+    if (post.authorId === req.user!.id) throw new HttpError(400, "Cannot report your own post", "INVALID_OPERATION");
+
+    const existing = await prisma.report.findFirst({
+      where: { filerId: req.user!.id, targetType: "POST", targetId: post.id },
+    });
+    if (existing) throw new HttpError(409, "Already reported", "ALREADY_REPORTED");
+
+    await prisma.report.create({
+      data: { filerId: req.user!.id, targetType: "POST", targetId: post.id, reason: req.body.reason },
+    });
+
+    res.json({ data: { reported: true } });
+  })
+);

@@ -7,6 +7,7 @@ import { validateBody } from "../../middleware/validate.js";
 import { writeAuditLog } from "../../utils/logger.js";
 import { startSeason, endSeason } from "../seasons/seasons.service.js";
 import { SEASON_CACHE_KEY } from "../seasons/seasons.routes.js";
+import { invalidateBanCache } from "../../middleware/antibot.js";
 import * as redis from "../../lib/redis.js";
 import { computeSuspiciousScore } from "../antibot/antibot.service.js";
 
@@ -56,6 +57,7 @@ adminRouter.post(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.update({ where: { id: req.params.id }, data: { isBanned: true } });
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_BAN_USER", entity: "User", entityId: user.id });
+    await invalidateBanCache(req.params.id);
     res.json({ data: { banned: true } });
   })
 );
@@ -65,6 +67,7 @@ adminRouter.post(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.update({ where: { id: req.params.id }, data: { isBanned: false } });
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_UNBAN_USER", entity: "User", entityId: user.id });
+    await invalidateBanCache(req.params.id);
     res.json({ data: { banned: false } });
   })
 );
@@ -79,6 +82,7 @@ adminRouter.post(
     });
     await prisma.user.update({ where: { id: req.params.id }, data: { isShadowBanned: true } });
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SHADOW_BAN", entity: "User", entityId: req.params.id });
+    await invalidateBanCache(req.params.id);
     res.json({ data: { shadowBanned: true } });
   })
 );
@@ -89,6 +93,7 @@ adminRouter.post(
     await prisma.shadowBan.deleteMany({ where: { userId: req.params.id } });
     await prisma.user.update({ where: { id: req.params.id }, data: { isShadowBanned: false } });
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SHADOW_UNBAN", entity: "User", entityId: req.params.id });
+    await invalidateBanCache(req.params.id);
     res.json({ data: { shadowBanned: false } });
   })
 );

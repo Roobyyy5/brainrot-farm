@@ -60,15 +60,20 @@ export async function getMissionsForUser(userId: string): Promise<MissionView[]>
 }
 
 /**
- * Bumps progress on every active mission tracking `action` for the current
- * daily/weekly period, granting the mission's reward exactly once the first
- * time progress crosses its target.
+ * Bumps progress on every active mission tracking `action`.
+ *
+ * Race-safe pattern:
+ * 1. Atomic increment via updateMany({ where: { completed: false } }) — prevents
+ *    double-increment if two requests race.
+ * 2. CAS completion via updateMany({ where: { completed: false, progress >= target } })
+ *    — only the first request to cross the threshold wins; reward is granted exactly once.
  */
 export async function recordMissionProgress(userId: string, action: MissionAction): Promise<void> {
   const missions = await prisma.mission.findMany({ where: { active: true, action } });
 
   for (const mission of missions) {
     const periodKey = periodKeyFor(mission.period);
+
     const userMission = await prisma.userMission.upsert({
       where: { userId_missionId_periodKey: { userId, missionId: mission.id, periodKey } },
       create: { userId, missionId: mission.id, periodKey },
@@ -77,19 +82,20 @@ export async function recordMissionProgress(userId: string, action: MissionActio
 
     if (userMission.completed) continue;
 
-    const progress = userMission.progress + 1;
-    const justCompleted = progress >= mission.targetCount;
+    // Atomic increment — skips if another concurrent request already marked it completed.
+    const incremented = await prisma.userMission.updateMany({
+      where: { id: userMission.id, completed: false },
+      data: { progress: { increment: 1 } },
+    });
+    if (incremented.count === 0) continue;
 
-    await prisma.userMission.update({
-      where: { id: userMission.id },
-      data: {
-        progress,
-        completed: justCompleted,
-        completedAt: justCompleted ? new Date() : undefined,
-      },
+    // CAS completion — exactly one concurrent winner sets completed=true.
+    const won = await prisma.userMission.updateMany({
+      where: { id: userMission.id, completed: false, progress: { gte: mission.targetCount } },
+      data: { completed: true, completedAt: new Date() },
     });
 
-    if (justCompleted) {
+    if (won.count === 1) {
       await prisma.user.update({
         where: { id: userId },
         data: { brainPoints: { increment: mission.pointsReward }, xp: { increment: mission.xpReward } },
