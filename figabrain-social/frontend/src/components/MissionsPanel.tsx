@@ -5,13 +5,29 @@ import type { Mission } from "../api/types";
 export function MissionsPanel() {
   const [daily, setDaily] = useState<Mission[]>([]);
   const [weekly, setWeekly] = useState<Mission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ data: { daily: Mission[]; weekly: Mission[] } }>("/missions").then((res) => {
-      setDaily(res.data.daily);
-      setWeekly(res.data.weekly);
-    });
+    api
+      .get<{ data: { daily: Mission[]; weekly: Mission[] } }>("/missions")
+      .then((res) => {
+        setDaily(res.data.daily);
+        setWeekly(res.data.weekly);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="glass-panel rounded-2xl p-5 animate-pulse">
+        <div className="h-4 bg-white/10 rounded w-1/4 mb-3" />
+        <div className="space-y-2">
+          <div className="h-14 bg-white/5 rounded-xl" />
+          <div className="h-14 bg-white/5 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-panel rounded-2xl p-5">

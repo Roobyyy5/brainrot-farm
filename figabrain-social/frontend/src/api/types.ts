@@ -74,7 +74,7 @@ export interface SeasonLeaderboardEntry {
 export interface SeasonCurrent {
   season: SeasonInfo | null;
   leaderboard: SeasonLeaderboardEntry[];
-  me: { seasonPoints: number; seasonXp: number } | null;
+  me: { seasonPoints: number; seasonXp: number; finalRank: number | null; rewardClaimed: boolean } | null;
 }
 
 export interface UserLootBoxItem {
