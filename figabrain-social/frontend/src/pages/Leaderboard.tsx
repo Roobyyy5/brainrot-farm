@@ -5,10 +5,18 @@ import type { LeaderboardEntry } from "../api/types";
 
 export function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ data: LeaderboardEntry[] }>("/leaderboard").then((res) => setEntries(res.data));
+    api
+      .get<{ data: LeaderboardEntry[] }>("/leaderboard")
+      .then((res) => setEntries(res.data))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return <p className="text-white/40 text-sm text-center mt-10">Loading leaderboard...</p>;
+  }
 
   const podium = entries.slice(0, 3);
   const rest = entries.slice(3);

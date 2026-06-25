@@ -6,8 +6,15 @@ export function Notifications() {
   const [items, setItems] = useState<NotificationItem[]>([]);
 
   useEffect(() => {
-    api.get<{ data: NotificationItem[] }>("/notifications").then((res) => setItems(res.data));
-    api.post("/notifications/read-all");
+    api
+      .get<{ data: NotificationItem[] }>("/notifications")
+      .then((res) => {
+        setItems(res.data);
+        // Mark as read only after items are rendered; ignore failures silently
+        // since a failed read-all is not critical to the user.
+        return api.post("/notifications/read-all").catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
   return (
