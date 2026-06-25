@@ -9,10 +9,11 @@ walletRouter.get(
   "/me",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const wallet = await prisma.wallet.findUnique({ where: { userId: req.user!.id } });
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId: req.user!.id },
+      include: { user: { select: { brainPoints: true } } },
+    });
     if (!wallet) throw new HttpError(404, "Wallet not found", "WALLET_NOT_FOUND");
-
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { brainPoints: true } });
 
     res.json({
       data: {
@@ -20,7 +21,7 @@ walletRouter.get(
         publicKey: wallet.publicKey,
         chain: wallet.chain,
         tokenBalance: Number(wallet.tokenBalance),
-        brainPoints: Number(user?.brainPoints ?? 0),
+        brainPoints: Number(wallet.user.brainPoints),
         createdAt: wallet.createdAt,
       },
     });

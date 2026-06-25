@@ -45,6 +45,9 @@ export async function openLootBox(userId: string, userLootBoxId: string): Promis
     }
   }
 
+  // All writes — including booster grant — are in one transaction so a crash
+  // between steps can never mark the box opened without crediting the reward,
+  // or credit BP/XP without granting the booster.
   await prisma.$transaction(async (tx) => {
     await tx.userLootBox.update({
       where: { id: userLootBoxId },
@@ -57,12 +60,26 @@ export async function openLootBox(userId: string, userLootBoxId: string): Promis
     await tx.economyLog.create({
       data: { userId, type: "LOOTBOX_OPENED", amount: pointsAwarded, metadata: { lootBoxKey: box.key, xpAwarded, boosterKey } },
     });
-  });
 
-  if (boosterKey) {
-    const { grantBooster } = await import("../boosters/boosters.service.js");
-    await grantBooster(userId, boosterKey, "LOOTBOX");
-  }
+    if (boosterKey) {
+      const booster = await tx.booster.findUnique({ where: { key: boosterKey } });
+      if (booster) {
+        await tx.userBooster.create({
+          data: {
+            userId,
+            boosterId: booster.id,
+            type: booster.type,
+            multiplier: booster.multiplier,
+            source: "LOOTBOX",
+            expiresAt: new Date(Date.now() + booster.durationSeconds * 1000),
+          },
+        });
+        await tx.economyLog.create({
+          data: { userId, type: "BOOSTER_ACTIVATED", metadata: { boosterKey, source: "LOOTBOX" } },
+        });
+      }
+    }
+  });
 
   return { pointsAwarded, xpAwarded, boosterKey };
 }
