@@ -1,11 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { HttpError } from "../../middleware/errorHandler.js";
-import { TokenEngine } from "./tokenEngine.js";
-import { UnimplementedChainProvider } from "./chainProvider.js";
 import { FGB_CONVERSION_RATE, MIN_CONVERSION_POINTS } from "./tokenConversion.config.js";
-
-const tokenEngine = new TokenEngine(new UnimplementedChainProvider("SOLANA"));
 
 /**
  * Simulates converting Brain Points into FGB tokens: spends the points,
@@ -24,6 +20,9 @@ export async function simulateTokenConversion(userId: string, brainPointsAmount:
 
   const fgbAmount = brainPointsAmount * FGB_CONVERSION_RATE;
 
+  // All three writes (debit BP, credit token balance, audit log) happen in one
+  // atomic transaction so a mid-flight crash can never deduct points without
+  // crediting tokens.
   const request = await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: userId }, data: { brainPoints: { decrement: brainPointsAmount } } });
     const created = await tx.tokenConversionRequest.create({
@@ -34,13 +33,15 @@ export async function simulateTokenConversion(userId: string, brainPointsAmount:
         rate: new Prisma.Decimal(FGB_CONVERSION_RATE),
       },
     });
+    await tx.wallet.update({
+      where: { userId },
+      data: { tokenBalance: { increment: fgbAmount } },
+    });
     await tx.economyLog.create({
       data: { userId, type: "TOKEN_CONVERSION", amount: new Prisma.Decimal(-brainPointsAmount), metadata: { fgbAmount } },
     });
     return created;
   });
-
-  await tokenEngine.creditOffChain(userId, fgbAmount);
 
   return { ...request, brainPointsSpent: Number(request.brainPointsSpent), fgbTokenAmount: Number(request.fgbTokenAmount), rate: Number(request.rate) };
 }

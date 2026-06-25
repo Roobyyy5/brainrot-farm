@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -41,9 +42,9 @@ export class StakingEngine {
       throw new Error("Position is still locked");
     }
 
-    const stakedDays = (Date.now() - position.startedAt.getTime()) / MS_PER_DAY;
-    const apr = Number(position.pool.apr) / 100;
-    const payout = Number(position.amount) * (1 + apr * (stakedDays / 365));
+    const stakedDays = new Prisma.Decimal(Date.now() - position.startedAt.getTime()).div(MS_PER_DAY);
+    const apr = position.pool.apr.div(100);
+    const payout = position.amount.mul(new Prisma.Decimal(1).add(apr.mul(stakedDays).div(365)));
 
     return prisma.$transaction([
       prisma.stakingPosition.update({

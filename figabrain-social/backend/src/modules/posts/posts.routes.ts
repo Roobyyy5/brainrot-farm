@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth, optionalAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
@@ -24,22 +25,6 @@ const feedQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(20),
 });
 
-function serializePost(post: any, viewerId?: string) {
-  return {
-    id: post.id,
-    content: post.content,
-    imageUrls: post.imageUrls,
-    linkUrl: post.linkUrl,
-    gifUrl: post.gifUrl,
-    createdAt: post.createdAt,
-    author: post.author,
-    likesCount: post._count?.likes ?? 0,
-    commentsCount: post._count?.comments ?? 0,
-    repostsCount: post._count?.reposts ?? 0,
-    likedByMe: viewerId ? post.likes?.some((l: { userId: string }) => l.userId === viewerId) : false,
-  };
-}
-
 const postAuthorSelect = {
   id: true,
   username: true,
@@ -48,6 +33,34 @@ const postAuthorSelect = {
   rank: true,
 } as const;
 
+const postInclude = {
+  author: { select: postAuthorSelect },
+  _count: { select: { likes: true, comments: true, reposts: true } },
+  likes: { select: { userId: true } },
+} as const;
+
+// likes is omitted from the base type so the conditional include (false for
+// anonymous requests) doesn't cause a TypeScript mismatch.
+type RawPost = Omit<Prisma.PostGetPayload<{ include: typeof postInclude }>, "likes"> & {
+  likes?: { userId: string }[];
+};
+
+function serializePost(post: RawPost, viewerId?: string) {
+  return {
+    id: post.id,
+    content: post.content,
+    imageUrls: post.imageUrls,
+    linkUrl: post.linkUrl,
+    gifUrl: post.gifUrl,
+    createdAt: post.createdAt,
+    author: post.author,
+    likesCount: post._count.likes,
+    commentsCount: post._count.comments,
+    repostsCount: post._count.reposts,
+    likedByMe: viewerId ? (post.likes?.some((l) => l.userId === viewerId) ?? false) : false,
+  };
+}
+
 postsRouter.get(
   "/feed",
   optionalAuth,
@@ -55,17 +68,16 @@ postsRouter.get(
   asyncHandler(async (req, res) => {
     const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
 
-    const posts = await prisma.post.findMany({
+    const posts = (await prisma.post.findMany({
       where: { moderation: "ACTIVE" },
       orderBy: { createdAt: "desc" },
       take: limit,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       include: {
-        author: { select: postAuthorSelect },
-        _count: { select: { likes: true, comments: true, reposts: true } },
+        ...postInclude,
         likes: req.user ? { where: { userId: req.user.id }, select: { userId: true } } : false,
       },
-    });
+    })) as RawPost[];
 
     res.json({
       data: posts.map((p) => serializePost(p, req.user?.id)),
@@ -78,14 +90,13 @@ postsRouter.get(
   "/:id",
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const post = await prisma.post.findUnique({
+    const post = (await prisma.post.findUnique({
       where: { id: req.params.id },
       include: {
-        author: { select: postAuthorSelect },
-        _count: { select: { likes: true, comments: true, reposts: true } },
+        ...postInclude,
         likes: req.user ? { where: { userId: req.user.id }, select: { userId: true } } : false,
       },
-    });
+    })) as RawPost | null;
     if (!post || post.moderation !== "ACTIVE") {
       throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
     }
