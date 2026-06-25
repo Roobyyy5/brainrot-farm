@@ -7,12 +7,22 @@ export function Settings() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    await api.patch("/users/me", { displayName, bio });
-    await refreshUser();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setIsSaving(true);
+    setError(null);
+    try {
+      await api.patch("/users/me", { displayName, bio });
+      await refreshUser();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setError("Failed to save. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -23,6 +33,7 @@ export function Settings() {
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
+          maxLength={60}
           className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none"
         />
       </div>
@@ -32,11 +43,17 @@ export function Settings() {
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={3}
+          maxLength={280}
           className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none resize-none"
         />
       </div>
-      <button onClick={save} className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-4 py-2 rounded-full">
-        {saved ? "Saved!" : "Save changes"}
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+      <button
+        onClick={save}
+        disabled={isSaving}
+        className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
+      >
+        {saved ? "Saved!" : isSaving ? "Saving..." : "Save changes"}
       </button>
       <button onClick={logout} className="block text-xs text-white/40 hover:text-white">
         Log out
