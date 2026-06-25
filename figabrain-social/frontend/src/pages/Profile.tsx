@@ -7,6 +7,7 @@ import { RankCard } from "../components/RankCard";
 export function Profile() {
   const { username } = useParams<{ username: string }>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -14,13 +15,23 @@ export function Profile() {
   }, [username]);
 
   async function toggleFollow() {
-    if (!profile) return;
-    if (profile.isFollowedByMe) {
-      await api.delete(`/users/${profile.username}/follow`);
-    } else {
-      await api.post(`/users/${profile.username}/follow`);
+    if (!profile || isFollowLoading) return;
+    const wasFollowing = profile.isFollowedByMe;
+    // Optimistic update.
+    setProfile({ ...profile, isFollowedByMe: !wasFollowing });
+    setIsFollowLoading(true);
+    try {
+      if (wasFollowing) {
+        await api.delete(`/users/${profile.username}/follow`);
+      } else {
+        await api.post(`/users/${profile.username}/follow`);
+      }
+    } catch {
+      // Rollback on failure.
+      setProfile({ ...profile, isFollowedByMe: wasFollowing });
+    } finally {
+      setIsFollowLoading(false);
     }
-    setProfile({ ...profile, isFollowedByMe: !profile.isFollowedByMe });
   }
 
   if (!profile) return <p className="text-white/40 text-sm">Loading profile...</p>;
@@ -37,7 +48,8 @@ export function Profile() {
         </div>
         <button
           onClick={toggleFollow}
-          className="ml-auto bg-white/10 hover:bg-white/20 text-sm font-semibold px-4 py-2 rounded-full"
+          disabled={isFollowLoading}
+          className="ml-auto bg-white/10 hover:bg-white/20 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
         >
           {profile.isFollowedByMe ? "Unfollow" : "Follow"}
         </button>

@@ -46,19 +46,31 @@ export function Feed() {
 
   async function handleLike(post: Post) {
     const wasLiked = post.likedByMe;
+    // Optimistic update first for instant feedback.
     setPosts((prev) =>
       prev.map((p) =>
         p.id === post.id
-          ? { ...p, likedByMe: !p.likedByMe, likesCount: p.likesCount + (p.likedByMe ? -1 : 1) }
+          ? { ...p, likedByMe: !wasLiked, likesCount: p.likesCount + (wasLiked ? -1 : 1) }
           : p
       )
     );
-    const res = await api.post<{ data: { liked: boolean }; reward?: { amount: number; xp: number } }>(
-      `/posts/${post.id}/like`
-    );
-    if (!wasLiked && res.reward) {
-      showReward(res.reward);
-      refreshUser();
+    try {
+      const res = await api.post<{ data: { liked: boolean }; reward?: { amount: number; xp: number } }>(
+        `/posts/${post.id}/like`
+      );
+      if (!wasLiked && res.reward) {
+        showReward(res.reward);
+        refreshUser();
+      }
+    } catch {
+      // Rollback to previous state on failure.
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? { ...p, likedByMe: wasLiked, likesCount: p.likesCount + (wasLiked ? 1 : -1) }
+            : p
+        )
+      );
     }
   }
 
