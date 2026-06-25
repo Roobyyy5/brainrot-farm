@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { UserProfile } from "../api/types";
+import { RankCard } from "../components/RankCard";
 
 export function Profile() {
   const { username } = useParams<{ username: string }>();
@@ -50,7 +51,7 @@ export function Profile() {
         <Stat label="Following" value={profile.followingCount} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
           <div className="text-xs text-white/50">Brain Points</div>
           <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
@@ -60,6 +61,8 @@ export function Profile() {
           <div className="text-lg font-bold text-brain-accent2">{profile.walletBalance.toFixed(4)}</div>
         </div>
       </div>
+
+      <RankCard profile={profile} />
     </div>
   );
 }

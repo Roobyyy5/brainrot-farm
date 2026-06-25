@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: "/notifications", label: "Notifications" },
   { to: "/messages", label: "Messages" },
   { to: "/wallet", label: "Wallet" },
+  { to: "/economy", label: "Brain Economy" },
   { to: "/rewards", label: "Rewards" },
   { to: "/leaderboard", label: "Leaderboard" },
   { to: "/settings", label: "Settings" },

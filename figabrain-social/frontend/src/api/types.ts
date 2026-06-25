@@ -4,16 +4,94 @@ export interface UserProfile {
   displayName: string;
   bio: string;
   avatarUrl: string | null;
-  rank: "NPC" | "NORMIE" | "SIGMA" | "GIGACHAD" | "BRAIN_LORD" | "MEME_EMPEROR" | "GALAXY_BRAIN" | "NEURAL_GOD";
+  rank: Rank;
   brainPoints: number;
   xp: number;
   reputation: number;
+  loginStreak: number;
+  longestStreak: number;
+  nextLevelTier: { rank: Rank; minXp: number; multiplier: number } | null;
   walletAddress: string | null;
   walletBalance: number;
   postsCount: number;
   followersCount: number;
   followingCount: number;
   isFollowedByMe?: boolean;
+}
+
+export type Rank = "NPC" | "NORMIE" | "SIGMA" | "GIGACHAD" | "BRAIN_LORD" | "MEME_EMPEROR" | "GALAXY_BRAIN" | "NEURAL_GOD";
+
+export interface Mission {
+  missionId: string;
+  key: string;
+  period: "DAILY" | "WEEKLY";
+  title: string;
+  description: string;
+  targetCount: number;
+  progress: number;
+  completed: boolean;
+  xpReward: number;
+  pointsReward: number;
+}
+
+export type AchievementRarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC";
+
+export interface AchievementItem {
+  key: string;
+  name: string;
+  description: string;
+  category: "SOCIAL" | "CONTENT" | "COMMUNITY" | "REFERRAL" | "ACTIVITY";
+  rarity: AchievementRarity;
+  icon: string;
+  xpReward: number;
+  pointsReward: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+}
+
+export interface StreakStatus {
+  currentStreak: number;
+  longestStreak: number;
+  nextMilestone: number | null;
+}
+
+export interface SeasonInfo {
+  id: string;
+  name: string;
+  startsAt: string;
+  endsAt: string;
+  status: "ACTIVE" | "ENDED";
+}
+
+export interface SeasonLeaderboardEntry {
+  position: number;
+  seasonPoints: number;
+  seasonXp: number;
+  finalRank: number | null;
+  user: { username: string; displayName: string; avatarUrl: string | null; rank: Rank };
+}
+
+export interface SeasonCurrent {
+  season: SeasonInfo | null;
+  leaderboard: SeasonLeaderboardEntry[];
+  me: { seasonPoints: number; seasonXp: number } | null;
+}
+
+export interface UserLootBoxItem {
+  id: string;
+  lootBox: { key: string; name: string; rarity: AchievementRarity };
+  source: string;
+  opened: boolean;
+  openedAt: string | null;
+  rewardJson: { pointsAwarded: number; xpAwarded: number; boosterKey: string | null } | null;
+}
+
+export interface ActiveBooster {
+  type: "BRAIN_POINTS_MULTIPLIER" | "XP_MULTIPLIER" | "REFERRAL_BOOST";
+  multiplier: number;
+  source: string;
+  expiresAt: string;
+  booster: { key: string; name: string; rarity: AchievementRarity };
 }
 
 export interface PostAuthor {

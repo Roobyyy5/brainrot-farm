@@ -3,9 +3,11 @@ import { api } from "../api/client";
 import type { Post } from "../api/types";
 import { PostCard } from "../components/PostCard";
 import { useAuth } from "../context/AuthContext";
+import { useRewardToast } from "../context/RewardToastContext";
 
 export function Feed() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { showReward } = useRewardToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -25,9 +27,16 @@ export function Feed() {
     setIsPosting(true);
     setError(null);
     try {
-      const res = await api.post<{ data: Post }>("/posts", { content, imageUrls: [] });
+      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", {
+        content,
+        imageUrls: [],
+      });
       setPosts((prev) => [res.data, ...prev]);
       setContent("");
+      if (res.reward) {
+        showReward(res.reward);
+        refreshUser();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post");
     } finally {
@@ -36,6 +45,7 @@ export function Feed() {
   }
 
   async function handleLike(post: Post) {
+    const wasLiked = post.likedByMe;
     setPosts((prev) =>
       prev.map((p) =>
         p.id === post.id
@@ -43,7 +53,13 @@ export function Feed() {
           : p
       )
     );
-    await api.post(`/posts/${post.id}/like`);
+    const res = await api.post<{ data: { liked: boolean }; reward?: { amount: number; xp: number } }>(
+      `/posts/${post.id}/like`
+    );
+    if (!wasLiked && res.reward) {
+      showReward(res.reward);
+      refreshUser();
+    }
   }
 
   async function handleRepost(post: Post) {

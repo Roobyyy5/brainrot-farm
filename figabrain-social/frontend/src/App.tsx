@@ -8,6 +8,7 @@ import { Notifications } from "./pages/Notifications";
 import { Messages } from "./pages/Messages";
 import { Leaderboard } from "./pages/Leaderboard";
 import { Rewards } from "./pages/Rewards";
+import { Economy } from "./pages/Economy";
 import { Settings } from "./pages/Settings";
 import { Search } from "./pages/Search";
 import { Admin } from "./pages/Admin";
@@ -36,6 +37,7 @@ export function App() {
       <Route path="/messages" element={<ProtectedLayout><Messages /></ProtectedLayout>} />
       <Route path="/leaderboard" element={<ProtectedLayout><Leaderboard /></ProtectedLayout>} />
       <Route path="/rewards" element={<ProtectedLayout><Rewards /></ProtectedLayout>} />
+      <Route path="/economy" element={<ProtectedLayout><Economy /></ProtectedLayout>} />
       <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
       <Route path="/search" element={<ProtectedLayout><Search /></ProtectedLayout>} />
       <Route path="/admin" element={<ProtectedLayout><Admin /></ProtectedLayout>} />
