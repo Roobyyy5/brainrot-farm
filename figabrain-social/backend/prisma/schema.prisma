@@ -1,0 +1,638 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rank {
+  NPC
+  NORMIE
+  SIGMA
+  GIGACHAD
+  BRAIN_LORD
+  MEME_EMPEROR
+  GALAXY_BRAIN
+  NEURAL_GOD
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  REPOST
+  FOLLOW
+  MENTION
+  REWARD
+  SYSTEM
+}
+
+enum MissionPeriod {
+  DAILY
+  WEEKLY
+}
+
+enum MissionAction {
+  LIKE
+  COMMENT
+  POST
+  FOLLOW
+  REFERRAL
+  REPOST
+  LOGIN
+}
+
+enum AchievementCategory {
+  SOCIAL
+  CONTENT
+  COMMUNITY
+  REFERRAL
+  ACTIVITY
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+  MYTHIC
+}
+
+enum BoosterType {
+  BRAIN_POINTS_MULTIPLIER
+  XP_MULTIPLIER
+  REFERRAL_BOOST
+}
+
+enum BoosterSource {
+  LOOTBOX
+  ACHIEVEMENT
+  SEASON_REWARD
+  STREAK_MILESTONE
+  ADMIN_GRANT
+}
+
+enum SeasonStatus {
+  ACTIVE
+  ENDED
+}
+
+enum TokenConversionStatus {
+  SIMULATED
+}
+
+enum ChainType {
+  TON
+  SOLANA
+}
+
+enum AirdropStatus {
+  PENDING
+  CLAIMABLE
+  CLAIMED
+  EXPIRED
+}
+
+enum StakingStatus {
+  ACTIVE
+  UNSTAKING
+  CLOSED
+}
+
+enum ModerationStatus {
+  ACTIVE
+  HIDDEN
+  REMOVED
+}
+
+model User {
+  id                String    @id @default(uuid())
+  telegramId        String    @unique
+  username          String    @unique
+  displayName       String
+  bio               String    @default("")
+  avatarUrl         String?
+  rank              Rank      @default(NPC)
+  isShadowBanned    Boolean   @default(false)
+  isAdmin           Boolean   @default(false)
+  isBanned          Boolean   @default(false)
+  brainPoints       Decimal   @default(0) @db.Decimal(20, 4)
+  xp                Int       @default(0)
+  reputation        Int       @default(0)
+  lastLoginAt       DateTime?
+  loginStreak       Int       @default(0)
+  longestStreak     Int       @default(0)
+  streakCycle       Int       @default(0)
+  referredById      String?
+  deviceFingerprint String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  wallet               Wallet?
+  posts                Post[]
+  comments             Comment[]
+  likes                Like[]
+  reposts              Repost[]
+  following            Follow[]                  @relation("FollowingRelation")
+  followers            Follow[]                  @relation("FollowerRelation")
+  notifications        Notification[]            @relation("NotificationRecipient")
+  actorNotifications   Notification[]            @relation("NotificationActor")
+  sentMessages         Message[]                 @relation("MessageSender")
+  conversations        ConversationParticipant[]
+  rewardEvents         RewardLedgerEntry[]
+  referredBy           User?                     @relation("Referrals", fields: [referredById], references: [id])
+  referrals            User[]                    @relation("Referrals")
+  auditLogs            AuditLog[]
+  airdropClaims        AirdropClaim[]
+  stakingPositions     StakingPosition[]
+  nfts                 Nft[]
+  reportsFiled         Report[]                  @relation("ReportFiler")
+  rateLimitHits        RateLimitHit[]
+  userMissions         UserMission[]
+  userAchievements     UserAchievement[]
+  userBoosters         UserBooster[]
+  userLootBoxes        UserLootBox[]
+  seasonParticipations SeasonParticipant[]
+  reputationLogs       ReputationLog[]
+  economyLogs          EconomyLog[]
+  tokenConversions     TokenConversionRequest[]
+  streakClaims         StreakMilestoneClaim[]
+
+  @@index([brainPoints])
+  @@index([xp])
+  @@index([reputation])
+  @@index([rank])
+}
+
+model Mission {
+  id           String        @id @default(uuid())
+  key          String        @unique
+  period       MissionPeriod
+  action       MissionAction
+  title        String
+  description  String
+  targetCount  Int
+  xpReward     Int
+  pointsReward Decimal       @db.Decimal(20, 4)
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+
+  userMissions UserMission[]
+
+  @@index([period, active])
+}
+
+model UserMission {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId   String
+  mission     Mission   @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  periodKey   String
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  claimedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, missionId, periodKey])
+  @@index([userId, periodKey])
+}
+
+model Achievement {
+  id           String              @id @default(uuid())
+  key          String              @unique
+  name         String
+  description  String
+  category     AchievementCategory
+  rarity       Rarity
+  icon         String
+  xpReward     Int
+  pointsReward Decimal             @db.Decimal(20, 4)
+  createdAt    DateTime            @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model StreakMilestoneClaim {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone   Int
+  streakCycle Int
+  claimedAt   DateTime @default(now())
+
+  @@unique([userId, milestone, streakCycle])
+}
+
+model Booster {
+  id              String      @id @default(uuid())
+  key             String      @unique
+  name            String
+  type            BoosterType
+  multiplier      Decimal     @db.Decimal(4, 2)
+  durationSeconds Int
+  rarity          Rarity
+  createdAt       DateTime    @default(now())
+
+  userBoosters UserBooster[]
+}
+
+model UserBooster {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boosterId   String
+  booster     Booster       @relation(fields: [boosterId], references: [id], onDelete: Cascade)
+  type        BoosterType
+  multiplier  Decimal       @db.Decimal(4, 2)
+  source      BoosterSource
+  activatedAt DateTime      @default(now())
+  expiresAt   DateTime
+
+  @@index([userId, type, expiresAt])
+}
+
+model LootBox {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  name          String
+  rarity        Rarity
+  pointsMin     Decimal  @db.Decimal(20, 4)
+  pointsMax     Decimal  @db.Decimal(20, 4)
+  xpMin         Int
+  xpMax         Int
+  boosterChance Decimal  @default(0) @db.Decimal(3, 2)
+  createdAt     DateTime @default(now())
+
+  userLootBoxes UserLootBox[]
+}
+
+model UserLootBox {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lootBoxId  String
+  lootBox    LootBox   @relation(fields: [lootBoxId], references: [id], onDelete: Cascade)
+  source     String
+  opened     Boolean   @default(false)
+  openedAt   DateTime?
+  rewardJson Json?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, opened])
+}
+
+model Season {
+  id        String       @id @default(uuid())
+  name      String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    SeasonStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+
+  participants SeasonParticipant[]
+}
+
+model SeasonParticipant {
+  id            String  @id @default(uuid())
+  seasonId      String
+  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seasonPoints  Decimal @default(0) @db.Decimal(20, 4)
+  seasonXp      Int     @default(0)
+  finalRank     Int?
+  rewardClaimed Boolean @default(false)
+
+  @@unique([seasonId, userId])
+  @@index([seasonId, seasonPoints])
+}
+
+model ReputationLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model EconomyLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  amount    Decimal? @db.Decimal(20, 4)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, type, createdAt])
+  @@index([type, createdAt])
+}
+
+model TokenConversionRequest {
+  id               String                @id @default(uuid())
+  userId           String
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brainPointsSpent Decimal               @db.Decimal(20, 4)
+  fgbTokenAmount   Decimal               @db.Decimal(36, 18)
+  rate             Decimal               @db.Decimal(20, 8)
+  status           TokenConversionStatus @default(SIMULATED)
+  createdAt        DateTime              @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Wallet {
+  id                  String    @id @default(uuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address             String    @unique
+  publicKey           String
+  encryptedPrivateKey String
+  encryptionIv        String
+  encryptionAuthTag   String
+  chain               ChainType @default(SOLANA)
+  isExternal          Boolean   @default(false)
+  externalAddress     String?
+  tokenBalance        Decimal   @default(0) @db.Decimal(36, 18)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model Post {
+  id           String           @id @default(uuid())
+  authorId     String
+  author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content      String
+  imageUrls    String[]         @default([])
+  linkUrl      String?
+  gifUrl       String?
+  moderation   ModerationStatus @default(ACTIVE)
+  contentHash  String
+  isRepostOf   String?
+  originalPost Post?            @relation("RepostOrigin", fields: [isRepostOf], references: [id])
+  reposts_     Post[]           @relation("RepostOrigin")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  comments      Comment[]
+  likes         Like[]
+  reposts       Repost[]
+  notifications Notification[]
+
+  @@index([authorId, createdAt])
+  @@index([contentHash])
+}
+
+model Comment {
+  id         String           @id @default(uuid())
+  postId     String
+  post       Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content    String
+  moderation ModerationStatus @default(ACTIVE)
+  createdAt  DateTime         @default(now())
+
+  @@index([postId, createdAt])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Repost {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("FollowerRelation", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("FollowingRelation", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  recipientId String
+  recipient   User             @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actor       User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  type        NotificationType
+  postId      String?
+  post        Post?            @relation(fields: [postId], references: [id], onDelete: SetNull)
+  message     String
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  @@index([recipientId, isRead, createdAt])
+}
+
+model Conversation {
+  id           String                    @id @default(uuid())
+  createdAt    DateTime                  @default(now())
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model RewardConfig {
+  id              String   @id @default(uuid())
+  action          String   @unique
+  amount          Decimal  @db.Decimal(20, 4)
+  xpAmount        Int      @default(0)
+  dailyCap        Decimal? @db.Decimal(20, 4)
+  cooldownSeconds Int      @default(0)
+  enabled         Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+}
+
+model RewardLedgerEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  amount    Decimal  @db.Decimal(20, 4)
+  refId     String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, action, createdAt])
+}
+
+model ShadowBan {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  reason    String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+}
+
+model RateLimitHit {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip        String
+  route     String
+  createdAt DateTime @default(now())
+
+  @@index([ip, route, createdAt])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  filerId    String
+  filer      User     @relation("ReportFiler", fields: [filerId], references: [id], onDelete: Cascade)
+  targetType String
+  targetId   String
+  reason     String
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
+}
+
+model AirdropCampaign {
+  id            String   @id @default(uuid())
+  name          String
+  totalAmount   Decimal  @db.Decimal(36, 18)
+  perUserAmount Decimal  @db.Decimal(36, 18)
+  startsAt      DateTime
+  endsAt        DateTime
+  createdAt     DateTime @default(now())
+
+  claims AirdropClaim[]
+}
+
+model AirdropClaim {
+  id         String          @id @default(uuid())
+  campaignId String
+  campaign   AirdropCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount     Decimal         @db.Decimal(36, 18)
+  status     AirdropStatus   @default(PENDING)
+  claimedAt  DateTime?
+  createdAt  DateTime        @default(now())
+
+  @@unique([campaignId, userId])
+}
+
+model StakingPool {
+  id        String   @id @default(uuid())
+  name      String
+  apr       Decimal  @db.Decimal(6, 3)
+  lockDays  Int
+  minAmount Decimal  @db.Decimal(36, 18)
+  createdAt DateTime @default(now())
+
+  positions StakingPosition[]
+}
+
+model StakingPosition {
+  id        String        @id @default(uuid())
+  poolId    String
+  pool      StakingPool   @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(36, 18)
+  status    StakingStatus @default(ACTIVE)
+  startedAt DateTime      @default(now())
+  unlocksAt DateTime
+  closedAt  DateTime?
+
+  @@index([userId, status])
+}
+
+model NftCollection {
+  id        String    @id @default(uuid())
+  name      String
+  symbol    String
+  chain     ChainType @default(SOLANA)
+  createdAt DateTime  @default(now())
+
+  nfts Nft[]
+}
+
+model Nft {
+  id           String        @id @default(uuid())
+  collectionId String
+  collection   NftCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tokenId      String
+  metadataUri  String
+  mintedAt     DateTime      @default(now())
+
+  @@unique([collectionId, tokenId])
+}

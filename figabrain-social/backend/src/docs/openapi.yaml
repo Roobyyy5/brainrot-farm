@@ -1,0 +1,283 @@
+openapi: 3.0.3
+info:
+  title: FIGABRAIN Social API
+  version: 1.0.0
+  description: >
+    REST API for FIGABRAIN Social — a Web3-native social network where every
+    account is simultaneously a social profile and an internal crypto
+    wallet, and engagement is rewarded with Brain Points.
+servers:
+  - url: /api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        displayName: { type: string }
+        bio: { type: string }
+        avatarUrl: { type: string, nullable: true }
+        rank: { type: string, enum: [NPC, NORMIE, SIGMA, GIGACHAD, BRAIN_LORD, MEME_EMPEROR, GALAXY_BRAIN, NEURAL_GOD] }
+        brainPoints: { type: number }
+        xp: { type: integer }
+        reputation: { type: integer }
+        walletAddress: { type: string, nullable: true }
+        walletBalance: { type: number }
+        postsCount: { type: integer }
+        followersCount: { type: integer }
+        followingCount: { type: integer }
+    Post:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        content: { type: string }
+        imageUrls: { type: array, items: { type: string } }
+        linkUrl: { type: string, nullable: true }
+        gifUrl: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/User" }
+        likesCount: { type: integer }
+        commentsCount: { type: integer }
+        repostsCount: { type: integer }
+        likedByMe: { type: boolean }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        "200": { description: OK }
+  /auth/telegram:
+    post:
+      summary: Login or register via Telegram Login Widget
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, first_name, auth_date, hash]
+              properties:
+                id: { type: integer }
+                first_name: { type: string }
+                username: { type: string }
+                photo_url: { type: string }
+                auth_date: { type: integer }
+                hash: { type: string }
+                referralCode: { type: string }
+                deviceFingerprint: { type: string }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accessToken: { type: string }
+                      isNewUser: { type: boolean }
+        "401": { description: Invalid signature, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /auth/refresh:
+    post:
+      summary: Rotate access token using the refresh-token cookie
+      security: []
+      responses:
+        "200": { description: New access token issued }
+  /auth/logout:
+    post:
+      summary: Clear refresh-token cookie
+      security: []
+      responses:
+        "200": { description: Logged out }
+  /users/{username}:
+    get:
+      summary: Get a public profile
+      security: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/User" }
+        "404": { description: Not found }
+  /users/me:
+    patch:
+      summary: Update own profile
+      responses:
+        "200": { description: Updated profile }
+  /users/{username}/follow:
+    post:
+      summary: Follow a user
+      responses:
+        "200": { description: Now following }
+    delete:
+      summary: Unfollow a user
+      responses:
+        "200": { description: Unfollowed }
+  /posts/feed:
+    get:
+      summary: Paginated chronological feed
+      security: []
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50 }
+      responses:
+        "200":
+          description: Feed page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Post" }
+                  nextCursor: { type: string, nullable: true }
+  /posts:
+    post:
+      summary: Create a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string }
+                imageUrls: { type: array, items: { type: string } }
+                linkUrl: { type: string }
+                gifUrl: { type: string }
+      responses:
+        "201": { description: Post created }
+        "409": { description: Duplicate content detected }
+  /posts/{id}:
+    get:
+      summary: Get a post by id
+      security: []
+      responses:
+        "200": { description: Post }
+    delete:
+      summary: Delete own post (or any post as admin)
+      responses:
+        "200": { description: Deleted }
+  /posts/{id}/like:
+    post:
+      summary: Toggle like on a post
+      responses:
+        "200": { description: Like toggled, Brain Points awarded if newly liked }
+  /posts/{id}/repost:
+    post:
+      summary: Repost a post
+      responses:
+        "201": { description: Reposted, Brain Points awarded }
+  /posts/{id}/comments:
+    get:
+      summary: List comments on a post
+      security: []
+      responses:
+        "200": { description: Comments }
+    post:
+      summary: Add a comment
+      responses:
+        "201": { description: Comment created, Brain Points awarded }
+  /notifications:
+    get:
+      summary: List own notifications
+      responses:
+        "200": { description: Notifications }
+  /messages/conversations:
+    get:
+      summary: List own conversations
+      responses:
+        "200": { description: Conversations }
+  /messages/send:
+    post:
+      summary: Send a direct message
+      responses:
+        "201": { description: Message sent }
+  /wallet/me:
+    get:
+      summary: Get own wallet (address + balances, never returns private key)
+      responses:
+        "200": { description: Wallet }
+  /leaderboard:
+    get:
+      summary: Top 100 users by Brain Points
+      security: []
+      responses:
+        "200": { description: Leaderboard }
+  /rewards/config:
+    get:
+      summary: Current reward configuration
+      security: []
+      responses:
+        "200": { description: Reward rules }
+  /rewards/me/history:
+    get:
+      summary: Own reward ledger history
+      responses:
+        "200": { description: Reward ledger entries }
+  /web3/staking/pools:
+    get:
+      summary: List staking pools
+      security: []
+      responses:
+        "200": { description: Pools }
+  /web3/staking/open:
+    post:
+      summary: Open a staking position (off-chain bookkeeping)
+      responses:
+        "201": { description: Position opened }
+  /web3/airdrops/me:
+    get:
+      summary: Own airdrop claims
+      responses:
+        "200": { description: Claims }
+  /admin/users:
+    get:
+      summary: Admin - list/search users
+      responses:
+        "200": { description: Users }
+  /admin/analytics/overview:
+    get:
+      summary: Admin - platform analytics overview
+      responses:
+        "200": { description: Overview metrics }
+  /admin/fraud/duplicate-devices:
+    get:
+      summary: Admin - fraud detection, accounts sharing a device fingerprint
+      responses:
+        "200": { description: Grouped device fingerprints }

@@ -1,0 +1,144 @@
+import { Router } from "express";
+import { z } from "zod";
+import { prisma } from "../../lib/prisma.js";
+import { requireAuth, optionalAuth } from "../../middleware/auth.js";
+import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
+import { validateBody } from "../../middleware/validate.js";
+import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
+import { computeRank, nextLevelTier } from "./rank.js";
+
+export const usersRouter = Router();
+
+const updateProfileSchema = z.object({
+  displayName: z.string().min(1).max(60).optional(),
+  bio: z.string().max(280).optional(),
+  avatarUrl: z.string().url().optional(),
+});
+
+usersRouter.get(
+  "/:username",
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { username: req.params.username },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
+        rank: true,
+        brainPoints: true,
+        xp: true,
+        reputation: true,
+        loginStreak: true,
+        longestStreak: true,
+        createdAt: true,
+        _count: { select: { posts: true, followers: true, following: true } },
+        wallet: { select: { address: true, tokenBalance: true } },
+      },
+    });
+
+    if (!user) {
+      throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+    }
+
+    let isFollowedByMe = false;
+    if (req.user) {
+      const follow = await prisma.follow.findUnique({
+        where: { followerId_followingId: { followerId: req.user.id, followingId: user.id } },
+      });
+      isFollowedByMe = follow !== null;
+    }
+
+    res.json({
+      data: {
+        ...user,
+        brainPoints: Number(user.brainPoints),
+        nextLevelTier: nextLevelTier(user.xp),
+        walletBalance: Number(user.wallet?.tokenBalance ?? 0),
+        walletAddress: user.wallet?.address ?? null,
+        postsCount: user._count.posts,
+        followersCount: user._count.followers,
+        followingCount: user._count.following,
+        isFollowedByMe,
+      },
+    });
+  })
+);
+
+usersRouter.patch(
+  "/me",
+  requireAuth,
+  writeActionRateLimiter,
+  validateBody(updateProfileSchema),
+  asyncHandler(async (req, res) => {
+    const updated = await prisma.user.update({
+      where: { id: req.user!.id },
+      data: req.body,
+    });
+    res.json({ data: { ...updated, brainPoints: Number(updated.brainPoints) } });
+  })
+);
+
+usersRouter.post(
+  "/:username/follow",
+  requireAuth,
+  writeActionRateLimiter,
+  asyncHandler(async (req, res) => {
+    const target = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!target) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+    if (target.id === req.user!.id) throw new HttpError(400, "Cannot follow yourself", "INVALID_OPERATION");
+
+    await prisma.follow.upsert({
+      where: { followerId_followingId: { followerId: req.user!.id, followingId: target.id } },
+      create: { followerId: req.user!.id, followingId: target.id },
+      update: {},
+    });
+
+    await prisma.notification.create({
+      data: {
+        recipientId: target.id,
+        actorId: req.user!.id,
+        type: "FOLLOW",
+        message: `@${req.user!.username} started following you`,
+      },
+    });
+
+    res.json({ data: { following: true } });
+  })
+);
+
+usersRouter.delete(
+  "/:username/follow",
+  requireAuth,
+  writeActionRateLimiter,
+  asyncHandler(async (req, res) => {
+    const target = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!target) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+
+    await prisma.follow.deleteMany({
+      where: { followerId: req.user!.id, followingId: target.id },
+    });
+
+    res.json({ data: { following: false } });
+  })
+);
+
+usersRouter.get(
+  "/:username/followers",
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!user) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+
+    const followers = await prisma.follow.findMany({
+      where: { followingId: user.id },
+      include: { follower: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
+      take: 100,
+    });
+
+    res.json({ data: followers.map((f) => f.follower) });
+  })
+);
+
+export { computeRank };

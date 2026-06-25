@@ -1,0 +1,84 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+import { env } from "./lib/env.js";
+import { globalRateLimiter } from "./middleware/rateLimit.js";
+import { requireNotBanned } from "./middleware/antibot.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
+import { usersRouter } from "./modules/users/users.routes.js";
+import { postsRouter } from "./modules/posts/posts.routes.js";
+import { commentsRouter } from "./modules/posts/comments.routes.js";
+import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
+import { messagesRouter } from "./modules/messages/messages.routes.js";
+import { walletRouter } from "./modules/wallet/wallet.routes.js";
+import { leaderboardRouter } from "./modules/leaderboard/leaderboard.routes.js";
+import { rewardsRouter } from "./modules/rewards/rewards.routes.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
+import { web3Router } from "./modules/web3/web3.routes.js";
+import { missionsRouter } from "./modules/missions/missions.routes.js";
+import { achievementsRouter } from "./modules/achievements/achievements.routes.js";
+import { boostersRouter } from "./modules/boosters/boosters.routes.js";
+import { lootboxesRouter } from "./modules/lootboxes/lootboxes.routes.js";
+import { streaksRouter } from "./modules/streaks/streaks.routes.js";
+import { reputationRouter } from "./modules/reputation/reputation.routes.js";
+import { seasonsRouter } from "./modules/seasons/seasons.routes.js";
+import { tokenConversionRouter } from "./modules/web3/tokenConversion.routes.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app = express();
+
+app.use(helmet());
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
+app.use(globalRateLimiter);
+app.use(requireNotBanned);
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "figabrain-social-backend", time: new Date().toISOString() });
+});
+
+try {
+  const openapiDocument = YAML.load(path.join(__dirname, "../src/docs/openapi.yaml"));
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
+} catch {
+  // OpenAPI spec is optional at runtime; the API still works without /docs.
+}
+
+app.use("/api/auth", authRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/posts", postsRouter);
+app.use("/api/posts/:id/comments", commentsRouter);
+app.use("/api/notifications", notificationsRouter);
+app.use("/api/messages", messagesRouter);
+app.use("/api/wallet", walletRouter);
+app.use("/api/leaderboard", leaderboardRouter);
+app.use("/api/rewards", rewardsRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/web3", web3Router);
+app.use("/api/missions", missionsRouter);
+app.use("/api/achievements", achievementsRouter);
+app.use("/api/boosters", boostersRouter);
+app.use("/api/lootboxes", lootboxesRouter);
+app.use("/api/streaks", streaksRouter);
+app.use("/api/reputation", reputationRouter);
+app.use("/api/seasons", seasonsRouter);
+app.use("/api/token-conversion", tokenConversionRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+app.listen(env.PORT, () => {
+  console.log(`FIGABRAIN Social backend listening on port ${env.PORT}`);
+});
