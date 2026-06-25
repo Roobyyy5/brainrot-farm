@@ -4,6 +4,8 @@ backend/brainrot.db
 backend/brainrot.db-wal
 backend/brainrot.db-shm
 frontend/dist/
+figabrain-social/frontend/dist/
+figabrain-social/backend/dist/
 *.log
 
 .vercel

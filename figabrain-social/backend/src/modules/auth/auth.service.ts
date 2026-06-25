@@ -16,14 +16,13 @@ function slugifyUsername(base: string, telegramId: string): string {
 
 async function ensureUniqueUsername(candidate: string): Promise<string> {
   let username = candidate;
-  let suffix = 0;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (let suffix = 0; suffix <= 99; suffix++) {
     const existing = await prisma.user.findUnique({ where: { username } });
     if (!existing) return username;
-    suffix += 1;
-    username = `${candidate}${suffix}`;
+    username = `${candidate}${suffix + 1}`;
   }
+  // Fallback: append telegramId-derived random segment (collision-safe)
+  return `${candidate}_${Date.now().toString(36)}`;
 }
 
 export interface LoginResult {
@@ -31,6 +30,39 @@ export interface LoginResult {
   refreshToken: string;
   isNewUser: boolean;
   userId: string;
+}
+
+type UserRow = Awaited<ReturnType<typeof prisma.user.findUniqueOrThrow>>;
+
+/** Applies the daily-login streak/reward side effects and mints tokens for an already-resolved user row. */
+async function loginExistingUser(user: UserRow): Promise<LoginResult> {
+  const today = new Date();
+  const lastLogin = user.lastLoginAt;
+  const isConsecutiveDay =
+    lastLogin && today.getTime() - lastLogin.getTime() < 48 * 60 * 60 * 1000 && today.toDateString() !== lastLogin.toDateString();
+  const isSameDay = lastLogin && today.toDateString() === lastLogin.toDateString();
+
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: today } });
+
+  if (!isSameDay) {
+    const newStreak = isConsecutiveDay ? user.loginStreak + 1 : 1;
+    await applyStreakUpdate(user.id, newStreak, !isConsecutiveDay);
+    await grantReward(user.id, "DAILY_LOGIN", undefined, { streak: newStreak });
+  }
+
+  return {
+    accessToken: signAccessToken({ sub: updated.id, username: updated.username, isAdmin: updated.isAdmin }),
+    refreshToken: signRefreshToken({ sub: updated.id }),
+    isNewUser: false,
+    userId: updated.id,
+  };
+}
+
+/** Logs into an existing account by username, bypassing telegramId entirely. Dev-only: see /auth/dev-login. */
+export async function loginByUsername(username: string): Promise<LoginResult | null> {
+  const user = await prisma.user.findUnique({ where: { username } });
+  if (!user) return null;
+  return loginExistingUser(user);
 }
 
 export async function loginOrRegisterWithTelegram(
@@ -83,28 +115,14 @@ export async function loginOrRegisterWithTelegram(
     }
 
     await writeAuditLog({ userId: user.id, action: "USER_REGISTERED", entity: "User", entityId: user.id, ip });
-  } else {
-    const today = new Date();
-    const lastLogin = user.lastLoginAt;
-    const isConsecutiveDay =
-      lastLogin && today.getTime() - lastLogin.getTime() < 48 * 60 * 60 * 1000 &&
-      today.toDateString() !== lastLogin.toDateString();
-    const isSameDay = lastLogin && today.toDateString() === lastLogin.toDateString();
 
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: today },
-    });
-
-    if (!isSameDay) {
-      const newStreak = isConsecutiveDay ? user.loginStreak + 1 : 1;
-      await applyStreakUpdate(user.id, newStreak, !isConsecutiveDay);
-      await grantReward(user.id, "DAILY_LOGIN", undefined, { streak: newStreak });
-    }
+    return {
+      accessToken: signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin }),
+      refreshToken: signRefreshToken({ sub: user.id }),
+      isNewUser,
+      userId: user.id,
+    };
   }
 
-  const accessToken = signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin });
-  const refreshToken = signRefreshToken({ sub: user.id });
-
-  return { accessToken, refreshToken, isNewUser, userId: user.id };
+  return loginExistingUser(user);
 }

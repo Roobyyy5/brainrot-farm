@@ -4,7 +4,7 @@ import { authRateLimiter } from "../../middleware/rateLimit.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
 import { verifyTelegramLogin } from "./telegramVerify.js";
-import { loginOrRegisterWithTelegram } from "./auth.service.js";
+import { loginOrRegisterWithTelegram, loginByUsername } from "./auth.service.js";
 import { verifyRefreshToken, signAccessToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
 import { flagMultiAccountAbuse } from "../antibot/antibot.service.js";
@@ -47,22 +47,30 @@ authRouter.post(
     }
 
     const { username, displayName } = req.body;
+
+    // If this username already exists (e.g. seeded demo data), log straight
+    // into that account instead of minting a fake telegramId — otherwise
+    // dev-login would create a shadow "username1" duplicate every time.
+    const existingLogin = await loginByUsername(username);
+
     const fakeTelegramId = Math.abs(
       Array.from(`dev_${username}`).reduce((hash, ch) => (hash * 31 + ch.charCodeAt(0)) % 2_147_483_647, 7)
     );
 
-    const result = await loginOrRegisterWithTelegram(
-      {
-        id: fakeTelegramId,
-        first_name: displayName ?? username,
-        username,
-        auth_date: Math.floor(Date.now() / 1000),
-        hash: "dev-bypass",
-      },
-      undefined,
-      undefined,
-      req.ip
-    );
+    const result =
+      existingLogin ??
+      (await loginOrRegisterWithTelegram(
+        {
+          id: fakeTelegramId,
+          first_name: displayName ?? username,
+          username,
+          auth_date: Math.floor(Date.now() / 1000),
+          hash: "dev-bypass",
+        },
+        undefined,
+        undefined,
+        req.ip
+      ));
 
     res.cookie("refresh_token", result.refreshToken, {
       httpOnly: true,
