@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
-import { validateBody } from "../../middleware/validate.js";
+import { validateBody, validateQuery } from "../../middleware/validate.js";
 import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
 import { shadowBanGate } from "../../middleware/antibot.js";
 import { grantReward } from "../rewards/rewards.service.js";
@@ -15,16 +15,27 @@ const createCommentSchema = z.object({
   content: z.string().min(1).max(1000),
 });
 
+const commentsQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(50).default(20),
+});
+
 commentsRouter.get(
   "/",
+  validateQuery(commentsQuerySchema),
   asyncHandler(async (req, res) => {
+    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
     const comments = await prisma.comment.findMany({
       where: { postId: req.params.id, moderation: "ACTIVE" },
       orderBy: { createdAt: "asc" },
       include: { author: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
-      take: 100,
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     });
-    res.json({ data: comments });
+    res.json({
+      data: comments,
+      nextCursor: comments.length === limit ? comments[comments.length - 1]?.id : null,
+    });
   })
 );
 

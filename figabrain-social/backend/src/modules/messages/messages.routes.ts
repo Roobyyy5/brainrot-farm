@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
@@ -67,24 +68,27 @@ messagesRouter.post(
     if (!recipient) throw new HttpError(404, "Recipient not found", "USER_NOT_FOUND");
     if (recipient.id === req.user!.id) throw new HttpError(400, "Cannot message yourself", "INVALID_OPERATION");
 
-    let conversation = await prisma.conversation.findFirst({
-      where: {
-        participants: { some: { userId: req.user!.id } },
-        AND: { participants: { some: { userId: recipient.id } } },
-      },
-      include: { participants: true },
-    });
-
-    if (!conversation || conversation.participants.length !== 2) {
-      conversation = await prisma.conversation.create({
-        data: {
-          participants: {
-            create: [{ userId: req.user!.id }, { userId: recipient.id }],
+    // Serializable isolation prevents a race where two simultaneous requests
+    // both see no conversation and each create one, producing duplicates.
+    const conversation = await prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.conversation.findFirst({
+          where: {
+            participants: { some: { userId: req.user!.id } },
+            AND: { participants: { some: { userId: recipient.id } } },
           },
-        },
-        include: { participants: true },
-      });
-    }
+        });
+        if (existing) return existing;
+        return tx.conversation.create({
+          data: {
+            participants: {
+              create: [{ userId: req.user!.id }, { userId: recipient.id }],
+            },
+          },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
 
     const message = await prisma.message.create({
       data: { conversationId: conversation.id, senderId: req.user!.id, content: req.body.content },

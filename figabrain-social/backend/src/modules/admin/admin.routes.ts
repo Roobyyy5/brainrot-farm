@@ -13,16 +13,23 @@ adminRouter.use(requireAuth, requireAdmin);
 
 // ---- User management ----
 
+const adminUsersQuerySchema = z.object({
+  search: z.string().optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).default(50),
+});
+
 adminRouter.get(
   "/users",
   asyncHandler(async (req, res) => {
-    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const { search, cursor, limit } = adminUsersQuerySchema.parse(req.query);
     const users = await prisma.user.findMany({
       where: search
         ? { OR: [{ username: { contains: search, mode: "insensitive" } }, { displayName: { contains: search, mode: "insensitive" } }] }
         : undefined,
       orderBy: { createdAt: "desc" },
-      take: 100,
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       select: {
         id: true,
         username: true,
@@ -35,7 +42,10 @@ adminRouter.get(
         createdAt: true,
       },
     });
-    res.json({ data: users.map((u) => ({ ...u, brainPoints: Number(u.brainPoints) })) });
+    res.json({
+      data: users.map((u) => ({ ...u, brainPoints: Number(u.brainPoints) })),
+      nextCursor: users.length === limit ? users[users.length - 1]?.id : null,
+    });
   })
 );
 

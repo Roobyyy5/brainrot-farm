@@ -36,6 +36,10 @@ usersRouter.get(
         createdAt: true,
         _count: { select: { posts: true, followers: true, following: true } },
         wallet: { select: { address: true, tokenBalance: true } },
+        // Single query for follow status instead of a second round-trip.
+        followers: req.user
+          ? { where: { followerId: req.user.id }, select: { followerId: true }, take: 1 }
+          : false,
       },
     });
 
@@ -43,13 +47,7 @@ usersRouter.get(
       throw new HttpError(404, "User not found", "USER_NOT_FOUND");
     }
 
-    let isFollowedByMe = false;
-    if (req.user) {
-      const follow = await prisma.follow.findUnique({
-        where: { followerId_followingId: { followerId: req.user.id, followingId: user.id } },
-      });
-      isFollowedByMe = follow !== null;
-    }
+    const isFollowedByMe = Array.isArray(user.followers) && user.followers.length > 0;
 
     res.json({
       data: {
