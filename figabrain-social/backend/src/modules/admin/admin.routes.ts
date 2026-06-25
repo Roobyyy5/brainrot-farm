@@ -6,6 +6,8 @@ import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
 import { writeAuditLog } from "../../utils/logger.js";
 import { startSeason, endSeason } from "../seasons/seasons.service.js";
+import { SEASON_CACHE_KEY } from "../seasons/seasons.routes.js";
+import * as redis from "../../lib/redis.js";
 import { computeSuspiciousScore } from "../antibot/antibot.service.js";
 
 export const adminRouter = Router();
@@ -134,6 +136,8 @@ adminRouter.post(
   asyncHandler(async (req, res) => {
     const season = await startSeason(req.body.name, req.body.durationDays);
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SEASON_STARTED", entity: "Season", entityId: season.id });
+    // Invalidate the cached season so the new one is served immediately.
+    await redis.del(SEASON_CACHE_KEY);
     res.status(201).json({ data: season });
   })
 );
@@ -143,6 +147,7 @@ adminRouter.post(
   asyncHandler(async (req, res) => {
     const participantCount = await endSeason(req.params.id);
     await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SEASON_ENDED", entity: "Season", entityId: req.params.id, metadata: { participantCount } });
+    await redis.del(SEASON_CACHE_KEY);
     res.json({ data: { ended: true, participantCount } });
   })
 );
@@ -343,10 +348,23 @@ adminRouter.get(
   })
 );
 
+const auditLogsQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).default(50),
+});
+
 adminRouter.get(
   "/audit-logs",
-  asyncHandler(async (_req, res) => {
-    const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
-    res.json({ data: logs });
+  asyncHandler(async (req, res) => {
+    const { cursor, limit } = auditLogsQuerySchema.parse(req.query);
+    const logs = await prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+    res.json({
+      data: logs,
+      nextCursor: logs.length === limit ? logs[logs.length - 1]?.id : null,
+    });
   })
 );

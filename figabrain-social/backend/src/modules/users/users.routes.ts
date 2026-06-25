@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth, optionalAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
-import { validateBody } from "../../middleware/validate.js";
+import { validateBody, validateQuery } from "../../middleware/validate.js";
 import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
 import { computeRank, nextLevelTier } from "./rank.js";
 
@@ -14,6 +14,38 @@ const updateProfileSchema = z.object({
   bio: z.string().max(280).optional(),
   avatarUrl: z.string().url().optional(),
 });
+
+const followListQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(50).default(20),
+});
+
+const searchQuerySchema = z.object({
+  q: z.string().min(1).max(50),
+});
+
+// GET /users/search must be defined before GET /users/:username to avoid
+// "search" being interpreted as a username.
+usersRouter.get(
+  "/search",
+  validateQuery(searchQuerySchema),
+  asyncHandler(async (req, res) => {
+    const { q } = req.query as { q: string };
+    const results = await prisma.user.findMany({
+      where: {
+        isBanned: false,
+        isShadowBanned: false,
+        OR: [
+          { username: { contains: q, mode: "insensitive" } },
+          { displayName: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 20,
+      select: { username: true, displayName: true, avatarUrl: true, rank: true },
+    });
+    res.json({ data: results });
+  })
+);
 
 usersRouter.get(
   "/:username",
@@ -125,17 +157,47 @@ usersRouter.delete(
 
 usersRouter.get(
   "/:username/followers",
+  validateQuery(followListQuerySchema),
   asyncHandler(async (req, res) => {
+    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
     const user = await prisma.user.findUnique({ where: { username: req.params.username } });
     if (!user) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
 
-    const followers = await prisma.follow.findMany({
+    const follows = await prisma.follow.findMany({
       where: { followingId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       include: { follower: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
-      take: 100,
     });
 
-    res.json({ data: followers.map((f) => f.follower) });
+    res.json({
+      data: follows.map((f) => f.follower),
+      nextCursor: follows.length === limit ? follows[follows.length - 1]?.id : null,
+    });
+  })
+);
+
+usersRouter.get(
+  "/:username/following",
+  validateQuery(followListQuerySchema),
+  asyncHandler(async (req, res) => {
+    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
+    const user = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!user) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+
+    const follows = await prisma.follow.findMany({
+      where: { followerId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      include: { following: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
+    });
+
+    res.json({
+      data: follows.map((f) => f.following),
+      nextCursor: follows.length === limit ? follows[follows.length - 1]?.id : null,
+    });
   })
 );
 
