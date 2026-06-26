@@ -1,9 +1,12 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { LANGUAGES, getLanguageByCode } from "../lib/languages";
+import i18n from "../i18n";
 
 export function Settings() {
+  const { t } = useTranslation();
   const { user, refreshUser, logout } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
@@ -20,11 +23,18 @@ export function Settings() {
       (l) =>
         l.englishName.toLowerCase().includes(q) ||
         l.nativeName.toLowerCase().includes(q) ||
-        l.code.toLowerCase().includes(q)
+        l.code.toLowerCase() === q
     );
   }, [langSearch]);
 
   const selectedLang = getLanguageByCode(language);
+
+  function pickLanguage(code: string) {
+    setLanguage(code);
+    setLangSearch("");
+    // Change UI language immediately so the user sees feedback right away.
+    i18n.changeLanguage(code);
+  }
 
   async function save() {
     setIsSaving(true);
@@ -35,7 +45,7 @@ export function Settings() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      setError("Failed to save. Please try again.");
+      setError(t("settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -43,10 +53,10 @@ export function Settings() {
 
   return (
     <div className="glass-panel rounded-2xl p-6 space-y-5 max-w-md">
-      <h2 className="text-lg font-bold">Profile Settings</h2>
+      <h2 className="text-lg font-bold">{t("settings.title")}</h2>
 
       <div>
-        <label className="text-xs text-white/40 block mb-1">Display name</label>
+        <label className="text-xs text-white/40 block mb-1">{t("settings.displayName")}</label>
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
@@ -56,7 +66,7 @@ export function Settings() {
       </div>
 
       <div>
-        <label className="text-xs text-white/40 block mb-1">Bio</label>
+        <label className="text-xs text-white/40 block mb-1">{t("settings.bio")}</label>
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -67,36 +77,48 @@ export function Settings() {
       </div>
 
       <div>
-        <label className="text-xs text-white/40 block mb-1">Language</label>
-        <div className="mb-2 text-sm font-semibold">
-          {selectedLang.nativeName}
-          <span className="text-white/40 font-normal ml-2">— {selectedLang.englishName}</span>
+        <label className="text-xs text-white/40 block mb-1">{t("settings.language")}</label>
+
+        {/* Current selection badge */}
+        <div className="flex items-center gap-2 mb-2 bg-brain-accent/10 border border-brain-accent/30 rounded-lg px-3 py-2">
+          <span className="font-semibold text-sm">{selectedLang.nativeName}</span>
+          <span className="text-white/40 text-xs">— {selectedLang.englishName}</span>
+          <span className="ml-auto text-xs text-white/30 font-mono">{selectedLang.code}</span>
         </div>
+
+        {/* Filter input */}
         <input
           value={langSearch}
           onChange={(e) => setLangSearch(e.target.value)}
-          placeholder="Search language..."
+          placeholder={t("settings.searchLanguage")}
           className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none mb-1"
         />
-        <select
-          size={6}
-          value={language}
-          onChange={(e) => {
-            setLanguage(e.target.value);
-            setLangSearch("");
-          }}
-          className="w-full bg-black/30 rounded-lg text-sm outline-none"
-          style={{ scrollbarWidth: "thin" }}
-        >
-          {filteredLanguages.map((lang) => (
-            <option key={lang.code} value={lang.code} className="px-3 py-1">
-              {lang.nativeName} — {lang.englishName}
-            </option>
-          ))}
-        </select>
-        {filteredLanguages.length === 0 && (
-          <p className="text-white/40 text-xs mt-1">No languages found.</p>
-        )}
+
+        {/* Scrollable language list — using buttons, not <select>, for reliable touch/click handling */}
+        <div className="h-44 overflow-y-auto rounded-lg bg-black/20 border border-white/5">
+          {filteredLanguages.length === 0 ? (
+            <p className="text-white/40 text-xs text-center py-4">{t("settings.noLanguages")}</p>
+          ) : (
+            filteredLanguages.map((lang) => {
+              const active = lang.code === language;
+              return (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => pickLanguage(lang.code)}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                    active
+                      ? "bg-brain-accent/20 text-brain-accent font-semibold"
+                      : "text-white/70 hover:bg-white/5 active:bg-white/10"
+                  }`}
+                >
+                  <span>{lang.nativeName}</span>
+                  <span className="text-xs text-white/30 ml-2 flex-shrink-0">{lang.englishName}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {error && <p className="text-red-400 text-xs">{error}</p>}
@@ -106,11 +128,11 @@ export function Settings() {
         disabled={isSaving}
         className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
       >
-        {saved ? "Saved!" : isSaving ? "Saving..." : "Save changes"}
+        {saved ? t("settings.saved") : isSaving ? t("settings.saving") : t("settings.save")}
       </button>
 
       <button onClick={logout} className="block text-xs text-white/40 hover:text-white">
-        Log out
+        {t("settings.logout")}
       </button>
     </div>
   );

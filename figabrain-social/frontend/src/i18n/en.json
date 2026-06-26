@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "feed": "Feed",
+    "search": "Search",
+    "economy": "Economy",
+    "messages": "Messages",
+    "leaderboard": "Leaderboard",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "rewards": "Rewards"
+  },
+  "settings": {
+    "title": "Profile Settings",
+    "displayName": "Display name",
+    "bio": "Bio",
+    "language": "Language",
+    "searchLanguage": "Search language...",
+    "noLanguages": "No languages found.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "saved": "Saved!",
+    "logout": "Log out",
+    "saveError": "Failed to save. Please try again."
+  },
+  "feed": {
+    "placeholder": "What's on your brain?",
+    "post": "Post",
+    "posting": "Posting...",
+    "like": "Like",
+    "comment": "Comment",
+    "repost": "Repost",
+    "report": "Report",
+    "noMore": "No more posts.",
+    "empty": "No posts yet. Be the first!"
+  },
+  "search": {
+    "title": "Search users",
+    "placeholder": "@username or display name",
+    "searching": "...",
+    "search": "Search",
+    "notFound": "No users found."
+  },
+  "leaderboard": {
+    "loading": "Loading leaderboard..."
+  },
+  "notifications": {
+    "empty": "No notifications yet."
+  },
+  "economy": {
+    "activeBoosters": "Active boosters",
+    "lootboxes": "Loot Boxes",
+    "noLootboxes": "No unopened loot boxes. Earn XP to get new ones!",
+    "missions": "Missions",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "achievements": "Achievements",
+    "season": "Season",
+    "noSeason": "No active season right now.",
+    "seasonEnded": "Ended",
+    "yourScore": "Your score",
+    "claimReward": "🎁 Claim reward",
+    "claiming": "Claiming...",
+    "rewardClaimed": "✓ Reward claimed",
+    "timeLeft": "{{days}}d {{hours}}h left"
+  },
+  "profile": {
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "followers": "Followers",
+    "following": "Following",
+    "posts": "Posts",
+    "brainPoints": "Brain Points",
+    "loginStreak": "Login Streak",
+    "reputation": "Reputation"
+  },
+  "messages": {
+    "title": "Messages",
+    "placeholder": "Message...",
+    "send": "Send",
+    "sending": "...",
+    "newConversation": "Start new conversation",
+    "usernamePlaceholder": "@username"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong.",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back"
+  }
+}

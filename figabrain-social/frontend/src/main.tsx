@@ -5,6 +5,7 @@ import { App } from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { RewardToastProvider } from "./context/RewardToastContext";
 import "./styles/index.css";
+import "./i18n";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "feed": "Лента",
+    "search": "Поиск",
+    "economy": "Экономика",
+    "messages": "Сообщения",
+    "leaderboard": "Рейтинг",
+    "notifications": "Уведомления",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "rewards": "Награды"
+  },
+  "settings": {
+    "title": "Настройки профиля",
+    "displayName": "Отображаемое имя",
+    "bio": "О себе",
+    "language": "Язык",
+    "searchLanguage": "Поиск языка...",
+    "noLanguages": "Языков не найдено.",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "saved": "Сохранено!",
+    "logout": "Выйти",
+    "saveError": "Ошибка сохранения. Попробуйте ещё раз."
+  },
+  "feed": {
+    "placeholder": "Что у тебя на уме?",
+    "post": "Опубликовать",
+    "posting": "Публикация...",
+    "like": "Лайк",
+    "comment": "Комментарий",
+    "repost": "Репост",
+    "report": "Пожаловаться",
+    "noMore": "Больше постов нет.",
+    "empty": "Постов ещё нет. Будь первым!"
+  },
+  "search": {
+    "title": "Поиск пользователей",
+    "placeholder": "@никнейм или имя",
+    "searching": "...",
+    "search": "Найти",
+    "notFound": "Пользователи не найдены."
+  },
+  "leaderboard": {
+    "loading": "Загрузка рейтинга..."
+  },
+  "notifications": {
+    "empty": "Уведомлений пока нет."
+  },
+  "economy": {
+    "activeBoosters": "Активные бустеры",
+    "lootboxes": "Лутбоксы",
+    "noLootboxes": "Нет неоткрытых лутбоксов. Зарабатывай XP, чтобы получить новые!",
+    "missions": "Миссии",
+    "daily": "Ежедневные",
+    "weekly": "Еженедельные",
+    "achievements": "Достижения",
+    "season": "Сезон",
+    "noSeason": "Сейчас нет активного сезона.",
+    "seasonEnded": "Завершён",
+    "yourScore": "Твой результат",
+    "claimReward": "🎁 Получить награду",
+    "claiming": "Получение...",
+    "rewardClaimed": "✓ Награда получена",
+    "timeLeft": "{{days}}д {{hours}}ч осталось"
+  },
+  "profile": {
+    "follow": "Подписаться",
+    "unfollow": "Отписаться",
+    "followers": "Подписчики",
+    "following": "Подписки",
+    "posts": "Посты",
+    "brainPoints": "Brain Points",
+    "loginStreak": "Серия входов",
+    "reputation": "Репутация"
+  },
+  "messages": {
+    "title": "Сообщения",
+    "placeholder": "Сообщение...",
+    "send": "Отправить",
+    "sending": "...",
+    "newConversation": "Новый разговор",
+    "usernamePlaceholder": "@никнейм"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Что-то пошло не так.",
+    "retry": "Попробовать снова",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "back": "Назад"
+  }
+}

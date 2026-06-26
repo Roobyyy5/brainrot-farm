@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, setAccessToken, setRefreshFn } from "../api/client";
 import type { UserProfile } from "../api/types";
+import i18n from "../i18n";
 
 interface TelegramLoginPayload {
   id: number;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const meUsername = JSON.parse(atob(accessToken.split(".")[1])).username as string;
       const profile = await api.get<{ data: UserProfile }>(`/users/${meUsername}`);
       setUser(profile.data);
+      if (profile.data.language) i18n.changeLanguage(profile.data.language);
     } catch {
       setAccessToken(null);
       setUser(null);

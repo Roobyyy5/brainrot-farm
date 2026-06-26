@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "feed": "Стрічка",
+    "search": "Пошук",
+    "economy": "Економіка",
+    "messages": "Повідомлення",
+    "leaderboard": "Рейтинг",
+    "notifications": "Сповіщення",
+    "profile": "Профіль",
+    "settings": "Налаштування",
+    "rewards": "Нагороди"
+  },
+  "settings": {
+    "title": "Налаштування профілю",
+    "displayName": "Відображуване ім'я",
+    "bio": "Про себе",
+    "language": "Мова",
+    "searchLanguage": "Пошук мови...",
+    "noLanguages": "Мов не знайдено.",
+    "save": "Зберегти",
+    "saving": "Збереження...",
+    "saved": "Збережено!",
+    "logout": "Вийти",
+    "saveError": "Помилка збереження. Спробуйте ще раз."
+  },
+  "feed": {
+    "placeholder": "Що у тебе на думці?",
+    "post": "Опублікувати",
+    "posting": "Публікація...",
+    "like": "Лайк",
+    "comment": "Коментар",
+    "repost": "Репост",
+    "report": "Поскаржитись",
+    "noMore": "Більше дописів немає.",
+    "empty": "Ще немає дописів. Будь першим!"
+  },
+  "search": {
+    "title": "Пошук користувачів",
+    "placeholder": "@нікнейм або ім'я",
+    "searching": "...",
+    "search": "Знайти",
+    "notFound": "Користувачів не знайдено."
+  },
+  "leaderboard": {
+    "loading": "Завантаження рейтингу..."
+  },
+  "notifications": {
+    "empty": "Поки немає сповіщень."
+  },
+  "economy": {
+    "activeBoosters": "Активні бустери",
+    "lootboxes": "Лутбокси",
+    "noLootboxes": "Немає невідкритих лутбоксів. Заробляй XP, щоб отримати нові!",
+    "missions": "Місії",
+    "daily": "Щоденні",
+    "weekly": "Щотижневі",
+    "achievements": "Досягнення",
+    "season": "Сезон",
+    "noSeason": "Наразі немає активного сезону.",
+    "seasonEnded": "Завершено",
+    "yourScore": "Твій результат",
+    "claimReward": "🎁 Отримати нагороду",
+    "claiming": "Отримання...",
+    "rewardClaimed": "✓ Нагороду отримано",
+    "timeLeft": "{{days}}д {{hours}}г залишилось"
+  },
+  "profile": {
+    "follow": "Стежити",
+    "unfollow": "Відписатись",
+    "followers": "Підписники",
+    "following": "Підписки",
+    "posts": "Пости",
+    "brainPoints": "Brain Points",
+    "loginStreak": "Серія входів",
+    "reputation": "Репутація"
+  },
+  "messages": {
+    "title": "Повідомлення",
+    "placeholder": "Повідомлення...",
+    "send": "Відправити",
+    "sending": "...",
+    "newConversation": "Нова розмова",
+    "usernamePlaceholder": "@нікнейм"
+  },
+  "common": {
+    "loading": "Завантаження...",
+    "error": "Щось пішло не так.",
+    "retry": "Спробувати знову",
+    "cancel": "Скасувати",
+    "close": "Закрити",
+    "back": "Назад"
+  }
+}
