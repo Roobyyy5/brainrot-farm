@@ -8,7 +8,8 @@
     "notifications": "Notifications",
     "profile": "Profile",
     "settings": "Settings",
-    "rewards": "Rewards"
+    "rewards": "Rewards",
+    "wallet": "Wallet"
   },
   "settings": {
     "title": "Profile Settings",

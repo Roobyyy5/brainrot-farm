@@ -8,7 +8,8 @@
     "notifications": "Уведомления",
     "profile": "Профиль",
     "settings": "Настройки",
-    "rewards": "Награды"
+    "rewards": "Награды",
+    "wallet": "Кошелёк"
   },
   "settings": {
     "title": "Настройки профиля",

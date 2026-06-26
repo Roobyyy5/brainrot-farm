@@ -1,19 +1,22 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
-
-const NAV_ITEMS = [
-  { to: "/", label: "Feed" },
-  { to: "/search", label: "Search" },
-  { to: "/notifications", label: "Notifications" },
-  { to: "/messages", label: "Messages" },
-  { to: "/wallet", label: "Wallet" },
-  { to: "/economy", label: "Brain Economy" },
-  { to: "/rewards", label: "Rewards" },
-  { to: "/leaderboard", label: "Leaderboard" },
-  { to: "/settings", label: "Settings" },
-];
+import { useTranslation } from "react-i18next";
 
 export function Sidebar() {
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    { to: "/", label: t("nav.feed") },
+    { to: "/search", label: t("nav.search") },
+    { to: "/notifications", label: t("nav.notifications") },
+    { to: "/messages", label: t("nav.messages") },
+    { to: "/wallet", label: t("nav.wallet") },
+    { to: "/economy", label: t("nav.economy") },
+    { to: "/rewards", label: t("nav.rewards") },
+    { to: "/leaderboard", label: t("nav.leaderboard") },
+    { to: "/settings", label: t("nav.settings") },
+  ];
+
   return (
     <aside className="hidden lg:flex flex-col w-64 shrink-0 p-4 gap-1 border-r border-white/5">
       <motion.div
