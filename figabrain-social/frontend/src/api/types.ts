@@ -4,6 +4,7 @@ export interface UserProfile {
   displayName: string;
   bio: string;
   avatarUrl: string | null;
+  language: string;
   rank: Rank;
   brainPoints: number;
   xp: number;

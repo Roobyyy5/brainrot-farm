@@ -13,6 +13,7 @@ const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(60).optional(),
   bio: z.string().max(280).optional(),
   avatarUrl: z.string().url().optional(),
+  language: z.string().min(2).max(10).optional(),
 });
 
 const followListQuerySchema = z.object({
@@ -59,6 +60,7 @@ usersRouter.get(
         displayName: true,
         bio: true,
         avatarUrl: true,
+        language: true,
         rank: true,
         brainPoints: true,
         xp: true,
