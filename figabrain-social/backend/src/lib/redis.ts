@@ -6,9 +6,8 @@ let _client: Redis | null = null;
 function getClient(): Redis {
   if (_client) return _client;
   _client = new Redis(env.REDIS_URL, {
-    lazyConnect: true,
     maxRetriesPerRequest: 1,
-    enableOfflineQueue: false,
+    enableOfflineQueue: true,
     retryStrategy: (times: number) => (times > 3 ? null : Math.min(times * 200, 2000)),
   });
   _client.on("error", () => {
