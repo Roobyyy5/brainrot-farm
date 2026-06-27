@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { useAuth } from "../context/AuthContext";
@@ -13,10 +14,20 @@ export function Layout({ children }: { children: ReactNode }) {
         <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <div className="text-sm text-white/60">Premium Web3 Social Network</div>
           {user && (
-            <div className="flex items-center gap-3 glass-panel rounded-full px-4 py-1.5">
+            <Link
+              to={`/u/${user.username}`}
+              className="flex items-center gap-3 glass-panel rounded-full px-4 py-1.5 hover:bg-white/10 transition-colors"
+            >
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brain-accent to-brain-accent2 flex items-center justify-center text-xs font-bold">
+                  {user.displayName[0]?.toUpperCase()}
+                </div>
+              )}
               <span className="text-sm font-semibold">{user.displayName}</span>
               <span className="text-xs text-brain-point font-bold">{user.brainPoints.toFixed(1)} BP</span>
-            </div>
+            </Link>
           )}
         </header>
         {/* pb-20 ensures content isn't hidden under the mobile bottom nav */}
