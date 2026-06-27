@@ -9,6 +9,27 @@ import { shadowBanGate } from "../../middleware/antibot.js";
 import { grantReward } from "../rewards/rewards.service.js";
 import { adjustReputation } from "../reputation/reputation.service.js";
 
+async function createMentionNotifications(content: string, actorId: string, postId: string) {
+  const handles = [...new Set((content.match(/@([a-zA-Z0-9_]{1,32})/g) ?? []).map((h) => h.slice(1).toLowerCase()))];
+  if (!handles.length) return;
+  const mentioned = await prisma.user.findMany({
+    where: { username: { in: handles, mode: "insensitive" }, id: { not: actorId }, isBanned: false },
+    select: { id: true },
+  });
+  if (!mentioned.length) return;
+  const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { username: true } });
+  await prisma.notification.createMany({
+    data: mentioned.map((u) => ({
+      recipientId: u.id,
+      actorId,
+      type: "MENTION" as const,
+      postId,
+      message: `@${actor?.username ?? "someone"} mentioned you in a comment`,
+    })),
+    skipDuplicates: true,
+  });
+}
+
 export const commentsRouter = Router({ mergeParams: true });
 
 const createCommentSchema = z.object({
@@ -68,6 +89,7 @@ commentsRouter.post(
     }
 
     const reward = await grantReward(req.user!.id, "COMMENT", comment.id);
+    createMentionNotifications(req.body.content, req.user!.id, post.id).catch(() => {});
     res.status(201).json({ data: comment, reward });
   })
 );

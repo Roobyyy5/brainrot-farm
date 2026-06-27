@@ -25,6 +25,26 @@ const searchQuerySchema = z.object({
   q: z.string().min(1).max(50),
 });
 
+// GET /users/me/referral — must be before /:username
+usersRouter.get(
+  "/me/referral",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { username: true, _count: { select: { referrals: true } } },
+    });
+    // Referral link uses Telegram bot deep link: t.me/botname?start=ref_USERNAME
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME ?? "figabrain_bot";
+    res.json({
+      data: {
+        referralLink: `https://t.me/${botUsername}?start=ref_${user?.username}`,
+        referralCount: user?._count.referrals ?? 0,
+      },
+    });
+  })
+);
+
 // GET /users/search must be defined before GET /users/:username to avoid
 // "search" being interpreted as a username.
 usersRouter.get(

@@ -135,6 +135,14 @@ const startSeasonSchema = z.object({
   durationDays: z.number().min(1).max(365).default(30),
 });
 
+adminRouter.get(
+  "/seasons",
+  asyncHandler(async (_req, res) => {
+    const seasons = await prisma.season.findMany({ orderBy: { startsAt: "desc" }, take: 20 });
+    res.json({ data: seasons });
+  })
+);
+
 adminRouter.post(
   "/seasons",
   validateBody(startSeasonSchema),

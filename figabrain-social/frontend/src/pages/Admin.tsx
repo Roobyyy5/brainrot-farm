@@ -23,22 +23,31 @@ interface EngagementStats { postsPerUser: number; commentsPerUser: number; likes
 interface Report { id: string; targetType: string; targetId: string; reason: string; createdAt: string; filer: { username: string } }
 interface AuditLog { id: string; action: string; entity: string; entityId: string | null; createdAt: string }
 interface ShadowBanEntry { id: string; userId: string; reason: string | null; createdAt: string; username: string | null }
+interface DuplicateDevice { deviceFingerprint: string; _count: { _all: number } }
+interface RewardConfig { id: string; action: string; amount: number; xpAmount: number; dailyCap: number | null; cooldownSeconds: number; enabled: boolean }
+interface Season { id: string; name: string; startsAt: string; endsAt: string; isActive: boolean }
 
-type Tab = "overview" | "users" | "reports" | "economy" | "retention" | "engagement" | "fraud" | "audit" | "seasons";
+type Tab = "overview" | "users" | "reports" | "economy" | "retention" | "engagement" | "fraud" | "audit" | "seasons" | "rewards-config";
 
 export function Admin() {
   const [tab, setTab] = useState<Tab>("overview");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [rewards, setRewards] = useState<RewardStat[]>([]);
+  const [rewardConfigs, setRewardConfigs] = useState<RewardConfig[]>([]);
   const [economy, setEconomy] = useState<EconomyStats | null>(null);
   const [retention, setRetention] = useState<RetentionStats | null>(null);
   const [engagement, setEngagement] = useState<EngagementStats | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [shadowBans, setShadowBans] = useState<ShadowBanEntry[]>([]);
+  const [duplicateDevices, setDuplicateDevices] = useState<DuplicateDevice[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [newSeasonName, setNewSeasonName] = useState("");
+  const [newSeasonDays, setNewSeasonDays] = useState(30);
+  const [editingConfig, setEditingConfig] = useState<{ action: string; field: string; value: string } | null>(null);
 
   useEffect(() => { loadTab(tab); }, [tab]);
 
@@ -60,9 +69,17 @@ export function Admin() {
       } else if (t === "engagement") {
         const e = await api.get<{ data: EngagementStats }>("/admin/analytics/engagement"); setEngagement(e.data);
       } else if (t === "fraud") {
-        const sb = await api.get<{ data: ShadowBanEntry[] }>("/admin/fraud/shadow-bans"); setShadowBans(sb.data);
+        const [sb, dd] = await Promise.all([
+          api.get<{ data: ShadowBanEntry[] }>("/admin/fraud/shadow-bans"),
+          api.get<{ data: DuplicateDevice[] }>("/admin/fraud/duplicate-devices"),
+        ]);
+        setShadowBans(sb.data); setDuplicateDevices(dd.data);
       } else if (t === "audit") {
         const a = await api.get<{ data: AuditLog[] }>("/admin/audit-logs?limit=100"); setAuditLogs(a.data);
+      } else if (t === "seasons") {
+        const s = await api.get<{ data: Season[] }>("/admin/seasons"); setSeasons(s.data);
+      } else if (t === "rewards-config") {
+        const rc = await api.get<{ data: RewardConfig[] }>("/rewards/config"); setRewardConfigs(rc.data);
       }
     } finally { setIsLoading(false); }
   }
@@ -79,6 +96,22 @@ export function Admin() {
     await api.post(`/admin/posts/${postId}/remove`);
     await loadTab("reports");
   }
+  async function startSeason() {
+    if (!newSeasonName.trim()) return;
+    await api.post("/admin/seasons", { name: newSeasonName.trim(), durationDays: newSeasonDays });
+    setNewSeasonName(""); await loadTab("seasons");
+  }
+  async function endSeason(id: string) {
+    if (!confirm("End this season? This will distribute rewards.")) return;
+    await api.post(`/admin/seasons/${id}/end`);
+    await loadTab("seasons");
+  }
+  async function saveRewardConfig(action: string, field: string, raw: string) {
+    const value = field === "enabled" ? raw === "true" : Number(raw);
+    await api.put(`/admin/reward-config/${action}`, { [field]: value });
+    setEditingConfig(null);
+    await loadTab("rewards-config");
+  }
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -89,6 +122,8 @@ export function Admin() {
     { key: "engagement", label: "Engagement" },
     { key: "fraud", label: "Fraud" },
     { key: "audit", label: "Audit Log" },
+    { key: "seasons", label: "Seasons" },
+    { key: "rewards-config", label: "Reward Config" },
   ];
 
   const filteredUsers = users.filter((u) =>
@@ -272,17 +307,32 @@ export function Admin() {
 
       {/* Fraud */}
       {!isLoading && tab === "fraud" && (
-        <div className="glass-panel rounded-2xl p-4">
-          <h2 className="text-lg font-bold mb-3">Shadow-banned users</h2>
-          {shadowBans.length === 0 && <p className="text-white/40 text-sm">No active shadow bans.</p>}
-          <div className="space-y-2">
-            {shadowBans.map((sb) => (
-              <div key={sb.id} className="flex items-center gap-3 p-2 border-b border-white/5">
-                <span className="text-sm font-mono">@{sb.username ?? sb.userId.slice(0, 8)}</span>
-                <span className="text-xs text-white/40 flex-1">{sb.reason ?? "No reason"}</span>
-                <span className="text-xs text-white/30">{new Date(sb.createdAt).toLocaleDateString()}</span>
-              </div>
-            ))}
+        <div className="space-y-4">
+          <div className="glass-panel rounded-2xl p-4">
+            <h2 className="text-base font-bold mb-3">Shadow-banned users</h2>
+            {shadowBans.length === 0 && <p className="text-white/40 text-sm">No active shadow bans.</p>}
+            <div className="space-y-2">
+              {shadowBans.map((sb) => (
+                <div key={sb.id} className="flex items-center gap-3 p-2 border-b border-white/5">
+                  <span className="text-sm font-mono">@{sb.username ?? sb.userId.slice(0, 8)}</span>
+                  <span className="text-xs text-white/40 flex-1">{sb.reason ?? "No reason"}</span>
+                  <span className="text-xs text-white/30">{new Date(sb.createdAt).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="glass-panel rounded-2xl p-4">
+            <h2 className="text-base font-bold mb-1">Duplicate Devices</h2>
+            <p className="text-xs text-white/40 mb-3">Fingerprints shared by multiple accounts — potential multi-account abuse.</p>
+            {duplicateDevices.length === 0 && <p className="text-white/40 text-sm">No duplicate devices detected.</p>}
+            <div className="space-y-2">
+              {duplicateDevices.map((d) => (
+                <div key={d.deviceFingerprint} className="flex items-center gap-3 p-2 border-b border-white/5">
+                  <span className="text-xs font-mono text-yellow-400 flex-1 truncate">{d.deviceFingerprint}</span>
+                  <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">{d._count._all} accounts</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -302,6 +352,116 @@ export function Admin() {
             ))}
             {auditLogs.length === 0 && <p className="text-white/40 text-sm text-center py-4">No audit logs found.</p>}
           </div>
+        </div>
+      )}
+
+      {/* Seasons */}
+      {!isLoading && tab === "seasons" && (
+        <div className="space-y-4">
+          <div className="glass-panel rounded-2xl p-4">
+            <h2 className="text-base font-bold mb-3">Start New Season</h2>
+            <div className="flex gap-2 flex-wrap">
+              <input
+                value={newSeasonName}
+                onChange={(e) => setNewSeasonName(e.target.value)}
+                placeholder="Season name..."
+                className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none min-w-40"
+              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={newSeasonDays}
+                  onChange={(e) => setNewSeasonDays(Number(e.target.value))}
+                  min={1} max={365}
+                  className="w-20 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none text-center"
+                />
+                <span className="text-xs text-white/40">days</span>
+              </div>
+              <button
+                onClick={startSeason}
+                disabled={!newSeasonName.trim()}
+                className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-40"
+              >
+                Start Season
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {seasons.length === 0 && <p className="text-white/40 text-sm text-center py-4">No seasons yet.</p>}
+            {seasons.map((s) => (
+              <div key={s.id} className="glass-panel rounded-xl p-4 flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-sm">{s.name}</div>
+                  <div className="text-xs text-white/40">
+                    {new Date(s.startsAt).toLocaleDateString()} → {new Date(s.endsAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${s.isActive ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/30"}`}>
+                  {s.isActive ? "Active" : "Ended"}
+                </span>
+                {s.isActive && (
+                  <button onClick={() => endSeason(s.id)} className="text-xs text-red-400 hover:underline">End season</button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reward Config */}
+      {!isLoading && tab === "rewards-config" && (
+        <div className="glass-panel rounded-2xl p-4">
+          <h2 className="text-lg font-bold mb-1">Reward Config</h2>
+          <p className="text-xs text-white/40 mb-4">Edit live — changes take effect immediately.</p>
+          <table className="w-full text-xs">
+            <thead className="text-white/40 text-left">
+              <tr>
+                <th className="py-2 pr-3">Action</th>
+                <th className="pr-3">BP Amount</th>
+                <th className="pr-3">Daily Cap</th>
+                <th className="pr-3">Cooldown (s)</th>
+                <th>Enabled</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rewardConfigs.map((rc) => (
+                <tr key={rc.action} className="border-t border-white/5">
+                  <td className="py-2 pr-3 font-mono text-white/70">{rc.action}</td>
+                  {(["amount", "dailyCap", "cooldownSeconds", "enabled"] as const).map((field) => {
+                    const isEditing = editingConfig?.action === rc.action && editingConfig?.field === field;
+                    const display = field === "enabled" ? (rc[field] ? "✓" : "✗") : (rc[field] ?? "—");
+                    return (
+                      <td key={field} className="pr-3">
+                        {isEditing ? (
+                          <div className="flex gap-1">
+                            <input
+                              autoFocus
+                              defaultValue={String(rc[field] ?? "")}
+                              onChange={(e) => setEditingConfig({ ...editingConfig!, value: e.target.value })}
+                              className="w-20 bg-black/50 rounded px-1.5 py-0.5 outline-none text-xs"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveRewardConfig(rc.action, field, editingConfig!.value ?? String(rc[field]));
+                                if (e.key === "Escape") setEditingConfig(null);
+                              }}
+                            />
+                            <button onClick={() => saveRewardConfig(rc.action, field, editingConfig!.value ?? String(rc[field]))} className="text-green-400 hover:text-green-300">✓</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setEditingConfig({ action: rc.action, field, value: String(rc[field] ?? "") })}
+                            className={`px-2 py-0.5 rounded hover:bg-white/10 transition-colors ${field === "enabled" ? (rc.enabled ? "text-green-400" : "text-red-400") : "text-white/70"}`}
+                          >
+                            {String(display)}
+                          </button>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-xs text-white/25 mt-3">Click any cell to edit. Press Enter to save, Esc to cancel.</p>
         </div>
       )}
     </div>

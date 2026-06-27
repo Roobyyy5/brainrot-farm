@@ -11,6 +11,27 @@ import { hashPostContent, isDuplicatePost } from "../antibot/antibot.service.js"
 import { grantReward } from "../rewards/rewards.service.js";
 import { adjustReputation } from "../reputation/reputation.service.js";
 
+async function createMentionNotifications(content: string, actorId: string, postId: string) {
+  const handles = [...new Set((content.match(/@([a-zA-Z0-9_]{1,32})/g) ?? []).map((h) => h.slice(1).toLowerCase()))];
+  if (!handles.length) return;
+  const mentioned = await prisma.user.findMany({
+    where: { username: { in: handles, mode: "insensitive" }, id: { not: actorId }, isBanned: false },
+    select: { id: true },
+  });
+  if (!mentioned.length) return;
+  const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { username: true } });
+  await prisma.notification.createMany({
+    data: mentioned.map((u) => ({
+      recipientId: u.id,
+      actorId,
+      type: "MENTION" as const,
+      postId,
+      message: `@${actor?.username ?? "someone"} mentioned you in a post`,
+    })),
+    skipDuplicates: true,
+  });
+}
+
 export const postsRouter = Router();
 
 const createPostSchema = z.object({
@@ -157,6 +178,7 @@ postsRouter.post(
     });
 
     const reward = await grantReward(req.user!.id, "POST_CREATED", post.id);
+    createMentionNotifications(content, req.user!.id, post.id).catch(() => {});
 
     res.status(201).json({ data: serializePost({ ...post, _count: { likes: 0, comments: 0, reposts: 0 } }), reward });
   })

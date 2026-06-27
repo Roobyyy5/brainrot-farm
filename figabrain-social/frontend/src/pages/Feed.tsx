@@ -8,12 +8,14 @@ import { useRewardToast } from "../context/RewardToastContext";
 
 type FeedFilter = "all" | "following";
 
+const DRAFT_KEY = "feed:draft";
+
 export function Feed() {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const { showReward } = useRewardToast();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -67,6 +69,7 @@ export function Feed() {
       const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", { content, imageUrls: [] });
       setPosts((prev) => [res.data, ...prev]);
       setContent("");
+      localStorage.removeItem(DRAFT_KEY);
       if (res.reward) { showReward(res.reward); refreshUser(); }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post");
@@ -100,7 +103,7 @@ export function Feed() {
         <div className="glass-panel rounded-2xl p-4 mb-6">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => { setContent(e.target.value); localStorage.setItem(DRAFT_KEY, e.target.value); }}
             onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSubmit(); }}
             placeholder={t("feed.placeholder")}
             className="w-full bg-transparent outline-none resize-none text-sm placeholder:text-white/30"
@@ -108,7 +111,10 @@ export function Feed() {
             maxLength={2000}
           />
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between mt-1">
+            <span className={`text-xs ${content.length > 1800 ? "text-red-400" : "text-white/20"}`}>
+              {content.length} / 2000
+            </span>
             <button
               onClick={handleSubmit}
               disabled={isPosting || !content.trim()}
