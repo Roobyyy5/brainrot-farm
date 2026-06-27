@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { ActiveBooster } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -9,6 +10,7 @@ import { SeasonProgress } from "../components/SeasonProgress";
 import { LootBoxShelf } from "../components/LootBoxShelf";
 
 export function Economy() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [boosters, setBoosters] = useState<ActiveBooster[]>([]);
   const [boostersLoading, setBoostersLoading] = useState(true);
@@ -33,11 +35,11 @@ export function Economy() {
         </div>
       ) : boosters.length > 0 ? (
         <div className="glass-panel rounded-2xl p-5">
-          <h2 className="font-bold mb-3">Активні бустери</h2>
+          <h2 className="font-bold mb-3">{t("economy.activeBoosters")}</h2>
           <div className="flex flex-wrap gap-2">
             {boosters.map((b, i) => (
               <span key={i} className="bg-brain-accent/15 border border-brain-accent/40 rounded-full px-3 py-1 text-xs font-semibold">
-                {b.booster.name} · x{b.multiplier} · до {new Date(b.expiresAt).toLocaleTimeString()}
+                {b.booster.name} · x{b.multiplier} · {new Date(b.expiresAt).toLocaleTimeString()}
               </span>
             ))}
           </div>

@@ -23,6 +23,7 @@ const createPostSchema = z.object({
 const feedQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(50).default(20),
+  filter: z.enum(["all", "following"]).default("all"),
 });
 
 const postAuthorSelect = {
@@ -66,10 +67,17 @@ postsRouter.get(
   optionalAuth,
   validateQuery(feedQuerySchema),
   asyncHandler(async (req, res) => {
-    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
+    const { cursor, limit, filter } = req.query as unknown as { cursor?: string; limit: number; filter: "all" | "following" };
+
+    let authorIdIn: string[] | undefined;
+    if (filter === "following" && req.user) {
+      const follows = await prisma.follow.findMany({ where: { followerId: req.user.id }, select: { followingId: true } });
+      authorIdIn = follows.map((f) => f.followingId);
+      if (authorIdIn.length === 0) { res.json({ data: [], nextCursor: null }); return; }
+    }
 
     const posts = (await prisma.post.findMany({
-      where: { moderation: "ACTIVE" },
+      where: { moderation: "ACTIVE", ...(authorIdIn ? { authorId: { in: authorIdIn } } : {}) },
       orderBy: { createdAt: "desc" },
       take: limit,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),

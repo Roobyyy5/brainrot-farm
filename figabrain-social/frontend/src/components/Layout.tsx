@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
+import { BottomNav } from "./BottomNav";
 import { useAuth } from "../context/AuthContext";
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -18,8 +19,10 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           )}
         </header>
-        <main className="flex-1 p-6 max-w-3xl w-full mx-auto">{children}</main>
+        {/* pb-20 ensures content isn't hidden under the mobile bottom nav */}
+        <main className="flex-1 p-6 pb-24 lg:pb-6 max-w-3xl w-full mx-auto">{children}</main>
       </div>
+      <BottomNav />
     </div>
   );
 }

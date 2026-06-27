@@ -117,6 +117,20 @@ export interface Post {
   likedByMe: boolean;
 }
 
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { username: string; displayName: string; avatarUrl: string | null; rank: UserProfile["rank"] };
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  createdAt: string;
+  senderId: string;
+}
+
 export interface NotificationItem {
   id: string;
   type: "LIKE" | "COMMENT" | "REPOST" | "FOLLOW" | "MENTION" | "REWARD" | "SYSTEM";

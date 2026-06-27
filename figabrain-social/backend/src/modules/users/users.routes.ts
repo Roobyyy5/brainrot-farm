@@ -203,4 +203,49 @@ usersRouter.get(
   })
 );
 
+const userPostsQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(50).default(20),
+});
+
+usersRouter.get(
+  "/:username/posts",
+  optionalAuth,
+  validateQuery(userPostsQuerySchema),
+  asyncHandler(async (req, res) => {
+    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
+    const user = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!user) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
+
+    const posts = await prisma.post.findMany({
+      where: { authorId: user.id, moderation: "ACTIVE" },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      include: {
+        author: { select: { id: true, username: true, displayName: true, avatarUrl: true, rank: true } },
+        _count: { select: { likes: true, comments: true, reposts: true } },
+        likes: req.user ? { where: { userId: req.user.id }, select: { userId: true } } : false,
+      },
+    });
+
+    res.json({
+      data: posts.map((p) => ({
+        id: p.id,
+        content: p.content,
+        imageUrls: p.imageUrls,
+        linkUrl: p.linkUrl,
+        gifUrl: p.gifUrl,
+        createdAt: p.createdAt,
+        author: p.author,
+        likesCount: p._count.likes,
+        commentsCount: p._count.comments,
+        repostsCount: p._count.reposts,
+        likedByMe: req.user ? ((p as { likes?: { userId: string }[] }).likes?.some((l) => l.userId === req.user!.id) ?? false) : false,
+      })),
+      nextCursor: posts.length === limit ? posts[posts.length - 1]?.id : null,
+    });
+  })
+);
+
 export { computeRank };

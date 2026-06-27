@@ -32,6 +32,17 @@ notificationsRouter.get(
   })
 );
 
+notificationsRouter.get(
+  "/unread-count",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const unread = await prisma.notification.count({
+      where: { recipientId: req.user!.id, isRead: false },
+    });
+    res.json({ data: { unread } });
+  })
+);
+
 notificationsRouter.post(
   "/read-all",
   requireAuth,

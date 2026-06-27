@@ -1,0 +1,173 @@
+import { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { api } from "../api/client";
+import type { Post, Comment } from "../api/types";
+import { useAuth } from "../context/AuthContext";
+import { useRewardToast } from "../context/RewardToastContext";
+
+export function PostDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
+  const { showReward } = useRewardToast();
+
+  const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    api.get<{ data: Post }>(`/posts/${id}`).then((r) => setPost(r.data)).catch(() => navigate("/", { replace: true }));
+    loadComments();
+    // Scroll to comments if hash present
+    if (window.location.hash === "#comments") {
+      setTimeout(() => commentInputRef.current?.scrollIntoView({ behavior: "smooth" }), 300);
+    }
+  }, [id]);
+
+  async function loadComments(cursor?: string) {
+    if (!id) return;
+    const params = new URLSearchParams({ limit: "20" });
+    if (cursor) params.set("cursor", cursor);
+    const res = await api.get<{ data: Comment[]; nextCursor: string | null }>(`/posts/${id}/comments?${params}`);
+    if (cursor) {
+      setComments((prev) => [...prev, ...res.data]);
+    } else {
+      setComments(res.data);
+    }
+    setNextCursor(res.nextCursor);
+  }
+
+  async function loadMore() {
+    if (!nextCursor) return;
+    setIsLoadingMore(true);
+    try { await loadComments(nextCursor); } finally { setIsLoadingMore(false); }
+  }
+
+  async function handleLike() {
+    if (!post) return;
+    const wasLiked = post.likedByMe;
+    setPost({ ...post, likedByMe: !wasLiked, likesCount: post.likesCount + (wasLiked ? -1 : 1) });
+    try {
+      const res = await api.post<{ data: { liked: boolean }; reward?: { amount: number; xp: number } }>(`/posts/${post.id}/like`);
+      if (!wasLiked && res.reward) { showReward(res.reward); refreshUser(); }
+    } catch {
+      setPost({ ...post, likedByMe: wasLiked, likesCount: post.likesCount + (wasLiked ? 1 : -1) });
+    }
+  }
+
+  async function submitComment() {
+    if (!id || !commentText.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await api.post<{ data: Comment; reward?: { amount: number; xp: number } }>(`/posts/${id}/comments`, { content: commentText.trim() });
+      setComments((prev) => [res.data, ...prev]);
+      setCommentText("");
+      setPost((p) => p ? { ...p, commentsCount: p.commentsCount + 1 } : p);
+      if (res.reward) { showReward(res.reward); refreshUser(); }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!post) {
+    return (
+      <div className="space-y-3 animate-pulse">
+        <div className="h-8 bg-white/5 rounded-xl w-24" />
+        <div className="glass-panel rounded-2xl p-6 h-40" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <button onClick={() => navigate(-1)} className="text-white/40 hover:text-white text-sm mb-4 flex items-center gap-1">
+        ← Back
+      </button>
+
+      {/* Post */}
+      <div className="glass-panel rounded-2xl p-5 mb-4">
+        <div className="flex items-center gap-3 mb-3">
+          {post.author.avatarUrl ? (
+            <img src={post.author.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+          ) : (
+            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-brain-accent to-brain-accent2 flex items-center justify-center font-bold text-lg">
+              {post.author.displayName[0].toUpperCase()}
+            </div>
+          )}
+          <div>
+            <div className="font-semibold">{post.author.displayName}</div>
+            <div className="text-xs text-white/40">@{post.author.username} · {new Date(post.createdAt).toLocaleString()}</div>
+          </div>
+        </div>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed mb-4">{post.content}</p>
+        {post.imageUrls.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {post.imageUrls.map((url) => <img key={url} src={url} alt="" className="rounded-xl object-cover max-h-64 w-full" />)}
+          </div>
+        )}
+        <div className="flex gap-6 text-sm text-white/50 pt-3 border-t border-white/5">
+          <button onClick={handleLike} className={`flex items-center gap-1 transition-colors ${post.likedByMe ? "text-brain-accent" : "hover:text-white"}`}>
+            ♥ {post.likesCount}
+          </button>
+          <span className="flex items-center gap-1">💬 {post.commentsCount}</span>
+        </div>
+      </div>
+
+      {/* Comment box */}
+      {user && (
+        <div id="comments" className="glass-panel rounded-2xl p-4 mb-4">
+          <textarea
+            ref={commentInputRef}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Write a comment..."
+            rows={2}
+            maxLength={1000}
+            className="w-full bg-transparent outline-none resize-none text-sm placeholder:text-white/30"
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={submitComment}
+              disabled={isSubmitting || !commentText.trim()}
+              className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-xs font-semibold px-4 py-1.5 rounded-full disabled:opacity-40"
+            >
+              {isSubmitting ? "..." : "Reply"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Comments list */}
+      <div className="space-y-3">
+        {comments.map((c) => (
+          <div key={c.id} className="glass-panel rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              {c.author.avatarUrl ? (
+                <img src={c.author.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-brain-accent/30 flex items-center justify-center text-xs font-bold">
+                  {c.author.displayName[0].toUpperCase()}
+                </div>
+              )}
+              <span className="text-sm font-semibold">{c.author.displayName}</span>
+              <span className="text-xs text-white/30">@{c.author.username}</span>
+              <span className="ml-auto text-xs text-white/25">{new Date(c.createdAt).toLocaleString()}</span>
+            </div>
+            <p className="text-sm leading-relaxed">{c.content}</p>
+          </div>
+        ))}
+        {comments.length === 0 && <p className="text-white/30 text-sm text-center py-6">No comments yet. Be the first!</p>}
+        {nextCursor && (
+          <button onClick={loadMore} disabled={isLoadingMore} className="w-full text-xs text-white/40 hover:text-white py-2">
+            {isLoadingMore ? "Loading..." : "Load more comments"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useAuth } from "./context/AuthContext";
 import { Feed } from "./pages/Feed";
 import { Profile } from "./pages/Profile";
+import { PostDetail } from "./pages/PostDetail";
 import { Wallet } from "./pages/Wallet";
 import { Notifications } from "./pages/Notifications";
 import { Messages } from "./pages/Messages";
@@ -23,7 +25,11 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  return <Layout>{children}</Layout>;
+  return (
+    <Layout>
+      <ErrorBoundary>{children}</ErrorBoundary>
+    </Layout>
+  );
 }
 
 export function App() {
@@ -32,6 +38,7 @@ export function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedLayout><Feed /></ProtectedLayout>} />
       <Route path="/u/:username" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
+      <Route path="/posts/:id" element={<ProtectedLayout><PostDetail /></ProtectedLayout>} />
       <Route path="/wallet" element={<ProtectedLayout><Wallet /></ProtectedLayout>} />
       <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
       <Route path="/messages" element={<ProtectedLayout><Messages /></ProtectedLayout>} />
