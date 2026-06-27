@@ -27,8 +27,10 @@ interface ShadowBanEntry { id: string; userId: string; reason: string | null; cr
 interface DuplicateDevice { deviceFingerprint: string; _count: { _all: number } }
 interface RewardConfig { id: string; action: string; amount: number; xpAmount: number; dailyCap: number | null; cooldownSeconds: number; enabled: boolean }
 interface Season { id: string; name: string; startsAt: string; endsAt: string; isActive: boolean }
+interface BpPurchaseAdmin { id: string; bpAmount: number; usdAmount: number; cryptoCurrency: string; txHash: string | null; status: string; createdAt: string; adminNote: string | null; user: { username: string; displayName: string } }
+interface PaidAirdrop { id: string; name: string; totalAmount: number; perUserAmount: number; startsAt: string; endsAt: string; sponsorName: string; sponsorWebsite: string | null; paymentTxHash: string | null; _count: { claims: number } }
 
-type Tab = "overview" | "users" | "reports" | "economy" | "retention" | "engagement" | "fraud" | "audit" | "seasons" | "rewards-config";
+type Tab = "overview" | "users" | "reports" | "economy" | "retention" | "engagement" | "fraud" | "audit" | "seasons" | "rewards-config" | "bp-purchases" | "airdrops" | "announce";
 
 export function Admin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -51,6 +53,17 @@ export function Admin() {
   const [newSeasonName, setNewSeasonName] = useState("");
   const [newSeasonDays, setNewSeasonDays] = useState(30);
   const [editingConfig, setEditingConfig] = useState<{ action: string; field: string; value: string } | null>(null);
+
+  // Monetization state
+  const [bpPurchases, setBpPurchases] = useState<BpPurchaseAdmin[]>([]);
+  const [paidAirdrops, setPaidAirdrops] = useState<PaidAirdrop[]>([]);
+  const [announceText, setAnnounceText] = useState("");
+  const [announceParseMode, setAnnounceParseMode] = useState<"HTML" | "Markdown" | "">("");
+  const [announceLoading, setAnnounceLoading] = useState(false);
+  const [announceResult, setAnnounceResult] = useState<string | null>(null);
+  const [airdropForm, setAirdropForm] = useState({ name: "", totalAmount: "", perUserAmount: "", startsAt: "", endsAt: "", eligibleUserIds: "", sponsorName: "", sponsorWebsite: "", paymentTxHash: "" });
+  const [airdropLoading, setAirdropLoading] = useState(false);
+  const [airdropResult, setAirdropResult] = useState<string | null>(null);
 
   useEffect(() => { loadTab(tab); }, [tab]);
 
@@ -83,6 +96,12 @@ export function Admin() {
         const s = await api.get<{ data: Season[] }>("/admin/seasons"); setSeasons(s.data);
       } else if (t === "rewards-config") {
         const rc = await api.get<{ data: RewardConfig[] }>("/rewards/config"); setRewardConfigs(rc.data);
+      } else if (t === "bp-purchases") {
+        const p = await api.get<{ data: BpPurchaseAdmin[] }>("/bp-purchase/admin/pending"); setBpPurchases(p.data);
+      } else if (t === "airdrops") {
+        const a = await api.get<{ data: PaidAirdrop[] }>("/admin/paid-airdrops"); setPaidAirdrops(a.data);
+      } else if (t === "announce") {
+        // nothing to preload
       }
     } finally { setIsLoading(false); }
   }
@@ -129,6 +148,56 @@ export function Admin() {
     await loadTab("rewards-config");
   }
 
+  async function approveBpPurchase(id: string) {
+    await api.post(`/bp-purchase/admin/${id}/approve`, {});
+    await loadTab("bp-purchases");
+  }
+  async function rejectBpPurchase(id: string) {
+    const note = prompt("Rejection reason (optional):");
+    await api.post(`/bp-purchase/admin/${id}/reject`, { adminNote: note ?? undefined });
+    await loadTab("bp-purchases");
+  }
+  async function sendAnnouncement() {
+    if (!announceText.trim()) return;
+    setAnnounceLoading(true); setAnnounceResult(null);
+    try {
+      await api.post("/admin/bot-announce", { text: announceText.trim(), ...(announceParseMode ? { parseMode: announceParseMode } : {}) });
+      setAnnounceResult("✓ Sent successfully");
+      setAnnounceText("");
+    } catch (e: unknown) {
+      setAnnounceResult(`Error: ${(e as Error).message}`);
+    } finally {
+      setAnnounceLoading(false);
+    }
+  }
+  async function createPaidAirdrop() {
+    setAirdropLoading(true); setAirdropResult(null);
+    try {
+      const eligibleUserIds = airdropForm.eligibleUserIds
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      await api.post("/admin/paid-airdrops", {
+        name: airdropForm.name,
+        totalAmount: Number(airdropForm.totalAmount),
+        perUserAmount: Number(airdropForm.perUserAmount),
+        startsAt: new Date(airdropForm.startsAt).toISOString(),
+        endsAt: new Date(airdropForm.endsAt).toISOString(),
+        eligibleUserIds,
+        sponsorName: airdropForm.sponsorName || undefined,
+        sponsorWebsite: airdropForm.sponsorWebsite || undefined,
+        paymentTxHash: airdropForm.paymentTxHash || undefined,
+      });
+      setAirdropResult("✓ Airdrop campaign created");
+      setAirdropForm({ name: "", totalAmount: "", perUserAmount: "", startsAt: "", endsAt: "", eligibleUserIds: "", sponsorName: "", sponsorWebsite: "", paymentTxHash: "" });
+      await loadTab("airdrops");
+    } catch (e: unknown) {
+      setAirdropResult(`Error: ${(e as Error).message}`);
+    } finally {
+      setAirdropLoading(false);
+    }
+  }
+
   const TABS: { key: Tab; label: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "users", label: "Users" },
@@ -140,6 +209,9 @@ export function Admin() {
     { key: "audit", label: "Audit Log" },
     { key: "seasons", label: "Seasons" },
     { key: "rewards-config", label: "Reward Config" },
+    { key: "bp-purchases", label: `BP Purchases${bpPurchases.length ? ` (${bpPurchases.length})` : ""}` },
+    { key: "airdrops", label: "Paid Airdrops" },
+    { key: "announce", label: "Bot Announce" },
   ];
 
   const filteredUsers = users.filter((u) =>
@@ -496,6 +568,134 @@ export function Admin() {
             </tbody>
           </table>
           <p className="text-xs text-white/25 mt-3">Click any cell to edit. Press Enter to save, Esc to cancel.</p>
+        </div>
+      )}
+      {/* BP Purchases */}
+      {!isLoading && tab === "bp-purchases" && (
+        <div className="space-y-3">
+          <div className="glass-panel rounded-2xl p-4">
+            <h2 className="text-base font-bold mb-3">Pending BP Purchases</h2>
+            {bpPurchases.length === 0 && <p className="text-white/40 text-sm text-center py-4">No pending purchases.</p>}
+            <div className="space-y-2">
+              {bpPurchases.map((p) => (
+                <div key={p.id} className="bg-black/20 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-semibold">@{p.user.username} <span className="text-white/40 font-normal">({p.user.displayName})</span></div>
+                      <div className="text-xs text-brain-point font-bold mt-0.5">+{p.bpAmount.toLocaleString()} BP · ${p.usdAmount} · {p.cryptoCurrency}</div>
+                      <div className={`text-xs mt-0.5 ${p.status === "SUBMITTED" ? "text-yellow-400" : "text-white/40"}`}>{p.status}</div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => approveBpPurchase(p.id)} className="text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-lg font-semibold">Approve</button>
+                      <button onClick={() => rejectBpPurchase(p.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded-lg font-semibold">Reject</button>
+                    </div>
+                  </div>
+                  {p.txHash && (
+                    <div className="text-xs font-mono text-white/30 break-all border-t border-white/5 pt-2">TX: {p.txHash}</div>
+                  )}
+                  <div className="text-xs text-white/25">{new Date(p.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Paid Airdrops */}
+      {!isLoading && tab === "airdrops" && (
+        <div className="space-y-4">
+          <div className="glass-panel rounded-2xl p-4">
+            <h2 className="text-base font-bold mb-3">Create Paid Airdrop Campaign</h2>
+            <div className="space-y-2">
+              {[
+                { field: "name", placeholder: "Campaign name", label: "Name" },
+                { field: "sponsorName", placeholder: "Sponsor project name", label: "Sponsor" },
+                { field: "sponsorWebsite", placeholder: "https://...", label: "Sponsor website" },
+                { field: "paymentTxHash", placeholder: "Payment TX hash", label: "Payment TX" },
+                { field: "totalAmount", placeholder: "Total FGB amount", label: "Total FGB" },
+                { field: "perUserAmount", placeholder: "Per-user FGB amount", label: "Per user FGB" },
+              ].map(({ field, placeholder, label }) => (
+                <div key={field} className="flex items-center gap-3">
+                  <label className="text-xs text-white/40 w-28 shrink-0">{label}</label>
+                  <input
+                    value={airdropForm[field as keyof typeof airdropForm]}
+                    onChange={(e) => setAirdropForm((f) => ({ ...f, [field]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none"
+                  />
+                </div>
+              ))}
+              <div className="flex items-center gap-3">
+                <label className="text-xs text-white/40 w-28 shrink-0">Starts at</label>
+                <input type="datetime-local" value={airdropForm.startsAt} onChange={(e) => setAirdropForm((f) => ({ ...f, startsAt: e.target.value }))} className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none" />
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-xs text-white/40 w-28 shrink-0">Ends at</label>
+                <input type="datetime-local" value={airdropForm.endsAt} onChange={(e) => setAirdropForm((f) => ({ ...f, endsAt: e.target.value }))} className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none" />
+              </div>
+              <div className="flex items-start gap-3">
+                <label className="text-xs text-white/40 w-28 shrink-0 pt-2">User IDs</label>
+                <textarea
+                  value={airdropForm.eligibleUserIds}
+                  onChange={(e) => setAirdropForm((f) => ({ ...f, eligibleUserIds: e.target.value }))}
+                  placeholder="UUID per line or comma-separated"
+                  rows={3}
+                  className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-xs font-mono outline-none resize-none"
+                />
+              </div>
+              {airdropResult && <p className={`text-xs ${airdropResult.startsWith("✓") ? "text-green-400" : "text-red-400"}`}>{airdropResult}</p>}
+              <button onClick={createPaidAirdrop} disabled={airdropLoading || !airdropForm.name || !airdropForm.totalAmount} className="w-full bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-bold py-2.5 rounded-xl disabled:opacity-40">
+                {airdropLoading ? "..." : "Create Campaign"}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {paidAirdrops.map((a) => (
+              <div key={a.id} className="glass-panel rounded-xl p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold">{a.name}</div>
+                    {a.sponsorName && <div className="text-xs text-white/40">Sponsor: {a.sponsorName}</div>}
+                  </div>
+                  <span className="text-xs text-white/30">{a._count.claims} claims</span>
+                </div>
+                <div className="text-xs text-brain-accent2 mt-1">{Number(a.perUserAmount).toFixed(2)} FGB per user · {Number(a.totalAmount).toFixed(2)} FGB total</div>
+                <div className="text-xs text-white/25 mt-1">{new Date(a.startsAt).toLocaleDateString()} – {new Date(a.endsAt).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bot Announce */}
+      {!isLoading && tab === "announce" && (
+        <div className="glass-panel rounded-2xl p-5 space-y-3">
+          <h2 className="text-base font-bold">Send Bot Announcement</h2>
+          <p className="text-xs text-white/40">Message will be sent to the configured Telegram channel via the bot.</p>
+          <textarea
+            value={announceText}
+            onChange={(e) => { setAnnounceText(e.target.value); setAnnounceResult(null); }}
+            placeholder="Enter announcement text..."
+            rows={6}
+            className="w-full bg-black/30 rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
+          />
+          <div className="flex items-center gap-3">
+            <label className="text-xs text-white/40">Format:</label>
+            <select value={announceParseMode} onChange={(e) => setAnnounceParseMode(e.target.value as typeof announceParseMode)} className="bg-black/30 rounded-xl px-3 py-1.5 text-sm outline-none appearance-none">
+              <option value="">Plain text</option>
+              <option value="HTML">HTML</option>
+              <option value="Markdown">Markdown</option>
+            </select>
+            <span className="text-xs text-white/25">{announceText.length}/4096</span>
+          </div>
+          {announceResult && <p className={`text-xs ${announceResult.startsWith("✓") ? "text-green-400" : "text-red-400"}`}>{announceResult}</p>}
+          <button
+            onClick={sendAnnouncement}
+            disabled={announceLoading || !announceText.trim()}
+            className="w-full bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-bold py-2.5 rounded-xl disabled:opacity-40"
+          >
+            {announceLoading ? "Sending..." : "Send Announcement"}
+          </button>
         </div>
       )}
     </div>

@@ -7,10 +7,13 @@ import { useAuth } from "../context/AuthContext";
 interface ReferralInfo { referralLink: string; referralCount: number }
 interface ConversionHistory { id: string; brainPointsSpent: number; fgbTokenAmount: number; rate: number; createdAt: string }
 interface ConversionInfo { rate: number; minPoints: number; history: ConversionHistory[] }
-interface StakingPool { id: string; name: string; apr: number; lockDays: number; minAmount: number }
+interface StakingPool { id: string; name: string; apr: number; lockDays: number; minAmount: number; platformFeePercent: number }
 interface StakingPosition { id: string; poolId: string; amount: number; unlocksAt: string; status: string; startedAt: string; pool: StakingPool }
 interface AirdropClaim { id: string; amount: number; status: string; campaignId: string; campaign: { name: string; endsAt: string } }
 interface NftItem { id: string; name: string; tokenUri: string; collection: { name: string } }
+interface BpPackage { bpAmount: number; usdAmount: number }
+interface BpPurchase { id: string; bpAmount: number; usdAmount: number; cryptoCurrency: string; status: string; txHash: string | null; createdAt: string }
+interface LootBoxShopItem { id: string; key: string; name: string; rarity: string; price: number }
 
 const MIN_POINTS = 100;
 
@@ -42,6 +45,27 @@ export function Wallet() {
   // NFTs
   const [nfts, setNfts] = useState<NftItem[]>([]);
 
+  // Buy BP
+  const [bpPackages, setBpPackages] = useState<BpPackage[]>([]);
+  const [payAddresses, setPayAddresses] = useState<Record<string, string>>({});
+  const [buyStep, setBuyStep] = useState<"idle" | "select" | "paying" | "submitted">("idle");
+  const [selectedPkg, setSelectedPkg] = useState<BpPackage | null>(null);
+  const [selectedCrypto, setSelectedCrypto] = useState<string>("");
+  const [buyPurchaseId, setBuyPurchaseId] = useState<string | null>(null);
+  const [txHashInput, setTxHashInput] = useState("");
+  const [buyError, setBuyError] = useState<string | null>(null);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [copiedPayAddr, setCopiedPayAddr] = useState(false);
+  const [myPurchases, setMyPurchases] = useState<BpPurchase[]>([]);
+
+  // Loot Box Shop
+  const [lootboxShop, setLootboxShop] = useState<LootBoxShopItem[]>([]);
+  const [buyingLootbox, setBuyingLootbox] = useState<string | null>(null);
+
+  // TGE Waitlist
+  const [onTgeWaitlist, setOnTgeWaitlist] = useState(false);
+  const [joiningTge, setJoiningTge] = useState(false);
+
   function loadAll() {
     api.get<{ data: WalletInfo }>("/wallet/me").then((res) => setWallet(res.data));
     api.get<{ data: ReferralInfo }>("/users/me/referral").then((res) => setReferral(res.data)).catch(() => {});
@@ -50,6 +74,11 @@ export function Wallet() {
     api.get<{ data: StakingPosition[] }>("/web3/staking/me").then((res) => setMyPositions(res.data)).catch(() => {});
     api.get<{ data: AirdropClaim[] }>("/web3/airdrops/me").then((res) => setAirdropClaims(res.data)).catch(() => {});
     api.get<{ data: NftItem[] }>("/web3/nfts/me").then((res) => setNfts(res.data)).catch(() => {});
+    api.get<{ data: { packages: BpPackage[]; addresses: Record<string, string> } }>("/bp-purchase/packages")
+      .then((res) => { setBpPackages(res.data.packages); setPayAddresses(res.data.addresses); }).catch(() => {});
+    api.get<{ data: BpPurchase[] }>("/bp-purchase/me").then((res) => setMyPurchases(res.data)).catch(() => {});
+    api.get<{ data: LootBoxShopItem[] }>("/lootboxes/shop").then((res) => setLootboxShop(res.data)).catch(() => {});
+    api.get<{ data: { onWaitlist: boolean } }>("/web3/tge/waitlist/status").then((res) => setOnTgeWaitlist(res.data.onWaitlist)).catch(() => {});
   }
 
   useEffect(() => { loadAll(); }, []);
@@ -122,6 +151,67 @@ export function Wallet() {
       alert(e instanceof ApiError ? e.message : "Claim failed");
     } finally {
       setClaimingId(null);
+    }
+  }
+
+  async function initBuyBp() {
+    if (!selectedPkg || !selectedCrypto) { setBuyError("Select a package and crypto"); return; }
+    setBuyLoading(true); setBuyError(null);
+    try {
+      const res = await api.post<{ data: { id: string; cryptoAddress: string } }>("/bp-purchase/init", {
+        bpAmount: selectedPkg.bpAmount,
+        usdAmount: selectedPkg.usdAmount,
+        cryptoCurrency: selectedCrypto,
+      });
+      setBuyPurchaseId(res.data.id);
+      setBuyStep("paying");
+    } catch (e) {
+      setBuyError(e instanceof ApiError ? e.message : "Failed to create purchase");
+    } finally {
+      setBuyLoading(false);
+    }
+  }
+
+  async function submitTxHash() {
+    if (!buyPurchaseId || !txHashInput.trim()) { setBuyError("Enter TX hash"); return; }
+    setBuyLoading(true); setBuyError(null);
+    try {
+      await api.post(`/bp-purchase/${buyPurchaseId}/submit-tx`, { txHash: txHashInput.trim() });
+      setBuyStep("submitted");
+      loadAll();
+    } catch (e) {
+      setBuyError(e instanceof ApiError ? e.message : "Failed to submit");
+    } finally {
+      setBuyLoading(false);
+    }
+  }
+
+  function copyPayAddress() {
+    const addr = selectedCrypto ? payAddresses[selectedCrypto] : null;
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => { setCopiedPayAddr(true); setTimeout(() => setCopiedPayAddr(false), 2000); });
+  }
+
+  async function buyLootBox(lootBoxKey: string) {
+    setBuyingLootbox(lootBoxKey);
+    try {
+      await api.post("/lootboxes/buy", { lootBoxKey });
+      await refreshUser();
+      loadAll();
+    } catch (e) {
+      alert(e instanceof ApiError ? e.message : "Purchase failed");
+    } finally {
+      setBuyingLootbox(null);
+    }
+  }
+
+  async function joinTgeWaitlist() {
+    setJoiningTge(true);
+    try {
+      await api.post("/web3/tge/waitlist", {});
+      setOnTgeWaitlist(true);
+    } catch { } finally {
+      setJoiningTge(false);
     }
   }
 
@@ -262,7 +352,7 @@ export function Wallet() {
               <option value="">{t("wallet.selectPool")}</option>
               {stakingPools.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — {Number(p.apr).toFixed(1)}% APR · {p.lockDays}d lock · min {Number(p.minAmount)} FGB
+                  {p.name} — {Number(p.apr).toFixed(1)}% APR · {p.lockDays}d lock · min {Number(p.minAmount)} FGB · {Number(p.platformFeePercent).toFixed(0)}% fee
                 </option>
               ))}
             </select>
@@ -327,6 +417,150 @@ export function Wallet() {
         </div>
       )}
 
+      {/* Buy BP with Crypto */}
+      {bpPackages.length > 0 && (
+        <div className="glass-panel rounded-2xl p-5 border border-brain-point/20">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold">💰 {t("wallet.buyBp", "Buy Brain Points")}</h3>
+            {buyStep !== "idle" && (
+              <button onClick={() => { setBuyStep("idle"); setBuyError(null); setTxHashInput(""); }} className="text-xs text-white/30 hover:text-white">✕</button>
+            )}
+          </div>
+
+          {buyStep === "idle" && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {bpPackages.map((pkg) => (
+                  <button
+                    key={pkg.bpAmount}
+                    onClick={() => setSelectedPkg(pkg)}
+                    className={`rounded-xl p-3 text-left border transition-colors ${selectedPkg?.bpAmount === pkg.bpAmount ? "border-brain-point bg-brain-point/10" : "border-white/10 bg-black/20 hover:border-brain-point/40"}`}
+                  >
+                    <div className="text-sm font-bold text-brain-point">{pkg.bpAmount.toLocaleString()} BP</div>
+                    <div className="text-xs text-white/50">${pkg.usdAmount}</div>
+                  </button>
+                ))}
+              </div>
+              <select
+                value={selectedCrypto}
+                onChange={(e) => setSelectedCrypto(e.target.value)}
+                className="w-full bg-black/30 rounded-xl px-3 py-2.5 text-sm outline-none appearance-none"
+              >
+                <option value="">{t("wallet.selectCrypto", "Select crypto...")}</option>
+                {Object.keys(payAddresses).map((c) => (
+                  <option key={c} value={c}>{c.replace("_", " ")}</option>
+                ))}
+              </select>
+              {buyError && <p className="text-xs text-red-400">{buyError}</p>}
+              <button
+                onClick={initBuyBp}
+                disabled={buyLoading || !selectedPkg || !selectedCrypto}
+                className="w-full bg-gradient-to-r from-brain-point/80 to-brain-accent text-sm font-bold py-2.5 rounded-xl disabled:opacity-40"
+              >
+                {buyLoading ? "..." : t("wallet.proceedToPay", "Proceed to Pay")}
+              </button>
+            </div>
+          )}
+
+          {buyStep === "paying" && selectedPkg && (
+            <div className="space-y-3">
+              <div className="bg-black/30 rounded-xl p-3 text-center">
+                <div className="text-xs text-white/40 mb-1">{t("wallet.sendExactly", "Send exactly")}</div>
+                <div className="text-xl font-bold text-brain-point">${selectedPkg.usdAmount}</div>
+                <div className="text-xs text-white/40">{selectedCrypto.replace("_", " ")} to receive {selectedPkg.bpAmount.toLocaleString()} BP</div>
+              </div>
+              <div>
+                <div className="text-xs text-white/40 mb-1">{t("wallet.paymentAddress", "Payment address")}</div>
+                <div
+                  onClick={copyPayAddress}
+                  className="bg-black/40 rounded-xl p-3 font-mono text-xs break-all cursor-pointer flex items-center gap-2 group hover:bg-black/60 transition-colors"
+                >
+                  <span className="flex-1 text-white/70">{payAddresses[selectedCrypto]}</span>
+                  <span className="text-white/30 group-hover:text-white/60 shrink-0">{copiedPayAddr ? "✓" : "⎘"}</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-white/40 mb-1">{t("wallet.enterTxHash", "Enter TX hash after sending")}</div>
+                <input
+                  value={txHashInput}
+                  onChange={(e) => setTxHashInput(e.target.value)}
+                  placeholder="0x..."
+                  className="w-full bg-black/30 rounded-xl px-3 py-2.5 text-sm font-mono outline-none"
+                />
+              </div>
+              {buyError && <p className="text-xs text-red-400">{buyError}</p>}
+              <button
+                onClick={submitTxHash}
+                disabled={buyLoading || !txHashInput.trim()}
+                className="w-full bg-gradient-to-r from-brain-point/80 to-brain-accent text-sm font-bold py-2.5 rounded-xl disabled:opacity-40"
+              >
+                {buyLoading ? "..." : t("wallet.confirmPayment", "Confirm Payment")}
+              </button>
+            </div>
+          )}
+
+          {buyStep === "submitted" && (
+            <div className="text-center py-4">
+              <div className="text-3xl mb-2">✅</div>
+              <p className="text-sm font-semibold">{t("wallet.paymentReceived", "Payment submitted!")}</p>
+              <p className="text-xs text-white/40 mt-1">{t("wallet.paymentPending", "We'll credit your BP after verifying the transaction. Usually within 1 hour.")}</p>
+              <button onClick={() => setBuyStep("idle")} className="mt-3 text-xs text-brain-accent hover:text-white">
+                {t("wallet.buyMore", "Buy more BP")}
+              </button>
+            </div>
+          )}
+
+          {/* Purchase history */}
+          {myPurchases.length > 0 && buyStep === "idle" && (
+            <div className="mt-3 pt-3 border-t border-white/5">
+              <p className="text-xs text-white/30 mb-2">{t("wallet.recentPurchases", "Recent purchases")}</p>
+              <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                {myPurchases.slice(0, 5).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-xs">
+                    <span className="text-white/40">{new Date(p.createdAt).toLocaleDateString()}</span>
+                    <span className="text-brain-point">+{p.bpAmount.toLocaleString()} BP</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                      p.status === "APPROVED" ? "bg-green-500/20 text-green-400" :
+                      p.status === "REJECTED" ? "bg-red-500/20 text-red-400" :
+                      p.status === "SUBMITTED" ? "bg-yellow-500/20 text-yellow-400" :
+                      "bg-white/10 text-white/40"
+                    }`}>
+                      {p.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loot Box Shop */}
+      {lootboxShop.length > 0 && (
+        <div className="glass-panel rounded-2xl p-5 border border-purple-500/20">
+          <h3 className="text-sm font-bold mb-1">🎲 {t("wallet.buyLootboxTitle")}</h3>
+          <p className="text-xs text-white/40 mb-3">{t("wallet.buyLootboxDesc")}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {lootboxShop.map((box) => (
+              <div key={box.id} className="bg-black/20 rounded-xl p-3 flex flex-col gap-2">
+                <div>
+                  <div className="text-sm font-semibold">{box.name}</div>
+                  <div className="text-xs text-white/40">{box.rarity}</div>
+                  <div className="text-xs text-brain-point font-bold mt-1">{box.price} BP</div>
+                </div>
+                <button
+                  onClick={() => buyLootBox(box.key)}
+                  disabled={buyingLootbox === box.key || wallet.brainPoints < box.price}
+                  className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-xs font-semibold py-1.5 rounded-lg disabled:opacity-40 transition-colors"
+                >
+                  {buyingLootbox === box.key ? "..." : t("wallet.buy")}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* NFT Gallery */}
       {nfts.length > 0 && (
         <div className="glass-panel rounded-2xl p-5">
@@ -349,12 +583,24 @@ export function Wallet() {
         </div>
       )}
 
-      {/* Token launch info */}
+      {/* Token launch info + TGE Waitlist */}
       <div className="glass-panel rounded-2xl p-4 border border-white/5">
         <h3 className="text-sm font-semibold mb-2">🚀 {t("wallet.tokenLaunch")}</h3>
-        <p className="text-xs text-white/50 leading-relaxed">
+        <p className="text-xs text-white/50 leading-relaxed mb-3">
           {t("wallet.tokenLaunchDesc", { chain: wallet.chain })}
         </p>
+        <p className="text-xs text-white/40 mb-2">{t("wallet.tgeWaitlistDesc")}</p>
+        <button
+          onClick={joinTgeWaitlist}
+          disabled={onTgeWaitlist || joiningTge}
+          className={`w-full text-xs font-semibold py-2 rounded-xl transition-colors ${
+            onTgeWaitlist
+              ? "bg-green-500/15 text-green-400 cursor-default"
+              : "bg-white/5 hover:bg-white/10 text-white/70 disabled:opacity-40"
+          }`}
+        >
+          {joiningTge ? "..." : onTgeWaitlist ? t("wallet.tgeJoined") : t("wallet.tgeJoin")}
+        </button>
       </div>
 
       {/* Referral */}

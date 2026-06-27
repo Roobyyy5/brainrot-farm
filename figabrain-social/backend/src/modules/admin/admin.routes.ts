@@ -10,6 +10,8 @@ import { SEASON_CACHE_KEY } from "../seasons/seasons.routes.js";
 import { invalidateBanCache } from "../../middleware/antibot.js";
 import * as redis from "../../lib/redis.js";
 import { computeSuspiciousScore } from "../antibot/antibot.service.js";
+import { env } from "../../lib/env.js";
+import { AirdropEngine } from "../web3/airdropEngine.js";
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -380,6 +382,117 @@ const auditLogsQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
 });
+
+// ---- Bot announcements ----
+
+const botAnnounceSchema = z.object({
+  text: z.string().min(1).max(4096),
+  parseMode: z.enum(["HTML", "Markdown", "MarkdownV2"]).optional(),
+});
+
+adminRouter.post(
+  "/bot-announce",
+  validateBody(botAnnounceSchema),
+  asyncHandler(async (req, res) => {
+    const channelId = process.env.TELEGRAM_CHANNEL_ID;
+    if (!channelId) throw new HttpError(503, "TELEGRAM_CHANNEL_ID is not configured");
+
+    const { text, parseMode } = req.body as z.infer<typeof botAnnounceSchema>;
+
+    const tgRes = await fetch(
+      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: channelId,
+          text,
+          ...(parseMode ? { parse_mode: parseMode } : {}),
+          disable_web_page_preview: true,
+        }),
+      }
+    );
+
+    if (!tgRes.ok) {
+      const err = await tgRes.json() as { description?: string };
+      throw new HttpError(502, `Telegram error: ${err.description ?? tgRes.statusText}`);
+    }
+
+    await writeAuditLog({
+      userId: req.user!.id,
+      action: "ADMIN_BOT_ANNOUNCE",
+      entity: "System",
+      metadata: { channelId, textLength: text.length },
+    });
+
+    res.json({ data: { sent: true } });
+  })
+);
+
+// ---- Paid airdrop campaigns ----
+
+const paidAirdropSchema = z.object({
+  name:           z.string().min(1),
+  totalAmount:    z.number().positive(),
+  perUserAmount:  z.number().positive(),
+  startsAt:       z.string().datetime(),
+  endsAt:         z.string().datetime(),
+  eligibleUserIds: z.array(z.string().uuid()),
+  sponsorName:    z.string().optional(),
+  sponsorWebsite: z.string().url().optional(),
+  paymentTxHash:  z.string().optional(),
+});
+
+const airdropEngine = new AirdropEngine();
+
+adminRouter.post(
+  "/paid-airdrops",
+  validateBody(paidAirdropSchema),
+  asyncHandler(async (req, res) => {
+    const { sponsorName, sponsorWebsite, paymentTxHash, eligibleUserIds, startsAt, endsAt, ...rest } = req.body as z.infer<typeof paidAirdropSchema>;
+
+    const campaign = await airdropEngine.createCampaign({
+      ...rest,
+      startsAt: new Date(startsAt),
+      endsAt: new Date(endsAt),
+      eligibleUserIds,
+    });
+
+    // Attach sponsor meta
+    const updated = await prisma.airdropCampaign.update({
+      where: { id: campaign.id },
+      data: {
+        sponsorName:    sponsorName ?? null,
+        sponsorWebsite: sponsorWebsite ?? null,
+        paymentTxHash:  paymentTxHash ?? null,
+      },
+    });
+
+    await writeAuditLog({
+      userId: req.user!.id,
+      action: "ADMIN_CREATE_PAID_AIRDROP",
+      entity: "AirdropCampaign",
+      entityId: campaign.id,
+      metadata: { sponsorName, paymentTxHash },
+    });
+
+    res.status(201).json({ data: updated });
+  })
+);
+
+adminRouter.get(
+  "/paid-airdrops",
+  asyncHandler(async (_req, res) => {
+    const campaigns = await prisma.airdropCampaign.findMany({
+      where: { sponsorName: { not: null } },
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { claims: true } } },
+    });
+    res.json({ data: campaigns });
+  })
+);
+
+// ---- Audit logs ----
 
 adminRouter.get(
   "/audit-logs",

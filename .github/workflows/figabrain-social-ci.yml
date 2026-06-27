@@ -1,0 +1,64 @@
+name: figabrain-social-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "figabrain-social/**"
+  pull_request:
+    paths:
+      - "figabrain-social/**"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figabrain-social/backend
+    env:
+      DATABASE_URL: postgresql://figabrain:figabrain@localhost:5433/figabrain_social?schema=public
+      JWT_ACCESS_SECRET: ci-access-secret-please-override-1234567890
+      JWT_REFRESH_SECRET: ci-refresh-secret-please-override-1234567890
+      TELEGRAM_BOT_TOKEN: ci-bot-token
+      WALLET_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: figabrain
+          POSTGRES_PASSWORD: figabrain
+          POSTGRES_DB: figabrain_social
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: figabrain-social/backend/package-lock.json
+      - run: npm install
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npx prisma migrate deploy
+      - run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figabrain-social/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: figabrain-social/frontend/package-lock.json
+      - run: npm install
+      - run: npm run build

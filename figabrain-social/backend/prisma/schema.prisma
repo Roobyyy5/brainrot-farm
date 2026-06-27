@@ -100,6 +100,13 @@ enum StakingStatus {
   CLOSED
 }
 
+enum BpPurchaseStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 enum ModerationStatus {
   ACTIVE
   HIDDEN
@@ -159,6 +166,7 @@ model User {
   economyLogs          EconomyLog[]
   tokenConversions     TokenConversionRequest[]
   streakClaims         StreakMilestoneClaim[]
+  bpPurchases          BpPurchase[]
 
   @@index([brainPoints])
   @@index([xp])
@@ -564,13 +572,16 @@ model AuditLog {
 }
 
 model AirdropCampaign {
-  id            String   @id @default(uuid())
-  name          String
-  totalAmount   Decimal  @db.Decimal(36, 18)
-  perUserAmount Decimal  @db.Decimal(36, 18)
-  startsAt      DateTime
-  endsAt        DateTime
-  createdAt     DateTime @default(now())
+  id              String   @id @default(uuid())
+  name            String
+  totalAmount     Decimal  @db.Decimal(36, 18)
+  perUserAmount   Decimal  @db.Decimal(36, 18)
+  startsAt        DateTime
+  endsAt          DateTime
+  sponsorName     String?
+  sponsorWebsite  String?
+  paymentTxHash   String?
+  createdAt       DateTime @default(now())
 
   claims AirdropClaim[]
 }
@@ -590,12 +601,13 @@ model AirdropClaim {
 }
 
 model StakingPool {
-  id        String   @id @default(uuid())
-  name      String
-  apr       Decimal  @db.Decimal(6, 3)
-  lockDays  Int
-  minAmount Decimal  @db.Decimal(36, 18)
-  createdAt DateTime @default(now())
+  id                 String   @id @default(uuid())
+  name               String
+  apr                Decimal  @db.Decimal(6, 3)
+  lockDays           Int
+  minAmount          Decimal  @db.Decimal(36, 18)
+  platformFeePercent Decimal  @default(10) @db.Decimal(5, 2)
+  createdAt          DateTime @default(now())
 
   positions StakingPosition[]
 }
@@ -613,6 +625,24 @@ model StakingPosition {
   closedAt  DateTime?
 
   @@index([userId, status])
+}
+
+model BpPurchase {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bpAmount        Decimal          @db.Decimal(20, 4)
+  usdAmount       Decimal          @db.Decimal(10, 2)
+  cryptoAddress   String
+  cryptoCurrency  String
+  txHash          String?
+  status          BpPurchaseStatus @default(PENDING)
+  adminNote       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 model NftCollection {

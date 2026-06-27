@@ -32,6 +32,7 @@ import { reputationRouter } from "./modules/reputation/reputation.routes.js";
 import { seasonsRouter } from "./modules/seasons/seasons.routes.js";
 import { tokenConversionRouter } from "./modules/web3/tokenConversion.routes.js";
 import { i18nRouter } from "./modules/i18n/i18n.routes.js";
+import { bpPurchaseRouter } from "./modules/web3/bpPurchase.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -98,6 +99,7 @@ app.use("/api/reputation", reputationRouter);
 app.use("/api/seasons", seasonsRouter);
 app.use("/api/token-conversion", tokenConversionRouter);
 app.use("/api/i18n", i18nRouter);
+app.use("/api/bp-purchase", bpPurchaseRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

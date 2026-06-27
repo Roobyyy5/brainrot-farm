@@ -1,0 +1,3267 @@
+diff --git a/figabrain-social/backend/src/config/levelConfig.ts b/figabrain-social/backend/src/config/levelConfig.ts
+new file mode 100644
+index 0000000..3e5bf7c
+--- /dev/null
++++ b/figabrain-social/backend/src/config/levelConfig.ts
+@@ -0,0 +1,54 @@
++import type { Rank } from "@prisma/client";
++
++export interface LevelTier {
++  rank: Rank;
++  minXp: number;
++  multiplier: number;
++}
++
++/**
++ * XP thresholds and the Brain Points/XP reward multiplier unlocked at each
++ * rank. Ordered highest-to-lowest so computeRank/rankMultiplier can return on
++ * the first tier the user's XP clears.
++ */
++export const LEVEL_TIERS: LevelTier[] = [
++  { rank: "NEURAL_GOD", minXp: 30000, multiplier: 5 },
++  { rank: "GALAXY_BRAIN", minXp: 12000, multiplier: 4 },
++  { rank: "MEME_EMPEROR", minXp: 5000, multiplier: 3 },
++  { rank: "BRAIN_LORD", minXp: 2000, multiplier: 2 },
++  { rank: "GIGACHAD", minXp: 750, multiplier: 1.5 },
++  { rank: "SIGMA", minXp: 200, multiplier: 1.2 },
++  { rank: "NORMIE", minXp: 50, multiplier: 1 },
++  { rank: "NPC", minXp: 0, multiplier: 1 },
++];
++
++export function computeRank(xp: number): Rank {
++  for (const tier of LEVEL_TIERS) {
++    if (xp >= tier.minXp) return tier.rank;
++  }
++  return "NPC";
++}
++
++export function rankMultiplier(rank: Rank): number {
++  return LEVEL_TIERS.find((t) => t.rank === rank)?.multiplier ?? 1;
++}
++
++export function nextLevelTier(xp: number): LevelTier | null {
++  const ascending = [...LEVEL_TIERS].reverse();
++  for (const tier of ascending) {
++    if (xp < tier.minXp) return tier;
++  }
++  return null;
++}
++
++export const STREAK_MILESTONES = [1, 3, 7, 14, 30, 90, 365] as const;
++
++export const STREAK_MILESTONE_BONUS: Record<number, { xp: number; points: number }> = {
++  1: { xp: 5, points: 2 },
++  3: { xp: 15, points: 8 },
++  7: { xp: 40, points: 25 },
++  14: { xp: 90, points: 60 },
++  30: { xp: 200, points: 150 },
++  90: { xp: 600, points: 500 },
++  365: { xp: 3000, points: 3000 },
++};
+diff --git a/figabrain-social/backend/src/config/rewardConfig.ts b/figabrain-social/backend/src/config/rewardConfig.ts
+new file mode 100644
+index 0000000..9fb0f12
+--- /dev/null
++++ b/figabrain-social/backend/src/config/rewardConfig.ts
+@@ -0,0 +1,29 @@
++export type RewardAction =
++  | "LIKE"
++  | "COMMENT"
++  | "REPOST"
++  | "DAILY_LOGIN"
++  | "REFERRAL"
++  | "POST_CREATED";
++
++export interface RewardRule {
++  action: RewardAction;
++  amount: number;
++  xpAmount: number;
++  dailyCap: number | null;
++  cooldownSeconds: number;
++}
++
++/**
++ * Seed values for the Brain Points/XP reward engine. Persisted into
++ * RewardConfig at seed time so admins can tune amounts at runtime without a
++ * deploy; this object is only the fallback/default source of truth.
++ */
++export const DEFAULT_REWARD_RULES: Record<RewardAction, RewardRule> = {
++  LIKE: { action: "LIKE", amount: 0.2, xpAmount: 1, dailyCap: 10, cooldownSeconds: 1 },
++  COMMENT: { action: "COMMENT", amount: 0.5, xpAmount: 3, dailyCap: 25, cooldownSeconds: 5 },
++  REPOST: { action: "REPOST", amount: 1, xpAmount: 4, dailyCap: 20, cooldownSeconds: 10 },
++  DAILY_LOGIN: { action: "DAILY_LOGIN", amount: 5, xpAmount: 10, dailyCap: 5, cooldownSeconds: 0 },
++  REFERRAL: { action: "REFERRAL", amount: 20, xpAmount: 30, dailyCap: null, cooldownSeconds: 0 },
++  POST_CREATED: { action: "POST_CREATED", amount: 0.3, xpAmount: 5, dailyCap: 15, cooldownSeconds: 30 },
++};
+diff --git a/figabrain-social/backend/src/index.ts b/figabrain-social/backend/src/index.ts
+new file mode 100644
+index 0000000..3ba6a7b
+--- /dev/null
++++ b/figabrain-social/backend/src/index.ts
+@@ -0,0 +1,84 @@
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++import express from "express";
++import cors from "cors";
++import helmet from "helmet";
++import cookieParser from "cookie-parser";
++import swaggerUi from "swagger-ui-express";
++import YAML from "yamljs";
++import { env } from "./lib/env.js";
++import { globalRateLimiter } from "./middleware/rateLimit.js";
++import { requireNotBanned } from "./middleware/antibot.js";
++import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
++import { authRouter } from "./modules/auth/auth.routes.js";
++import { usersRouter } from "./modules/users/users.routes.js";
++import { postsRouter } from "./modules/posts/posts.routes.js";
++import { commentsRouter } from "./modules/posts/comments.routes.js";
++import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
++import { messagesRouter } from "./modules/messages/messages.routes.js";
++import { walletRouter } from "./modules/wallet/wallet.routes.js";
++import { leaderboardRouter } from "./modules/leaderboard/leaderboard.routes.js";
++import { rewardsRouter } from "./modules/rewards/rewards.routes.js";
++import { adminRouter } from "./modules/admin/admin.routes.js";
++import { web3Router } from "./modules/web3/web3.routes.js";
++import { missionsRouter } from "./modules/missions/missions.routes.js";
++import { achievementsRouter } from "./modules/achievements/achievements.routes.js";
++import { boostersRouter } from "./modules/boosters/boosters.routes.js";
++import { lootboxesRouter } from "./modules/lootboxes/lootboxes.routes.js";
++import { streaksRouter } from "./modules/streaks/streaks.routes.js";
++import { reputationRouter } from "./modules/reputation/reputation.routes.js";
++import { seasonsRouter } from "./modules/seasons/seasons.routes.js";
++import { tokenConversionRouter } from "./modules/web3/tokenConversion.routes.js";
++
++const __dirname = path.dirname(fileURLToPath(import.meta.url));
++const app = express();
++
++app.use(helmet());
++app.use(
++  cors({
++    origin: env.CORS_ORIGIN,
++    credentials: true,
++  })
++);
++app.use(express.json({ limit: "1mb" }));
++app.use(cookieParser());
++app.use(globalRateLimiter);
++app.use(requireNotBanned);
++
++app.get("/health", (_req, res) => {
++  res.json({ status: "ok", service: "figabrain-social-backend", time: new Date().toISOString() });
++});
++
++try {
++  const openapiDocument = YAML.load(path.join(__dirname, "../src/docs/openapi.yaml"));
++  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
++} catch {
++  // OpenAPI spec is optional at runtime; the API still works without /docs.
++}
++
++app.use("/api/auth", authRouter);
++app.use("/api/users", usersRouter);
++app.use("/api/posts", postsRouter);
++app.use("/api/posts/:id/comments", commentsRouter);
++app.use("/api/notifications", notificationsRouter);
++app.use("/api/messages", messagesRouter);
++app.use("/api/wallet", walletRouter);
++app.use("/api/leaderboard", leaderboardRouter);
++app.use("/api/rewards", rewardsRouter);
++app.use("/api/admin", adminRouter);
++app.use("/api/web3", web3Router);
++app.use("/api/missions", missionsRouter);
++app.use("/api/achievements", achievementsRouter);
++app.use("/api/boosters", boostersRouter);
++app.use("/api/lootboxes", lootboxesRouter);
++app.use("/api/streaks", streaksRouter);
++app.use("/api/reputation", reputationRouter);
++app.use("/api/seasons", seasonsRouter);
++app.use("/api/token-conversion", tokenConversionRouter);
++
++app.use(notFoundHandler);
++app.use(errorHandler);
++
++app.listen(env.PORT, () => {
++  console.log(`FIGABRAIN Social backend listening on port ${env.PORT}`);
++});
+diff --git a/figabrain-social/backend/src/modules/achievements/achievements.config.ts b/figabrain-social/backend/src/modules/achievements/achievements.config.ts
+new file mode 100644
+index 0000000..139e31b
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/achievements/achievements.config.ts
+@@ -0,0 +1,58 @@
++import type { AchievementCategory, Rarity } from "@prisma/client";
++
++export interface AchievementContext {
++  postsCount: number;
++  commentsCount: number;
++  likesGiven: number;
++  totalReferrals: number;
++  loginStreak: number;
++  reputation: number;
++}
++
++export interface AchievementSeed {
++  key: string;
++  name: string;
++  description: string;
++  category: AchievementCategory;
++  rarity: Rarity;
++  icon: string;
++  xpReward: number;
++  pointsReward: number;
++}
++
++/** Cheap, pure predicates evaluated against live AchievementContext after any rewarded action. */
++export const ACHIEVEMENT_CHECKS: Record<string, (ctx: AchievementContext) => boolean> = {
++  first_post: (ctx) => ctx.postsCount >= 1,
++  prolific_poster: (ctx) => ctx.postsCount >= 50,
++  content_legend: (ctx) => ctx.postsCount >= 500,
++  first_like: (ctx) => ctx.likesGiven >= 1,
++  social_butterfly: (ctx) => ctx.likesGiven >= 100,
++  commentator: (ctx) => ctx.commentsCount >= 25,
++  debate_champion: (ctx) => ctx.commentsCount >= 250,
++  week_streak: (ctx) => ctx.loginStreak >= 7,
++  month_streak: (ctx) => ctx.loginStreak >= 30,
++  year_streak: (ctx) => ctx.loginStreak >= 365,
++  networker: (ctx) => ctx.totalReferrals >= 1,
++  recruiter: (ctx) => ctx.totalReferrals >= 10,
++  community_pillar: (ctx) => ctx.totalReferrals >= 50,
++  reputable: (ctx) => ctx.reputation >= 100,
++  highly_trusted: (ctx) => ctx.reputation >= 500,
++};
++
++export const ACHIEVEMENT_CATALOG: AchievementSeed[] = [
++  { key: "first_post", name: "First Post", description: "Published your first post", category: "CONTENT", rarity: "COMMON", icon: "📝", xpReward: 10, pointsReward: 5 },
++  { key: "prolific_poster", name: "Prolific Poster", description: "Published 50 posts", category: "CONTENT", rarity: "RARE", icon: "🖋️", xpReward: 100, pointsReward: 50 },
++  { key: "content_legend", name: "Content Legend", description: "Published 500 posts", category: "CONTENT", rarity: "MYTHIC", icon: "👑", xpReward: 1000, pointsReward: 1000 },
++  { key: "first_like", name: "First Like", description: "Gave your first like", category: "SOCIAL", rarity: "COMMON", icon: "👍", xpReward: 5, pointsReward: 2 },
++  { key: "social_butterfly", name: "Social Butterfly", description: "Gave 100 likes", category: "SOCIAL", rarity: "RARE", icon: "🦋", xpReward: 80, pointsReward: 40 },
++  { key: "commentator", name: "Commentator", description: "Wrote 25 comments", category: "SOCIAL", rarity: "COMMON", icon: "💬", xpReward: 40, pointsReward: 20 },
++  { key: "debate_champion", name: "Debate Champion", description: "Wrote 250 comments", category: "SOCIAL", rarity: "EPIC", icon: "🎙️", xpReward: 300, pointsReward: 150 },
++  { key: "week_streak", name: "Week Streak", description: "Logged in 7 days in a row", category: "ACTIVITY", rarity: "COMMON", icon: "🔥", xpReward: 40, pointsReward: 25 },
++  { key: "month_streak", name: "Month Streak", description: "Logged in 30 days in a row", category: "ACTIVITY", rarity: "EPIC", icon: "📅", xpReward: 200, pointsReward: 150 },
++  { key: "year_streak", name: "Year Streak", description: "Logged in 365 days in a row", category: "ACTIVITY", rarity: "MYTHIC", icon: "🏆", xpReward: 3000, pointsReward: 3000 },
++  { key: "networker", name: "Networker", description: "Referred your first friend", category: "REFERRAL", rarity: "COMMON", icon: "🤝", xpReward: 30, pointsReward: 20 },
++  { key: "recruiter", name: "Recruiter", description: "Referred 10 friends", category: "REFERRAL", rarity: "RARE", icon: "📢", xpReward: 200, pointsReward: 100 },
++  { key: "community_pillar", name: "Community Pillar", description: "Referred 50 friends", category: "REFERRAL", rarity: "LEGENDARY", icon: "🏛️", xpReward: 800, pointsReward: 500 },
++  { key: "reputable", name: "Reputable", description: "Reached 100 reputation", category: "COMMUNITY", rarity: "RARE", icon: "⭐", xpReward: 120, pointsReward: 60 },
++  { key: "highly_trusted", name: "Highly Trusted", description: "Reached 500 reputation", category: "COMMUNITY", rarity: "LEGENDARY", icon: "🛡️", xpReward: 500, pointsReward: 300 },
++];
+diff --git a/figabrain-social/backend/src/modules/achievements/achievements.routes.ts b/figabrain-social/backend/src/modules/achievements/achievements.routes.ts
+new file mode 100644
+index 0000000..4cb02ad
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/achievements/achievements.routes.ts
+@@ -0,0 +1,14 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { getUserAchievements } from "./achievements.service.js";
++
++export const achievementsRouter = Router();
++
++achievementsRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    res.json({ data: await getUserAchievements(req.user!.id) });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/achievements/achievements.service.ts b/figabrain-social/backend/src/modules/achievements/achievements.service.ts
+new file mode 100644
+index 0000000..b4e9ae3
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/achievements/achievements.service.ts
+@@ -0,0 +1,83 @@
++import { Prisma } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { ACHIEVEMENT_CHECKS, type AchievementContext } from "./achievements.config.js";
++
++async function buildContext(userId: string): Promise<AchievementContext> {
++  const [postsCount, commentsCount, likesGiven, totalReferrals, user] = await Promise.all([
++    prisma.post.count({ where: { authorId: userId } }),
++    prisma.comment.count({ where: { authorId: userId } }),
++    prisma.like.count({ where: { userId } }),
++    prisma.user.count({ where: { referredById: userId } }),
++    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { loginStreak: true, reputation: true } }),
++  ]);
++  return { postsCount, commentsCount, likesGiven, totalReferrals, loginStreak: user.loginStreak, reputation: user.reputation };
++}
++
++/**
++ * Re-evaluates every not-yet-unlocked achievement against the user's live
++ * stats and grants the reward for any that newly qualify. Call after any
++ * action that could move the needle (post, comment, like, referral, login).
++ */
++export async function checkAndGrantAchievements(userId: string) {
++  const [unlockedRows, catalog] = await Promise.all([
++    prisma.userAchievement.findMany({ where: { userId }, select: { achievement: { select: { key: true } } } }),
++    prisma.achievement.findMany(),
++  ]);
++  const unlockedKeys = new Set(unlockedRows.map((r) => r.achievement.key));
++  const candidates = catalog.filter((a) => !unlockedKeys.has(a.key) && ACHIEVEMENT_CHECKS[a.key]);
++  if (candidates.length === 0) return [];
++
++  const ctx = await buildContext(userId);
++  const newlyUnlocked: typeof catalog = [];
++
++  for (const achievement of candidates) {
++    if (!ACHIEVEMENT_CHECKS[achievement.key](ctx)) continue;
++
++    try {
++      await prisma.userAchievement.create({ data: { userId, achievementId: achievement.id } });
++    } catch (err) {
++      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") continue;
++      throw err;
++    }
++
++    await prisma.user.update({
++      where: { id: userId },
++      data: { brainPoints: { increment: achievement.pointsReward }, xp: { increment: achievement.xpReward } },
++    });
++    await prisma.economyLog.create({
++      data: { userId, type: "ACHIEVEMENT_UNLOCKED", amount: achievement.pointsReward, metadata: { key: achievement.key } },
++    });
++    await prisma.notification.create({
++      data: {
++        recipientId: userId,
++        type: "REWARD",
++        message: `Досягнення розблоковано: ${achievement.icon} ${achievement.name}`,
++      },
++    });
++
++    newlyUnlocked.push(achievement);
++  }
++
++  return newlyUnlocked;
++}
++
++export async function getUserAchievements(userId: string) {
++  const [unlocked, catalog] = await Promise.all([
++    prisma.userAchievement.findMany({ where: { userId }, include: { achievement: true } }),
++    prisma.achievement.findMany(),
++  ]);
++  const unlockedByKey = new Map(unlocked.map((u) => [u.achievement.key, u.unlockedAt]));
++
++  return catalog.map((a) => ({
++    key: a.key,
++    name: a.name,
++    description: a.description,
++    category: a.category,
++    rarity: a.rarity,
++    icon: a.icon,
++    xpReward: a.xpReward,
++    pointsReward: Number(a.pointsReward),
++    unlocked: unlockedByKey.has(a.key),
++    unlockedAt: unlockedByKey.get(a.key) ?? null,
++  }));
++}
+diff --git a/figabrain-social/backend/src/modules/admin/admin.routes.ts b/figabrain-social/backend/src/modules/admin/admin.routes.ts
+new file mode 100644
+index 0000000..d54149f
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/admin/admin.routes.ts
+@@ -0,0 +1,342 @@
++import { Router } from "express";
++import { z } from "zod";
++import { prisma } from "../../lib/prisma.js";
++import { requireAuth, requireAdmin } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { validateBody } from "../../middleware/validate.js";
++import { writeAuditLog } from "../../utils/logger.js";
++import { startSeason, endSeason } from "../seasons/seasons.service.js";
++import { computeSuspiciousScore } from "../antibot/antibot.service.js";
++
++export const adminRouter = Router();
++adminRouter.use(requireAuth, requireAdmin);
++
++// ---- User management ----
++
++adminRouter.get(
++  "/users",
++  asyncHandler(async (req, res) => {
++    const search = typeof req.query.search === "string" ? req.query.search : undefined;
++    const users = await prisma.user.findMany({
++      where: search
++        ? { OR: [{ username: { contains: search, mode: "insensitive" } }, { displayName: { contains: search, mode: "insensitive" } }] }
++        : undefined,
++      orderBy: { createdAt: "desc" },
++      take: 100,
++      select: {
++        id: true,
++        username: true,
++        displayName: true,
++        brainPoints: true,
++        rank: true,
++        isBanned: true,
++        isShadowBanned: true,
++        isAdmin: true,
++        createdAt: true,
++      },
++    });
++    res.json({ data: users.map((u) => ({ ...u, brainPoints: Number(u.brainPoints) })) });
++  })
++);
++
++adminRouter.post(
++  "/users/:id/ban",
++  asyncHandler(async (req, res) => {
++    const user = await prisma.user.update({ where: { id: req.params.id }, data: { isBanned: true } });
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_BAN_USER", entity: "User", entityId: user.id });
++    res.json({ data: { banned: true } });
++  })
++);
++
++adminRouter.post(
++  "/users/:id/unban",
++  asyncHandler(async (req, res) => {
++    const user = await prisma.user.update({ where: { id: req.params.id }, data: { isBanned: false } });
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_UNBAN_USER", entity: "User", entityId: user.id });
++    res.json({ data: { banned: false } });
++  })
++);
++
++adminRouter.post(
++  "/users/:id/shadow-ban",
++  asyncHandler(async (req, res) => {
++    await prisma.shadowBan.upsert({
++      where: { userId: req.params.id },
++      create: { userId: req.params.id, reason: "manual_admin_action" },
++      update: {},
++    });
++    await prisma.user.update({ where: { id: req.params.id }, data: { isShadowBanned: true } });
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SHADOW_BAN", entity: "User", entityId: req.params.id });
++    res.json({ data: { shadowBanned: true } });
++  })
++);
++
++adminRouter.post(
++  "/users/:id/shadow-unban",
++  asyncHandler(async (req, res) => {
++    await prisma.shadowBan.deleteMany({ where: { userId: req.params.id } });
++    await prisma.user.update({ where: { id: req.params.id }, data: { isShadowBanned: false } });
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SHADOW_UNBAN", entity: "User", entityId: req.params.id });
++    res.json({ data: { shadowBanned: false } });
++  })
++);
++
++// ---- Reward management ----
++
++const rewardConfigSchema = z.object({
++  amount: z.number().min(0),
++  xpAmount: z.number().min(0).optional(),
++  dailyCap: z.number().min(0).nullable().optional(),
++  cooldownSeconds: z.number().min(0).optional(),
++  enabled: z.boolean().optional(),
++});
++
++adminRouter.put(
++  "/reward-config/:action",
++  validateBody(rewardConfigSchema),
++  asyncHandler(async (req, res) => {
++    const config = await prisma.rewardConfig.upsert({
++      where: { action: req.params.action },
++      create: { action: req.params.action, ...req.body },
++      update: req.body,
++    });
++    await writeAuditLog({
++      userId: req.user!.id,
++      action: "ADMIN_REWARD_CONFIG_UPDATED",
++      entity: "RewardConfig",
++      entityId: config.id,
++      metadata: req.body,
++    });
++    res.json({ data: config });
++  })
++);
++
++// ---- Seasons ----
++
++const startSeasonSchema = z.object({
++  name: z.string().min(1).max(100),
++  durationDays: z.number().min(1).max(365).default(30),
++});
++
++adminRouter.post(
++  "/seasons",
++  validateBody(startSeasonSchema),
++  asyncHandler(async (req, res) => {
++    const season = await startSeason(req.body.name, req.body.durationDays);
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SEASON_STARTED", entity: "Season", entityId: season.id });
++    res.status(201).json({ data: season });
++  })
++);
++
++adminRouter.post(
++  "/seasons/:id/end",
++  asyncHandler(async (req, res) => {
++    const participantCount = await endSeason(req.params.id);
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_SEASON_ENDED", entity: "Season", entityId: req.params.id, metadata: { participantCount } });
++    res.json({ data: { ended: true, participantCount } });
++  })
++);
++
++// ---- Content moderation ----
++
++adminRouter.get(
++  "/reports",
++  asyncHandler(async (_req, res) => {
++    const reports = await prisma.report.findMany({
++      where: { resolved: false },
++      orderBy: { createdAt: "desc" },
++      take: 100,
++      include: { filer: { select: { username: true } } },
++    });
++    res.json({ data: reports });
++  })
++);
++
++adminRouter.post(
++  "/posts/:id/remove",
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.update({ where: { id: req.params.id }, data: { moderation: "REMOVED" } });
++    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_REMOVE_POST", entity: "Post", entityId: post.id });
++    res.json({ data: { removed: true } });
++  })
++);
++
++// ---- Analytics dashboard ----
++
++adminRouter.get(
++  "/analytics/overview",
++  asyncHandler(async (_req, res) => {
++    const [userCount, postCount, totalBrainPoints, bannedCount, shadowBannedCount] = await Promise.all([
++      prisma.user.count(),
++      prisma.post.count(),
++      prisma.user.aggregate({ _sum: { brainPoints: true } }),
++      prisma.user.count({ where: { isBanned: true } }),
++      prisma.shadowBan.count(),
++    ]);
++
++    res.json({
++      data: {
++        userCount,
++        postCount,
++        totalBrainPointsIssued: Number(totalBrainPoints._sum.brainPoints ?? 0),
++        bannedCount,
++        shadowBannedCount,
++      },
++    });
++  })
++);
++
++// ---- Reward dashboard ----
++
++adminRouter.get(
++  "/analytics/rewards",
++  asyncHandler(async (_req, res) => {
++    const since = new Date(Date.now() - 7 * 86_400_000);
++    const byAction = await prisma.rewardLedgerEntry.groupBy({
++      by: ["action"],
++      where: { createdAt: { gte: since } },
++      _sum: { amount: true },
++      _count: { _all: true },
++    });
++    res.json({
++      data: byAction.map((row) => ({
++        action: row.action,
++        totalAmount: Number(row._sum.amount ?? 0),
++        eventCount: row._count._all,
++      })),
++    });
++  })
++);
++
++// ---- Economy dashboard ----
++
++adminRouter.get(
++  "/analytics/economy",
++  asyncHandler(async (_req, res) => {
++    const [totalBrainPoints, totalXp, lootBoxesOpened, boostersActivated, tokenConversions, rankDistribution] = await Promise.all([
++      prisma.user.aggregate({ _sum: { brainPoints: true } }),
++      prisma.user.aggregate({ _sum: { xp: true } }),
++      prisma.userLootBox.count({ where: { opened: true } }),
++      prisma.userBooster.count(),
++      prisma.tokenConversionRequest.aggregate({ _sum: { brainPointsSpent: true, fgbTokenAmount: true }, _count: { _all: true } }),
++      prisma.user.groupBy({ by: ["rank"], _count: { _all: true } }),
++    ]);
++
++    res.json({
++      data: {
++        totalBrainPointsInCirculation: Number(totalBrainPoints._sum.brainPoints ?? 0),
++        totalXpEarned: totalXp._sum.xp ?? 0,
++        lootBoxesOpened,
++        boostersActivated,
++        tokenConversions: {
++          count: tokenConversions._count._all,
++          totalBrainPointsConverted: Number(tokenConversions._sum.brainPointsSpent ?? 0),
++          totalFgbIssued: Number(tokenConversions._sum.fgbTokenAmount ?? 0),
++        },
++        rankDistribution: rankDistribution.map((r) => ({ rank: r.rank, count: r._count._all })),
++      },
++    });
++  })
++);
++
++// ---- Retention dashboard ----
++
++adminRouter.get(
++  "/analytics/retention",
++  asyncHandler(async (_req, res) => {
++    const now = Date.now();
++    const [dau, wau, mau, streakDistribution] = await Promise.all([
++      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 86_400_000) } } }),
++      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 7 * 86_400_000) } } }),
++      prisma.user.count({ where: { lastLoginAt: { gte: new Date(now - 30 * 86_400_000) } } }),
++      prisma.user.groupBy({ by: ["loginStreak"], _count: { _all: true }, orderBy: { loginStreak: "asc" } }),
++    ]);
++
++    res.json({
++      data: {
++        dailyActiveUsers: dau,
++        weeklyActiveUsers: wau,
++        monthlyActiveUsers: mau,
++        streakDistribution: streakDistribution.map((s) => ({ streak: s.loginStreak, count: s._count._all })),
++      },
++    });
++  })
++);
++
++// ---- Engagement dashboard ----
++
++adminRouter.get(
++  "/analytics/engagement",
++  asyncHandler(async (_req, res) => {
++    const [userCount, postCount, commentCount, likeCount, repostCount, missionsCompleted, achievementsUnlocked] = await Promise.all([
++      prisma.user.count(),
++      prisma.post.count(),
++      prisma.comment.count(),
++      prisma.like.count(),
++      prisma.repost.count(),
++      prisma.userMission.count({ where: { completed: true } }),
++      prisma.userAchievement.count(),
++    ]);
++
++    const safeUserCount = Math.max(userCount, 1);
++
++    res.json({
++      data: {
++        postsPerUser: postCount / safeUserCount,
++        commentsPerUser: commentCount / safeUserCount,
++        likesPerUser: likeCount / safeUserCount,
++        repostsPerUser: repostCount / safeUserCount,
++        missionsCompleted,
++        achievementsUnlocked,
++      },
++    });
++  })
++);
++
++// ---- Fraud detection dashboard ----
++
++adminRouter.get(
++  "/fraud/duplicate-devices",
++  asyncHandler(async (_req, res) => {
++    const grouped = await prisma.user.groupBy({
++      by: ["deviceFingerprint"],
++      where: { deviceFingerprint: { not: null } },
++      _count: { _all: true },
++      having: { deviceFingerprint: { _count: { gt: 1 } } },
++    });
++    res.json({ data: grouped });
++  })
++);
++
++adminRouter.get(
++  "/fraud/suspicious-score/:userId",
++  asyncHandler(async (req, res) => {
++    res.json({ data: await computeSuspiciousScore(req.params.userId) });
++  })
++);
++
++adminRouter.get(
++  "/fraud/shadow-bans",
++  asyncHandler(async (_req, res) => {
++    const bans = await prisma.shadowBan.findMany({
++      orderBy: { createdAt: "desc" },
++      take: 100,
++    });
++    const users = await prisma.user.findMany({
++      where: { id: { in: bans.map((b) => b.userId) } },
++      select: { id: true, username: true },
++    });
++    const usernameById = new Map(users.map((u) => [u.id, u.username]));
++    res.json({
++      data: bans.map((b) => ({ ...b, username: usernameById.get(b.userId) ?? null })),
++    });
++  })
++);
++
++adminRouter.get(
++  "/audit-logs",
++  asyncHandler(async (_req, res) => {
++    const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
++    res.json({ data: logs });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/antibot/antibot.service.ts b/figabrain-social/backend/src/modules/antibot/antibot.service.ts
+new file mode 100644
+index 0000000..b0144d6
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/antibot/antibot.service.ts
+@@ -0,0 +1,138 @@
++import { prisma } from "../../lib/prisma.js";
++import { sha256Hex } from "../../lib/encryption.js";
++import { writeAuditLog } from "../../utils/logger.js";
++
++const MULTI_ACCOUNT_DEVICE_THRESHOLD = 3;
++const DUPLICATE_CONTENT_WINDOW_MS = 10 * 60_000;
++const REWARD_VELOCITY_WINDOW_MS = 5 * 60_000;
++const REWARD_VELOCITY_THRESHOLD = 60;
++const POST_VELOCITY_WINDOW_MS = 60 * 60_000;
++const POST_VELOCITY_THRESHOLD = 30;
++const LOW_REPUTATION_THRESHOLD = -50;
++const AUTO_SHADOW_BAN_SCORE_THRESHOLD = 50;
++
++/**
++ * Flags accounts sharing the same device fingerprint once the count of
++ * distinct accounts on that device crosses the threshold. Flagged accounts
++ * are shadow-banned rather than hard-banned so the abuser keeps farming
++ * worthless rewards instead of immediately noticing and re-registering.
++ */
++export async function flagMultiAccountAbuse(userId: string, deviceFingerprint: string): Promise<void> {
++  const accountsOnDevice = await prisma.user.count({ where: { deviceFingerprint } });
++
++  if (accountsOnDevice >= MULTI_ACCOUNT_DEVICE_THRESHOLD) {
++    await prisma.shadowBan.upsert({
++      where: { userId },
++      create: { userId, reason: `multi_account_device:${accountsOnDevice}` },
++      update: {},
++    });
++    await writeAuditLog({
++      userId,
++      action: "SHADOW_BAN_APPLIED",
++      entity: "User",
++      entityId: userId,
++      metadata: { reason: "multi_account_device", accountsOnDevice, deviceFingerprint },
++    });
++  }
++}
++
++/**
++ * Duplicate-content detection for posts: hashes the normalized content and
++ * rejects re-submission of the same text by the same user within a short
++ * window, defeating copy-paste spam loops.
++ */
++export function hashPostContent(content: string): string {
++  return sha256Hex(content.trim().toLowerCase());
++}
++
++export async function isDuplicatePost(authorId: string, content: string): Promise<boolean> {
++  const contentHash = hashPostContent(content);
++  const recentDuplicate = await prisma.post.findFirst({
++    where: {
++      authorId,
++      contentHash,
++      createdAt: { gte: new Date(Date.now() - DUPLICATE_CONTENT_WINDOW_MS) },
++    },
++  });
++  return recentDuplicate !== null;
++}
++
++/**
++ * Wallet-abuse heuristic: an address must be unique per user (DB constraint
++ * enforces this) and a single user must not control more than one active
++ * wallet record. Surfaced here so future on-chain top-up flows can call it
++ * before crediting a wallet.
++ */
++export async function isWalletAbuseSuspected(userId: string): Promise<boolean> {
++  const walletCount = await prisma.wallet.count({ where: { userId } });
++  return walletCount > 1;
++}
++
++export interface SuspiciousScore {
++  score: number;
++  rewardVelocityFlag: boolean;
++  postVelocityFlag: boolean;
++  multiAccountFlag: boolean;
++  lowReputationFlag: boolean;
++}
++
++/**
++ * Combines independent abuse signals into a single 0-100 score: each flag
++ * that trips contributes 25 points. Cheap, index-backed counts only — safe
++ * to run on every rewarded action, not just on a moderation review pass.
++ */
++export async function computeSuspiciousScore(userId: string): Promise<SuspiciousScore> {
++  const [rewardEventCount, postCount, user] = await Promise.all([
++    prisma.rewardLedgerEntry.count({
++      where: { userId, createdAt: { gte: new Date(Date.now() - REWARD_VELOCITY_WINDOW_MS) } },
++    }),
++    prisma.post.count({
++      where: { authorId: userId, createdAt: { gte: new Date(Date.now() - POST_VELOCITY_WINDOW_MS) } },
++    }),
++    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { reputation: true, deviceFingerprint: true } }),
++  ]);
++
++  const accountsOnDevice = user.deviceFingerprint
++    ? await prisma.user.count({ where: { deviceFingerprint: user.deviceFingerprint } })
++    : 1;
++
++  const flags: SuspiciousScore = {
++    score: 0,
++    rewardVelocityFlag: rewardEventCount > REWARD_VELOCITY_THRESHOLD,
++    postVelocityFlag: postCount > POST_VELOCITY_THRESHOLD,
++    multiAccountFlag: accountsOnDevice >= MULTI_ACCOUNT_DEVICE_THRESHOLD,
++    lowReputationFlag: user.reputation < LOW_REPUTATION_THRESHOLD,
++  };
++  flags.score =
++    (Number(flags.rewardVelocityFlag) +
++      Number(flags.postVelocityFlag) +
++      Number(flags.multiAccountFlag) +
++      Number(flags.lowReputationFlag)) *
++    25;
++
++  return flags;
++}
++
++/**
++ * Auto shadow-bans a user once their suspicious score crosses the threshold.
++ * Idempotent: never re-bans or downgrades a manually-applied ban. Called
++ * after every reward grant so farms get caught within their first abusive
++ * burst instead of waiting for a manual review pass.
++ */
++export async function evaluateAndAutoShadowBan(userId: string): Promise<void> {
++  const breakdown = await computeSuspiciousScore(userId);
++  if (breakdown.score < AUTO_SHADOW_BAN_SCORE_THRESHOLD) return;
++
++  const existing = await prisma.shadowBan.findUnique({ where: { userId } });
++  if (existing) return;
++
++  await prisma.shadowBan.create({ data: { userId, reason: `suspicious_score:${breakdown.score}` } });
++  await prisma.user.update({ where: { id: userId }, data: { isShadowBanned: true } });
++  await writeAuditLog({
++    userId,
++    action: "AUTO_SHADOW_BAN",
++    entity: "User",
++    entityId: userId,
++    metadata: { ...breakdown },
++  });
++}
+diff --git a/figabrain-social/backend/src/modules/boosters/boosters.routes.ts b/figabrain-social/backend/src/modules/boosters/boosters.routes.ts
+new file mode 100644
+index 0000000..15aa77c
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/boosters/boosters.routes.ts
+@@ -0,0 +1,15 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { listActiveBoosters } from "./boosters.service.js";
++
++export const boostersRouter = Router();
++
++boostersRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    const active = await listActiveBoosters(req.user!.id);
++    res.json({ data: active });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/boosters/boosters.service.ts b/figabrain-social/backend/src/modules/boosters/boosters.service.ts
+new file mode 100644
+index 0000000..979b1ed
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/boosters/boosters.service.ts
+@@ -0,0 +1,49 @@
++import type { BoosterSource, BoosterType } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { HttpError } from "../../middleware/errorHandler.js";
++
++/** Highest active multiplier of `type` for `userId`, or 1 (no-op) if none active. */
++export async function getActiveMultiplier(userId: string, type: BoosterType): Promise<number> {
++  const active = await prisma.userBooster.findFirst({
++    where: { userId, type, expiresAt: { gt: new Date() } },
++    orderBy: { multiplier: "desc" },
++  });
++  return active ? Number(active.multiplier) : 1;
++}
++
++export async function listActiveBoosters(userId: string) {
++  const boosters = await prisma.userBooster.findMany({
++    where: { userId, expiresAt: { gt: new Date() } },
++    include: { booster: { select: { key: true, name: true, rarity: true } } },
++    orderBy: { expiresAt: "asc" },
++  });
++  return boosters.map((b) => ({
++    type: b.type,
++    multiplier: Number(b.multiplier),
++    source: b.source,
++    expiresAt: b.expiresAt,
++    booster: b.booster,
++  }));
++}
++
++export async function grantBooster(userId: string, boosterKey: string, source: BoosterSource) {
++  const booster = await prisma.booster.findUnique({ where: { key: boosterKey } });
++  if (!booster) throw new HttpError(404, "Booster not found", "BOOSTER_NOT_FOUND");
++
++  const userBooster = await prisma.userBooster.create({
++    data: {
++      userId,
++      boosterId: booster.id,
++      type: booster.type,
++      multiplier: booster.multiplier,
++      source,
++      expiresAt: new Date(Date.now() + booster.durationSeconds * 1000),
++    },
++  });
++
++  await prisma.economyLog.create({
++    data: { userId, type: "BOOSTER_ACTIVATED", metadata: { boosterKey, source } },
++  });
++
++  return userBooster;
++}
+diff --git a/figabrain-social/backend/src/modules/lootboxes/lootboxes.routes.ts b/figabrain-social/backend/src/modules/lootboxes/lootboxes.routes.ts
+new file mode 100644
+index 0000000..e7f2e06
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/lootboxes/lootboxes.routes.ts
+@@ -0,0 +1,36 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
++import { listUserLootBoxes, openLootBox } from "./lootboxes.service.js";
++
++export const lootboxesRouter = Router();
++
++lootboxesRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    const boxes = await listUserLootBoxes(req.user!.id);
++    res.json({
++      data: boxes.map((b) => ({
++        id: b.id,
++        lootBox: b.lootBox,
++        source: b.source,
++        opened: b.opened,
++        openedAt: b.openedAt,
++        rewardJson: b.rewardJson,
++      })),
++    });
++  })
++);
++
++lootboxesRouter.post(
++  "/:id/open",
++  requireAuth,
++  writeActionRateLimiter,
++  asyncHandler(async (req, res) => {
++    if (!req.params.id) throw new HttpError(400, "Missing loot box id", "INVALID_REQUEST");
++    const result = await openLootBox(req.user!.id, req.params.id);
++    res.json({ data: result });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/lootboxes/lootboxes.service.ts b/figabrain-social/backend/src/modules/lootboxes/lootboxes.service.ts
+new file mode 100644
+index 0000000..1700b42
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/lootboxes/lootboxes.service.ts
+@@ -0,0 +1,76 @@
++import { prisma } from "../../lib/prisma.js";
++import { HttpError } from "../../middleware/errorHandler.js";
++
++function randomInRange(min: number, max: number): number {
++  return min + Math.random() * (max - min);
++}
++
++export async function grantLootBox(userId: string, lootBoxKey: string, source: string) {
++  const lootBox = await prisma.lootBox.findUnique({ where: { key: lootBoxKey } });
++  if (!lootBox) throw new HttpError(404, "Loot box not found", "LOOTBOX_NOT_FOUND");
++
++  return prisma.userLootBox.create({ data: { userId, lootBoxId: lootBox.id, source } });
++}
++
++export interface LootBoxOpenResult {
++  pointsAwarded: number;
++  xpAwarded: number;
++  boosterKey: string | null;
++}
++
++/** Opens a previously-granted, unopened loot box and applies its rolled reward to the user. */
++export async function openLootBox(userId: string, userLootBoxId: string): Promise<LootBoxOpenResult> {
++  const userLootBox = await prisma.userLootBox.findUnique({
++    where: { id: userLootBoxId },
++    include: { lootBox: true },
++  });
++
++  if (!userLootBox || userLootBox.userId !== userId) {
++    throw new HttpError(404, "Loot box not found", "LOOTBOX_NOT_FOUND");
++  }
++  if (userLootBox.opened) {
++    throw new HttpError(409, "Loot box already opened", "LOOTBOX_ALREADY_OPENED");
++  }
++
++  const box = userLootBox.lootBox;
++  const pointsAwarded = Math.round(randomInRange(Number(box.pointsMin), Number(box.pointsMax)) * 100) / 100;
++  const xpAwarded = Math.round(randomInRange(box.xpMin, box.xpMax));
++  const wonBooster = Math.random() < Number(box.boosterChance);
++
++  let boosterKey: string | null = null;
++  if (wonBooster) {
++    const candidates = await prisma.booster.findMany({ where: { rarity: box.rarity } });
++    if (candidates.length > 0) {
++      boosterKey = candidates[Math.floor(Math.random() * candidates.length)].key;
++    }
++  }
++
++  await prisma.$transaction(async (tx) => {
++    await tx.userLootBox.update({
++      where: { id: userLootBoxId },
++      data: { opened: true, openedAt: new Date(), rewardJson: { pointsAwarded, xpAwarded, boosterKey } },
++    });
++    await tx.user.update({
++      where: { id: userId },
++      data: { brainPoints: { increment: pointsAwarded }, xp: { increment: xpAwarded } },
++    });
++    await tx.economyLog.create({
++      data: { userId, type: "LOOTBOX_OPENED", amount: pointsAwarded, metadata: { lootBoxKey: box.key, xpAwarded, boosterKey } },
++    });
++  });
++
++  if (boosterKey) {
++    const { grantBooster } = await import("../boosters/boosters.service.js");
++    await grantBooster(userId, boosterKey, "LOOTBOX");
++  }
++
++  return { pointsAwarded, xpAwarded, boosterKey };
++}
++
++export async function listUserLootBoxes(userId: string) {
++  return prisma.userLootBox.findMany({
++    where: { userId },
++    include: { lootBox: { select: { key: true, name: true, rarity: true } } },
++    orderBy: { createdAt: "desc" },
++  });
++}
+diff --git a/figabrain-social/backend/src/modules/missions/missions.config.ts b/figabrain-social/backend/src/modules/missions/missions.config.ts
+new file mode 100644
+index 0000000..83edc49
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/missions/missions.config.ts
+@@ -0,0 +1,46 @@
++import type { MissionAction, MissionPeriod } from "@prisma/client";
++import type { RewardAction } from "../../config/rewardConfig.js";
++
++/** Maps a Brain Points reward action to the mission-progress bucket it counts toward. */
++export const MISSION_ACTION_BY_REWARD_ACTION: Partial<Record<RewardAction, MissionAction>> = {
++  LIKE: "LIKE",
++  COMMENT: "COMMENT",
++  REPOST: "REPOST",
++  POST_CREATED: "POST",
++  REFERRAL: "REFERRAL",
++  DAILY_LOGIN: "LOGIN",
++};
++
++export interface MissionSeed {
++  key: string;
++  period: MissionPeriod;
++  action: MissionAction;
++  title: string;
++  description: string;
++  targetCount: number;
++  xpReward: number;
++  pointsReward: number;
++}
++
++/** Seed catalog for `npm run prisma:seed`. New missions can be added via the admin API at runtime. */
++export const MISSION_CATALOG: MissionSeed[] = [
++  { key: "daily_like_5", period: "DAILY", action: "LIKE", title: "Лайкни 5 постів", description: "Постав 5 лайків іншим користувачам", targetCount: 5, xpReward: 10, pointsReward: 3 },
++  { key: "daily_comment_3", period: "DAILY", action: "COMMENT", title: "Напиши 3 коментарі", description: "Залиш 3 коментарі під будь-якими постами", targetCount: 3, xpReward: 15, pointsReward: 5 },
++  { key: "daily_post_1", period: "DAILY", action: "POST", title: "Створи 1 пост", description: "Опублікуй хоча б один пост", targetCount: 1, xpReward: 10, pointsReward: 4 },
++  { key: "daily_login", period: "DAILY", action: "LOGIN", title: "Зайди щодня", description: "Відвідай FIGABRAIN сьогодні", targetCount: 1, xpReward: 5, pointsReward: 2 },
++  { key: "weekly_comment_50", period: "WEEKLY", action: "COMMENT", title: "50 коментарів за тиждень", description: "Будь активним учасником дискусій", targetCount: 50, xpReward: 150, pointsReward: 60 },
++  { key: "weekly_post_20", period: "WEEKLY", action: "POST", title: "20 постів за тиждень", description: "Публікуй контент щодня", targetCount: 20, xpReward: 200, pointsReward: 80 },
++  { key: "weekly_referral_10", period: "WEEKLY", action: "REFERRAL", title: "Запроси 10 друзів", description: "Розбудовуй спільноту FIGABRAIN", targetCount: 10, xpReward: 400, pointsReward: 200 },
++];
++
++export function periodKeyFor(period: MissionPeriod, date: Date = new Date()): string {
++  if (period === "DAILY") {
++    return date.toISOString().slice(0, 10);
++  }
++  const utc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
++  const dayNum = (utc.getUTCDay() + 6) % 7;
++  utc.setUTCDate(utc.getUTCDate() - dayNum + 3);
++  const firstThursday = new Date(Date.UTC(utc.getUTCFullYear(), 0, 4));
++  const weekNumber = 1 + Math.round(((utc.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
++  return `${utc.getUTCFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
++}
+diff --git a/figabrain-social/backend/src/modules/missions/missions.routes.ts b/figabrain-social/backend/src/modules/missions/missions.routes.ts
+new file mode 100644
+index 0000000..8295f78
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/missions/missions.routes.ts
+@@ -0,0 +1,20 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { getMissionsForUser } from "./missions.service.js";
++
++export const missionsRouter = Router();
++
++missionsRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    const missions = await getMissionsForUser(req.user!.id);
++    res.json({
++      data: {
++        daily: missions.filter((m) => m.period === "DAILY"),
++        weekly: missions.filter((m) => m.period === "WEEKLY"),
++      },
++    });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/missions/missions.service.ts b/figabrain-social/backend/src/modules/missions/missions.service.ts
+new file mode 100644
+index 0000000..96a0265
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/missions/missions.service.ts
+@@ -0,0 +1,107 @@
++import type { MissionAction, MissionPeriod } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { periodKeyFor } from "./missions.config.js";
++
++/** Creates (idempotently) the current period's UserMission rows for every active mission, so progress has somewhere to land. */
++export async function ensureAssignedMissions(userId: string, period?: MissionPeriod): Promise<void> {
++  const missions = await prisma.mission.findMany({
++    where: { active: true, ...(period ? { period } : {}) },
++  });
++
++  await Promise.all(
++    missions.map((mission) =>
++      prisma.userMission.upsert({
++        where: { userId_missionId_periodKey: { userId, missionId: mission.id, periodKey: periodKeyFor(mission.period) } },
++        create: { userId, missionId: mission.id, periodKey: periodKeyFor(mission.period) },
++        update: {},
++      })
++    )
++  );
++}
++
++export interface MissionView {
++  missionId: string;
++  key: string;
++  period: MissionPeriod;
++  title: string;
++  description: string;
++  targetCount: number;
++  progress: number;
++  completed: boolean;
++  xpReward: number;
++  pointsReward: number;
++}
++
++export async function getMissionsForUser(userId: string): Promise<MissionView[]> {
++  await ensureAssignedMissions(userId);
++
++  const rows = await prisma.userMission.findMany({
++    where: {
++      userId,
++      periodKey: { in: [periodKeyFor("DAILY"), periodKeyFor("WEEKLY")] },
++    },
++    include: { mission: true },
++  });
++
++  return rows
++    .filter((r) => r.mission.active)
++    .map((r) => ({
++      missionId: r.missionId,
++      key: r.mission.key,
++      period: r.mission.period,
++      title: r.mission.title,
++      description: r.mission.description,
++      targetCount: r.mission.targetCount,
++      progress: r.progress,
++      completed: r.completed,
++      xpReward: r.mission.xpReward,
++      pointsReward: Number(r.mission.pointsReward),
++    }));
++}
++
++/**
++ * Bumps progress on every active mission tracking `action` for the current
++ * daily/weekly period, granting the mission's reward exactly once the first
++ * time progress crosses its target.
++ */
++export async function recordMissionProgress(userId: string, action: MissionAction): Promise<void> {
++  const missions = await prisma.mission.findMany({ where: { active: true, action } });
++
++  for (const mission of missions) {
++    const periodKey = periodKeyFor(mission.period);
++    const userMission = await prisma.userMission.upsert({
++      where: { userId_missionId_periodKey: { userId, missionId: mission.id, periodKey } },
++      create: { userId, missionId: mission.id, periodKey },
++      update: {},
++    });
++
++    if (userMission.completed) continue;
++
++    const progress = userMission.progress + 1;
++    const justCompleted = progress >= mission.targetCount;
++
++    await prisma.userMission.update({
++      where: { id: userMission.id },
++      data: {
++        progress,
++        completed: justCompleted,
++        completedAt: justCompleted ? new Date() : undefined,
++      },
++    });
++
++    if (justCompleted) {
++      await prisma.user.update({
++        where: { id: userId },
++        data: { brainPoints: { increment: mission.pointsReward }, xp: { increment: mission.xpReward } },
++      });
++      await prisma.economyLog.create({
++        data: {
++          userId,
++          type: "MISSION_COMPLETED",
++          amount: mission.pointsReward,
++          metadata: { missionKey: mission.key, xpReward: mission.xpReward },
++        },
++      });
++    }
++  }
++}
+diff --git a/figabrain-social/backend/src/modules/posts/comments.routes.ts b/figabrain-social/backend/src/modules/posts/comments.routes.ts
+new file mode 100644
+index 0000000..ab424fc
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/posts/comments.routes.ts
+@@ -0,0 +1,62 @@
++import { Router } from "express";
++import { z } from "zod";
++import { prisma } from "../../lib/prisma.js";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { validateBody } from "../../middleware/validate.js";
++import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
++import { shadowBanGate } from "../../middleware/antibot.js";
++import { grantReward } from "../rewards/rewards.service.js";
++import { adjustReputation } from "../reputation/reputation.service.js";
++
++export const commentsRouter = Router({ mergeParams: true });
++
++const createCommentSchema = z.object({
++  content: z.string().min(1).max(1000),
++});
++
++commentsRouter.get(
++  "/",
++  asyncHandler(async (req, res) => {
++    const comments = await prisma.comment.findMany({
++      where: { postId: req.params.id, moderation: "ACTIVE" },
++      orderBy: { createdAt: "asc" },
++      include: { author: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
++      take: 100,
++    });
++    res.json({ data: comments });
++  })
++);
++
++commentsRouter.post(
++  "/",
++  requireAuth,
++  shadowBanGate,
++  writeActionRateLimiter,
++  validateBody(createCommentSchema),
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
++    if (!post) throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
++
++    const comment = await prisma.comment.create({
++      data: { postId: post.id, authorId: req.user!.id, content: req.body.content },
++      include: { author: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
++    });
++
++    if (post.authorId !== req.user!.id) {
++      await prisma.notification.create({
++        data: {
++          recipientId: post.authorId,
++          actorId: req.user!.id,
++          type: "COMMENT",
++          postId: post.id,
++          message: `@${req.user!.username} commented on your post`,
++        },
++      });
++      await adjustReputation(post.authorId, 1, "COMMENT_RECEIVED");
++    }
++
++    const reward = await grantReward(req.user!.id, "COMMENT", comment.id);
++    res.status(201).json({ data: comment, reward });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/posts/posts.routes.ts b/figabrain-social/backend/src/modules/posts/posts.routes.ts
+new file mode 100644
+index 0000000..d7fff38
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/posts/posts.routes.ts
+@@ -0,0 +1,227 @@
++import { Router } from "express";
++import { z } from "zod";
++import { prisma } from "../../lib/prisma.js";
++import { requireAuth, optionalAuth } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { validateBody, validateQuery } from "../../middleware/validate.js";
++import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
++import { shadowBanGate } from "../../middleware/antibot.js";
++import { hashPostContent, isDuplicatePost } from "../antibot/antibot.service.js";
++import { grantReward } from "../rewards/rewards.service.js";
++import { adjustReputation } from "../reputation/reputation.service.js";
++
++export const postsRouter = Router();
++
++const createPostSchema = z.object({
++  content: z.string().min(1).max(2000),
++  imageUrls: z.array(z.string().url()).max(4).default([]),
++  linkUrl: z.string().url().optional(),
++  gifUrl: z.string().url().optional(),
++});
++
++const feedQuerySchema = z.object({
++  cursor: z.string().optional(),
++  limit: z.coerce.number().min(1).max(50).default(20),
++});
++
++function serializePost(post: any, viewerId?: string) {
++  return {
++    id: post.id,
++    content: post.content,
++    imageUrls: post.imageUrls,
++    linkUrl: post.linkUrl,
++    gifUrl: post.gifUrl,
++    createdAt: post.createdAt,
++    author: post.author,
++    likesCount: post._count?.likes ?? 0,
++    commentsCount: post._count?.comments ?? 0,
++    repostsCount: post._count?.reposts ?? 0,
++    likedByMe: viewerId ? post.likes?.some((l: { userId: string }) => l.userId === viewerId) : false,
++  };
++}
++
++const postAuthorSelect = {
++  id: true,
++  username: true,
++  displayName: true,
++  avatarUrl: true,
++  rank: true,
++} as const;
++
++postsRouter.get(
++  "/feed",
++  optionalAuth,
++  validateQuery(feedQuerySchema),
++  asyncHandler(async (req, res) => {
++    const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
++
++    const posts = await prisma.post.findMany({
++      where: { moderation: "ACTIVE" },
++      orderBy: { createdAt: "desc" },
++      take: limit,
++      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
++      include: {
++        author: { select: postAuthorSelect },
++        _count: { select: { likes: true, comments: true, reposts: true } },
++        likes: req.user ? { where: { userId: req.user.id }, select: { userId: true } } : false,
++      },
++    });
++
++    res.json({
++      data: posts.map((p) => serializePost(p, req.user?.id)),
++      nextCursor: posts.length === limit ? posts[posts.length - 1]?.id : null,
++    });
++  })
++);
++
++postsRouter.get(
++  "/:id",
++  optionalAuth,
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.findUnique({
++      where: { id: req.params.id },
++      include: {
++        author: { select: postAuthorSelect },
++        _count: { select: { likes: true, comments: true, reposts: true } },
++        likes: req.user ? { where: { userId: req.user.id }, select: { userId: true } } : false,
++      },
++    });
++    if (!post || post.moderation !== "ACTIVE") {
++      throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
++    }
++    res.json({ data: serializePost(post, req.user?.id) });
++  })
++);
++
++postsRouter.post(
++  "/",
++  requireAuth,
++  shadowBanGate,
++  writeActionRateLimiter,
++  validateBody(createPostSchema),
++  asyncHandler(async (req, res) => {
++    const { content, imageUrls, linkUrl, gifUrl } = req.body;
++
++    if (await isDuplicatePost(req.user!.id, content)) {
++      throw new HttpError(409, "Duplicate post detected, please wait before reposting the same text", "DUPLICATE_CONTENT");
++    }
++
++    const post = await prisma.post.create({
++      data: {
++        authorId: req.user!.id,
++        content,
++        imageUrls,
++        linkUrl,
++        gifUrl,
++        contentHash: hashPostContent(content),
++      },
++      include: { author: { select: postAuthorSelect } },
++    });
++
++    const reward = await grantReward(req.user!.id, "POST_CREATED", post.id);
++
++    res.status(201).json({ data: serializePost({ ...post, _count: { likes: 0, comments: 0, reposts: 0 } }), reward });
++  })
++);
++
++postsRouter.delete(
++  "/:id",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
++    if (!post) throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
++    if (post.authorId !== req.user!.id && !req.user!.isAdmin) {
++      throw new HttpError(403, "Not allowed to delete this post", "FORBIDDEN");
++    }
++
++    await prisma.post.delete({ where: { id: req.params.id } });
++    res.json({ data: { deleted: true } });
++  })
++);
++
++postsRouter.post(
++  "/:id/like",
++  requireAuth,
++  shadowBanGate,
++  writeActionRateLimiter,
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
++    if (!post) throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
++
++    const existing = await prisma.like.findUnique({
++      where: { postId_userId: { postId: post.id, userId: req.user!.id } },
++    });
++
++    if (existing) {
++      await prisma.like.delete({ where: { id: existing.id } });
++      res.json({ data: { liked: false } });
++      return;
++    }
++
++    await prisma.like.create({ data: { postId: post.id, userId: req.user!.id } });
++
++    if (post.authorId !== req.user!.id) {
++      await prisma.notification.create({
++        data: {
++          recipientId: post.authorId,
++          actorId: req.user!.id,
++          type: "LIKE",
++          postId: post.id,
++          message: `@${req.user!.username} liked your post`,
++        },
++      });
++      await adjustReputation(post.authorId, 1, "LIKE_RECEIVED");
++    }
++
++    const reward = await grantReward(req.user!.id, "LIKE", post.id);
++    res.json({ data: { liked: true }, reward });
++  })
++);
++
++postsRouter.post(
++  "/:id/repost",
++  requireAuth,
++  shadowBanGate,
++  writeActionRateLimiter,
++  asyncHandler(async (req, res) => {
++    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
++    if (!post) throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
++
++    const existing = await prisma.repost.findUnique({
++      where: { postId_userId: { postId: post.id, userId: req.user!.id } },
++    });
++    if (existing) {
++      throw new HttpError(409, "Already reposted", "ALREADY_REPOSTED");
++    }
++
++    await prisma.$transaction([
++      prisma.repost.create({ data: { postId: post.id, userId: req.user!.id } }),
++      prisma.post.create({
++        data: {
++          authorId: req.user!.id,
++          content: post.content,
++          imageUrls: post.imageUrls,
++          linkUrl: post.linkUrl,
++          gifUrl: post.gifUrl,
++          contentHash: post.contentHash,
++          isRepostOf: post.id,
++        },
++      }),
++    ]);
++
++    if (post.authorId !== req.user!.id) {
++      await prisma.notification.create({
++        data: {
++          recipientId: post.authorId,
++          actorId: req.user!.id,
++          type: "REPOST",
++          postId: post.id,
++          message: `@${req.user!.username} reposted your post`,
++        },
++      });
++    }
++
++    const reward = await grantReward(req.user!.id, "REPOST", post.id);
++    res.status(201).json({ data: { reposted: true }, reward });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/reputation/reputation.routes.ts b/figabrain-social/backend/src/modules/reputation/reputation.routes.ts
+new file mode 100644
+index 0000000..2c8cd55
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/reputation/reputation.routes.ts
+@@ -0,0 +1,15 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { getReputationHistory } from "./reputation.service.js";
++
++export const reputationRouter = Router();
++
++reputationRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    const history = await getReputationHistory(req.user!.id);
++    res.json({ data: { history } });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/reputation/reputation.service.ts b/figabrain-social/backend/src/modules/reputation/reputation.service.ts
+new file mode 100644
+index 0000000..9a5f479
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/reputation/reputation.service.ts
+@@ -0,0 +1,17 @@
++import { prisma } from "../../lib/prisma.js";
++
++const MIN_REPUTATION = -1000;
++const MAX_REPUTATION = 1_000_000;
++
++/** Reputation never goes through brainPoints/xp — it is a trust signal, adjusted directly by social proof or moderation events. */
++export async function adjustReputation(userId: string, delta: number, reason: string): Promise<void> {
++  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { reputation: true } });
++  const next = Math.max(MIN_REPUTATION, Math.min(MAX_REPUTATION, user.reputation + delta));
++
++  await prisma.user.update({ where: { id: userId }, data: { reputation: next } });
++  await prisma.reputationLog.create({ data: { userId, delta: next - user.reputation, reason } });
++}
++
++export async function getReputationHistory(userId: string, take = 50) {
++  return prisma.reputationLog.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take });
++}
+diff --git a/figabrain-social/backend/src/modules/rewards/rewards.service.ts b/figabrain-social/backend/src/modules/rewards/rewards.service.ts
+new file mode 100644
+index 0000000..f11aa9f
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/rewards/rewards.service.ts
+@@ -0,0 +1,106 @@
++import { Prisma } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { DEFAULT_REWARD_RULES, type RewardAction } from "../../config/rewardConfig.js";
++import { computeRank, rankMultiplier } from "../users/rank.js";
++import { getActiveMultiplier } from "../boosters/boosters.service.js";
++import { recordMissionProgress } from "../missions/missions.service.js";
++import { MISSION_ACTION_BY_REWARD_ACTION } from "../missions/missions.config.js";
++import { checkAndGrantAchievements } from "../achievements/achievements.service.js";
++import { recordSeasonProgress } from "../seasons/seasons.service.js";
++import { evaluateAndAutoShadowBan } from "../antibot/antibot.service.js";
++
++function startOfDay(date: Date): Date {
++  const d = new Date(date);
++  d.setUTCHours(0, 0, 0, 0);
++  return d;
++}
++
++/**
++ * Grants Brain Points for a given action, enforcing the per-action cooldown
++ * and daily cap from RewardConfig. Returns null (no-op, not an error) when
++ * the action is disabled, on cooldown, or has hit its daily cap — callers
++ * should treat the underlying social action (like/comment/...) as
++ * successful regardless, since rewards are a bonus, not a gate.
++ */
++export async function grantReward(
++  userId: string,
++  action: RewardAction,
++  refId?: string,
++  metadata?: Record<string, unknown>
++): Promise<{ granted: boolean; amount: number; xp: number }> {
++  const config = await prisma.rewardConfig.findUnique({ where: { action } });
++  const rule = config ?? {
++    amount: new Prisma.Decimal(DEFAULT_REWARD_RULES[action].amount),
++    xpAmount: DEFAULT_REWARD_RULES[action].xpAmount,
++    dailyCap: DEFAULT_REWARD_RULES[action].dailyCap
++      ? new Prisma.Decimal(DEFAULT_REWARD_RULES[action].dailyCap as number)
++      : null,
++    cooldownSeconds: DEFAULT_REWARD_RULES[action].cooldownSeconds,
++    enabled: true,
++  };
++
++  if (!rule.enabled) {
++    return { granted: false, amount: 0, xp: 0 };
++  }
++
++  if (rule.cooldownSeconds > 0) {
++    const lastEvent = await prisma.rewardLedgerEntry.findFirst({
++      where: { userId, action },
++      orderBy: { createdAt: "desc" },
++    });
++    if (lastEvent) {
++      const elapsedMs = Date.now() - lastEvent.createdAt.getTime();
++      if (elapsedMs < rule.cooldownSeconds * 1000) {
++        return { granted: false, amount: 0, xp: 0 };
++      }
++    }
++  }
++
++  if (rule.dailyCap !== null) {
++    const earnedToday = await prisma.rewardLedgerEntry.aggregate({
++      where: { userId, action, createdAt: { gte: startOfDay(new Date()) } },
++      _sum: { amount: true },
++    });
++    const earned = earnedToday._sum.amount ?? new Prisma.Decimal(0);
++    if (earned.greaterThanOrEqualTo(rule.dailyCap)) {
++      return { granted: false, amount: 0, xp: 0 };
++    }
++  }
++
++  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { rank: true } });
++  const [pointsMultiplier, xpMultiplier] = await Promise.all([
++    getActiveMultiplier(userId, "BRAIN_POINTS_MULTIPLIER"),
++    getActiveMultiplier(userId, "XP_MULTIPLIER"),
++  ]);
++  const amount = rule.amount.mul(rankMultiplier(user.rank)).mul(pointsMultiplier);
++  const xpGained = Math.round(rule.xpAmount * xpMultiplier);
++
++  const [, updatedUser] = await prisma.$transaction([
++    prisma.rewardLedgerEntry.create({
++      data: { userId, action, amount, refId, metadata: metadata as Prisma.InputJsonValue | undefined },
++    }),
++    prisma.user.update({
++      where: { id: userId },
++      data: { brainPoints: { increment: amount }, xp: { increment: xpGained } },
++    }),
++  ]);
++
++  const newRank = computeRank(updatedUser.xp);
++  if (newRank !== updatedUser.rank) {
++    await prisma.user.update({ where: { id: userId }, data: { rank: newRank } });
++    await prisma.economyLog.create({
++      data: { userId, type: "RANK_UP", metadata: { from: updatedUser.rank, to: newRank } },
++    });
++  }
++
++  const missionAction = MISSION_ACTION_BY_REWARD_ACTION[action];
++  if (missionAction) {
++    await recordMissionProgress(userId, missionAction);
++  }
++
++  await checkAndGrantAchievements(userId);
++  await recordSeasonProgress(userId, amount, xpGained);
++  await evaluateAndAutoShadowBan(userId);
++
++  return { granted: true, amount: Number(amount), xp: xpGained };
++}
+diff --git a/figabrain-social/backend/src/modules/seasons/seasons.routes.ts b/figabrain-social/backend/src/modules/seasons/seasons.routes.ts
+new file mode 100644
+index 0000000..65c6fa6
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/seasons/seasons.routes.ts
+@@ -0,0 +1,45 @@
++import { Router } from "express";
++import { prisma } from "../../lib/prisma.js";
++import { optionalAuth } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { getActiveSeason, getSeasonLeaderboard } from "./seasons.service.js";
++
++export const seasonsRouter = Router();
++
++seasonsRouter.get(
++  "/current",
++  optionalAuth,
++  asyncHandler(async (req, res) => {
++    const season = await getActiveSeason();
++    if (!season) {
++      res.json({ data: null });
++      return;
++    }
++
++    const leaderboard = await getSeasonLeaderboard(season.id, 100);
++    const myParticipant = req.user
++      ? await prisma.seasonParticipant.findUnique({
++          where: { seasonId_userId: { seasonId: season.id, userId: req.user.id } },
++        })
++      : null;
++
++    res.json({
++      data: {
++        season,
++        leaderboard,
++        me: myParticipant
++          ? { seasonPoints: Number(myParticipant.seasonPoints), seasonXp: myParticipant.seasonXp }
++          : null,
++      },
++    });
++  })
++);
++
++seasonsRouter.get(
++  "/:id/leaderboard",
++  asyncHandler(async (req, res) => {
++    const season = await prisma.season.findUnique({ where: { id: req.params.id } });
++    if (!season) throw new HttpError(404, "Season not found", "SEASON_NOT_FOUND");
++    res.json({ data: await getSeasonLeaderboard(season.id, 100) });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/seasons/seasons.service.ts b/figabrain-social/backend/src/modules/seasons/seasons.service.ts
+new file mode 100644
+index 0000000..27e72d2
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/seasons/seasons.service.ts
+@@ -0,0 +1,55 @@
++import type { Prisma } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++
++export async function getActiveSeason() {
++  return prisma.season.findFirst({ where: { status: "ACTIVE" }, orderBy: { startsAt: "desc" } });
++}
++
++/** Accrues season-scoped points/xp alongside the lifetime totals; no-op if no season is running. */
++export async function recordSeasonProgress(userId: string, points: Prisma.Decimal | number, xp: number): Promise<void> {
++  const season = await getActiveSeason();
++  if (!season) return;
++
++  await prisma.seasonParticipant.upsert({
++    where: { seasonId_userId: { seasonId: season.id, userId } },
++    create: { seasonId: season.id, userId, seasonPoints: points, seasonXp: xp },
++    update: { seasonPoints: { increment: points }, seasonXp: { increment: xp } },
++  });
++}
++
++export async function getSeasonLeaderboard(seasonId: string, take = 100) {
++  const rows = await prisma.seasonParticipant.findMany({
++    where: { seasonId },
++    orderBy: { seasonPoints: "desc" },
++    take,
++    include: { user: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
++  });
++  return rows.map((r, index) => ({
++    position: index + 1,
++    seasonPoints: Number(r.seasonPoints),
++    seasonXp: r.seasonXp,
++    finalRank: r.finalRank,
++    user: r.user,
++  }));
++}
++
++export async function startSeason(name: string, durationDays = 30) {
++  const startsAt = new Date();
++  const endsAt = new Date(startsAt.getTime() + durationDays * 86_400_000);
++  return prisma.season.create({ data: { name, startsAt, endsAt, status: "ACTIVE" } });
++}
++
++/** Freezes final ranks for every participant and marks the season ENDED. Rewards are claimed separately via /seasons/:id/claim. */
++export async function endSeason(seasonId: string): Promise<number> {
++  const participants = await prisma.seasonParticipant.findMany({
++    where: { seasonId },
++    orderBy: { seasonPoints: "desc" },
++  });
++
++  await prisma.$transaction([
++    ...participants.map((p, index) => prisma.seasonParticipant.update({ where: { id: p.id }, data: { finalRank: index + 1 } })),
++    prisma.season.update({ where: { id: seasonId }, data: { status: "ENDED" } }),
++  ]);
++
++  return participants.length;
++}
+diff --git a/figabrain-social/backend/src/modules/streaks/streaks.routes.ts b/figabrain-social/backend/src/modules/streaks/streaks.routes.ts
+new file mode 100644
+index 0000000..07d5ed5
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/streaks/streaks.routes.ts
+@@ -0,0 +1,14 @@
++import { Router } from "express";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { getStreakStatus } from "./streaks.service.js";
++
++export const streaksRouter = Router();
++
++streaksRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    res.json({ data: await getStreakStatus(req.user!.id) });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/streaks/streaks.service.ts b/figabrain-social/backend/src/modules/streaks/streaks.service.ts
+new file mode 100644
+index 0000000..24ce8ce
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/streaks/streaks.service.ts
+@@ -0,0 +1,48 @@
++import { Prisma } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { STREAK_MILESTONES, STREAK_MILESTONE_BONUS } from "../../config/levelConfig.js";
++
++/**
++ * Persists a new daily-login streak value, tracks the all-time best, and
++ * pays out the one-time milestone bonus (1/3/7/14/30/90/365 days) the first
++ * time a streak cycle reaches it. `didReset` marks a cycle boundary so the
++ * same milestone can be re-earned on a future streak.
++ */
++export async function applyStreakUpdate(userId: string, newStreak: number, didReset: boolean): Promise<void> {
++  const current = await prisma.user.findUniqueOrThrow({
++    where: { id: userId },
++    select: { longestStreak: true, streakCycle: true },
++  });
++  const longestStreak = Math.max(current.longestStreak, newStreak);
++  const streakCycle = didReset ? current.streakCycle + 1 : current.streakCycle;
++
++  await prisma.user.update({ where: { id: userId }, data: { loginStreak: newStreak, longestStreak, streakCycle } });
++
++  if (!STREAK_MILESTONES.includes(newStreak as (typeof STREAK_MILESTONES)[number])) return;
++  const bonus = STREAK_MILESTONE_BONUS[newStreak];
++  if (!bonus) return;
++
++  try {
++    await prisma.streakMilestoneClaim.create({ data: { userId, milestone: newStreak, streakCycle } });
++  } catch (err) {
++    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return;
++    throw err;
++  }
++
++  await prisma.user.update({
++    where: { id: userId },
++    data: { brainPoints: { increment: bonus.points }, xp: { increment: bonus.xp } },
++  });
++  await prisma.economyLog.create({
++    data: { userId, type: "STREAK_MILESTONE", amount: bonus.points, metadata: { milestone: newStreak, xpBonus: bonus.xp } },
++  });
++}
++
++export async function getStreakStatus(userId: string) {
++  const user = await prisma.user.findUniqueOrThrow({
++    where: { id: userId },
++    select: { loginStreak: true, longestStreak: true },
++  });
++  const nextMilestone = STREAK_MILESTONES.find((m) => m > user.loginStreak) ?? null;
++  return { currentStreak: user.loginStreak, longestStreak: user.longestStreak, nextMilestone };
++}
+diff --git a/figabrain-social/backend/src/modules/users/rank.ts b/figabrain-social/backend/src/modules/users/rank.ts
+new file mode 100644
+index 0000000..d9a9f5c
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/users/rank.ts
+@@ -0,0 +1 @@
++export { computeRank, rankMultiplier, nextLevelTier, LEVEL_TIERS } from "../../config/levelConfig.js";
+diff --git a/figabrain-social/backend/src/modules/users/users.routes.ts b/figabrain-social/backend/src/modules/users/users.routes.ts
+new file mode 100644
+index 0000000..5112e7c
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/users/users.routes.ts
+@@ -0,0 +1,144 @@
++import { Router } from "express";
++import { z } from "zod";
++import { prisma } from "../../lib/prisma.js";
++import { requireAuth, optionalAuth } from "../../middleware/auth.js";
++import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
++import { validateBody } from "../../middleware/validate.js";
++import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
++import { computeRank, nextLevelTier } from "./rank.js";
++
++export const usersRouter = Router();
++
++const updateProfileSchema = z.object({
++  displayName: z.string().min(1).max(60).optional(),
++  bio: z.string().max(280).optional(),
++  avatarUrl: z.string().url().optional(),
++});
++
++usersRouter.get(
++  "/:username",
++  optionalAuth,
++  asyncHandler(async (req, res) => {
++    const user = await prisma.user.findUnique({
++      where: { username: req.params.username },
++      select: {
++        id: true,
++        username: true,
++        displayName: true,
++        bio: true,
++        avatarUrl: true,
++        rank: true,
++        brainPoints: true,
++        xp: true,
++        reputation: true,
++        loginStreak: true,
++        longestStreak: true,
++        createdAt: true,
++        _count: { select: { posts: true, followers: true, following: true } },
++        wallet: { select: { address: true, tokenBalance: true } },
++      },
++    });
++
++    if (!user) {
++      throw new HttpError(404, "User not found", "USER_NOT_FOUND");
++    }
++
++    let isFollowedByMe = false;
++    if (req.user) {
++      const follow = await prisma.follow.findUnique({
++        where: { followerId_followingId: { followerId: req.user.id, followingId: user.id } },
++      });
++      isFollowedByMe = follow !== null;
++    }
++
++    res.json({
++      data: {
++        ...user,
++        brainPoints: Number(user.brainPoints),
++        nextLevelTier: nextLevelTier(user.xp),
++        walletBalance: Number(user.wallet?.tokenBalance ?? 0),
++        walletAddress: user.wallet?.address ?? null,
++        postsCount: user._count.posts,
++        followersCount: user._count.followers,
++        followingCount: user._count.following,
++        isFollowedByMe,
++      },
++    });
++  })
++);
++
++usersRouter.patch(
++  "/me",
++  requireAuth,
++  writeActionRateLimiter,
++  validateBody(updateProfileSchema),
++  asyncHandler(async (req, res) => {
++    const updated = await prisma.user.update({
++      where: { id: req.user!.id },
++      data: req.body,
++    });
++    res.json({ data: { ...updated, brainPoints: Number(updated.brainPoints) } });
++  })
++);
++
++usersRouter.post(
++  "/:username/follow",
++  requireAuth,
++  writeActionRateLimiter,
++  asyncHandler(async (req, res) => {
++    const target = await prisma.user.findUnique({ where: { username: req.params.username } });
++    if (!target) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
++    if (target.id === req.user!.id) throw new HttpError(400, "Cannot follow yourself", "INVALID_OPERATION");
++
++    await prisma.follow.upsert({
++      where: { followerId_followingId: { followerId: req.user!.id, followingId: target.id } },
++      create: { followerId: req.user!.id, followingId: target.id },
++      update: {},
++    });
++
++    await prisma.notification.create({
++      data: {
++        recipientId: target.id,
++        actorId: req.user!.id,
++        type: "FOLLOW",
++        message: `@${req.user!.username} started following you`,
++      },
++    });
++
++    res.json({ data: { following: true } });
++  })
++);
++
++usersRouter.delete(
++  "/:username/follow",
++  requireAuth,
++  writeActionRateLimiter,
++  asyncHandler(async (req, res) => {
++    const target = await prisma.user.findUnique({ where: { username: req.params.username } });
++    if (!target) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
++
++    await prisma.follow.deleteMany({
++      where: { followerId: req.user!.id, followingId: target.id },
++    });
++
++    res.json({ data: { following: false } });
++  })
++);
++
++usersRouter.get(
++  "/:username/followers",
++  asyncHandler(async (req, res) => {
++    const user = await prisma.user.findUnique({ where: { username: req.params.username } });
++    if (!user) throw new HttpError(404, "User not found", "USER_NOT_FOUND");
++
++    const followers = await prisma.follow.findMany({
++      where: { followingId: user.id },
++      include: { follower: { select: { username: true, displayName: true, avatarUrl: true, rank: true } } },
++      take: 100,
++    });
++
++    res.json({ data: followers.map((f) => f.follower) });
++  })
++);
++
++export { computeRank };
+diff --git a/figabrain-social/backend/src/modules/web3/tokenConversion.config.ts b/figabrain-social/backend/src/modules/web3/tokenConversion.config.ts
+new file mode 100644
+index 0000000..6f82095
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/web3/tokenConversion.config.ts
+@@ -0,0 +1,8 @@
++/**
++ * Brain Points -> FGB Token conversion rate. Purely simulated today: no real
++ * on-chain transfer happens, the converted amount is only credited to the
++ * off-chain Wallet.tokenBalance ledger via TokenEngine.creditOffChain. Once a
++ * live FGB token launches, settlement can be added without touching callers.
++ */
++export const FGB_CONVERSION_RATE = 0.001; // 1000 Brain Points == 1 FGB
++export const MIN_CONVERSION_POINTS = 100;
+diff --git a/figabrain-social/backend/src/modules/web3/tokenConversion.routes.ts b/figabrain-social/backend/src/modules/web3/tokenConversion.routes.ts
+new file mode 100644
+index 0000000..2343e07
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/web3/tokenConversion.routes.ts
+@@ -0,0 +1,31 @@
++import { Router } from "express";
++import { z } from "zod";
++import { requireAuth } from "../../middleware/auth.js";
++import { asyncHandler } from "../../middleware/errorHandler.js";
++import { validateBody } from "../../middleware/validate.js";
++import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
++import { simulateTokenConversion, getConversionHistory } from "./tokenConversion.service.js";
++import { FGB_CONVERSION_RATE, MIN_CONVERSION_POINTS } from "./tokenConversion.config.js";
++
++export const tokenConversionRouter = Router();
++
++tokenConversionRouter.get(
++  "/",
++  requireAuth,
++  asyncHandler(async (req, res) => {
++    res.json({ data: { rate: FGB_CONVERSION_RATE, minPoints: MIN_CONVERSION_POINTS, history: await getConversionHistory(req.user!.id) } });
++  })
++);
++
++const convertSchema = z.object({ brainPointsAmount: z.number().positive() });
++
++tokenConversionRouter.post(
++  "/convert",
++  requireAuth,
++  writeActionRateLimiter,
++  validateBody(convertSchema),
++  asyncHandler(async (req, res) => {
++    const result = await simulateTokenConversion(req.user!.id, req.body.brainPointsAmount);
++    res.status(201).json({ data: result });
++  })
++);
+diff --git a/figabrain-social/backend/src/modules/web3/tokenConversion.service.ts b/figabrain-social/backend/src/modules/web3/tokenConversion.service.ts
+new file mode 100644
+index 0000000..51550a6
+--- /dev/null
++++ b/figabrain-social/backend/src/modules/web3/tokenConversion.service.ts
+@@ -0,0 +1,51 @@
++import { Prisma } from "@prisma/client";
++import { prisma } from "../../lib/prisma.js";
++import { HttpError } from "../../middleware/errorHandler.js";
++import { TokenEngine } from "./tokenEngine.js";
++import { UnimplementedChainProvider } from "./chainProvider.js";
++import { FGB_CONVERSION_RATE, MIN_CONVERSION_POINTS } from "./tokenConversion.config.js";
++
++const tokenEngine = new TokenEngine(new UnimplementedChainProvider("SOLANA"));
++
++/**
++ * Simulates converting Brain Points into FGB tokens: spends the points,
++ * credits the off-chain wallet ledger, and logs a TokenConversionRequest for
++ * audit/analytics. No real blockchain transaction is ever issued from here.
++ */
++export async function simulateTokenConversion(userId: string, brainPointsAmount: number) {
++  if (brainPointsAmount < MIN_CONVERSION_POINTS) {
++    throw new HttpError(400, `Minimum conversion is ${MIN_CONVERSION_POINTS} Brain Points`, "BELOW_MINIMUM");
++  }
++
++  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
++  if (Number(user.brainPoints) < brainPointsAmount) {
++    throw new HttpError(400, "Insufficient Brain Points", "INSUFFICIENT_BALANCE");
++  }
++
++  const fgbAmount = brainPointsAmount * FGB_CONVERSION_RATE;
++
++  const request = await prisma.$transaction(async (tx) => {
++    await tx.user.update({ where: { id: userId }, data: { brainPoints: { decrement: brainPointsAmount } } });
++    const created = await tx.tokenConversionRequest.create({
++      data: {
++        userId,
++        brainPointsSpent: new Prisma.Decimal(brainPointsAmount),
++        fgbTokenAmount: new Prisma.Decimal(fgbAmount),
++        rate: new Prisma.Decimal(FGB_CONVERSION_RATE),
++      },
++    });
++    await tx.economyLog.create({
++      data: { userId, type: "TOKEN_CONVERSION", amount: new Prisma.Decimal(-brainPointsAmount), metadata: { fgbAmount } },
++    });
++    return created;
++  });
++
++  await tokenEngine.creditOffChain(userId, fgbAmount);
++
++  return { ...request, brainPointsSpent: Number(request.brainPointsSpent), fgbTokenAmount: Number(request.fgbTokenAmount), rate: Number(request.rate) };
++}
++
++export async function getConversionHistory(userId: string) {
++  const rows = await prisma.tokenConversionRequest.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50 });
++  return rows.map((r) => ({ ...r, brainPointsSpent: Number(r.brainPointsSpent), fgbTokenAmount: Number(r.fgbTokenAmount), rate: Number(r.rate) }));
++}
+diff --git a/figabrain-social/frontend/src/App.tsx b/figabrain-social/frontend/src/App.tsx
+new file mode 100644
+index 0000000..9a5ad96
+--- /dev/null
++++ b/figabrain-social/frontend/src/App.tsx
+@@ -0,0 +1,47 @@
++import { Navigate, Route, Routes } from "react-router-dom";
++import { Layout } from "./components/Layout";
++import { useAuth } from "./context/AuthContext";
++import { Feed } from "./pages/Feed";
++import { Profile } from "./pages/Profile";
++import { Wallet } from "./pages/Wallet";
++import { Notifications } from "./pages/Notifications";
++import { Messages } from "./pages/Messages";
++import { Leaderboard } from "./pages/Leaderboard";
++import { Rewards } from "./pages/Rewards";
++import { Economy } from "./pages/Economy";
++import { Settings } from "./pages/Settings";
++import { Search } from "./pages/Search";
++import { Admin } from "./pages/Admin";
++import { Login } from "./pages/Login";
++
++function ProtectedLayout({ children }: { children: React.ReactNode }) {
++  const { user, isLoading } = useAuth();
++
++  if (isLoading) {
++    return <div className="min-h-screen flex items-center justify-center text-white/40">Loading FIGABRAIN...</div>;
++  }
++  if (!user) {
++    return <Navigate to="/login" replace />;
++  }
++  return <Layout>{children}</Layout>;
++}
++
++export function App() {
++  return (
++    <Routes>
++      <Route path="/login" element={<Login />} />
++      <Route path="/" element={<ProtectedLayout><Feed /></ProtectedLayout>} />
++      <Route path="/u/:username" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
++      <Route path="/wallet" element={<ProtectedLayout><Wallet /></ProtectedLayout>} />
++      <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
++      <Route path="/messages" element={<ProtectedLayout><Messages /></ProtectedLayout>} />
++      <Route path="/leaderboard" element={<ProtectedLayout><Leaderboard /></ProtectedLayout>} />
++      <Route path="/rewards" element={<ProtectedLayout><Rewards /></ProtectedLayout>} />
++      <Route path="/economy" element={<ProtectedLayout><Economy /></ProtectedLayout>} />
++      <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
++      <Route path="/search" element={<ProtectedLayout><Search /></ProtectedLayout>} />
++      <Route path="/admin" element={<ProtectedLayout><Admin /></ProtectedLayout>} />
++      <Route path="*" element={<Navigate to="/" replace />} />
++    </Routes>
++  );
++}
+diff --git a/figabrain-social/frontend/src/api/types.ts b/figabrain-social/frontend/src/api/types.ts
+new file mode 100644
+index 0000000..f5a3475
+--- /dev/null
++++ b/figabrain-social/frontend/src/api/types.ts
+@@ -0,0 +1,153 @@
++export interface UserProfile {
++  id: string;
++  username: string;
++  displayName: string;
++  bio: string;
++  avatarUrl: string | null;
++  rank: Rank;
++  brainPoints: number;
++  xp: number;
++  reputation: number;
++  loginStreak: number;
++  longestStreak: number;
++  nextLevelTier: { rank: Rank; minXp: number; multiplier: number } | null;
++  walletAddress: string | null;
++  walletBalance: number;
++  postsCount: number;
++  followersCount: number;
++  followingCount: number;
++  isFollowedByMe?: boolean;
++}
++
++export type Rank = "NPC" | "NORMIE" | "SIGMA" | "GIGACHAD" | "BRAIN_LORD" | "MEME_EMPEROR" | "GALAXY_BRAIN" | "NEURAL_GOD";
++
++export interface Mission {
++  missionId: string;
++  key: string;
++  period: "DAILY" | "WEEKLY";
++  title: string;
++  description: string;
++  targetCount: number;
++  progress: number;
++  completed: boolean;
++  xpReward: number;
++  pointsReward: number;
++}
++
++export type AchievementRarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC";
++
++export interface AchievementItem {
++  key: string;
++  name: string;
++  description: string;
++  category: "SOCIAL" | "CONTENT" | "COMMUNITY" | "REFERRAL" | "ACTIVITY";
++  rarity: AchievementRarity;
++  icon: string;
++  xpReward: number;
++  pointsReward: number;
++  unlocked: boolean;
++  unlockedAt: string | null;
++}
++
++export interface StreakStatus {
++  currentStreak: number;
++  longestStreak: number;
++  nextMilestone: number | null;
++}
++
++export interface SeasonInfo {
++  id: string;
++  name: string;
++  startsAt: string;
++  endsAt: string;
++  status: "ACTIVE" | "ENDED";
++}
++
++export interface SeasonLeaderboardEntry {
++  position: number;
++  seasonPoints: number;
++  seasonXp: number;
++  finalRank: number | null;
++  user: { username: string; displayName: string; avatarUrl: string | null; rank: Rank };
++}
++
++export interface SeasonCurrent {
++  season: SeasonInfo | null;
++  leaderboard: SeasonLeaderboardEntry[];
++  me: { seasonPoints: number; seasonXp: number } | null;
++}
++
++export interface UserLootBoxItem {
++  id: string;
++  lootBox: { key: string; name: string; rarity: AchievementRarity };
++  source: string;
++  opened: boolean;
++  openedAt: string | null;
++  rewardJson: { pointsAwarded: number; xpAwarded: number; boosterKey: string | null } | null;
++}
++
++export interface ActiveBooster {
++  type: "BRAIN_POINTS_MULTIPLIER" | "XP_MULTIPLIER" | "REFERRAL_BOOST";
++  multiplier: number;
++  source: string;
++  expiresAt: string;
++  booster: { key: string; name: string; rarity: AchievementRarity };
++}
++
++export interface PostAuthor {
++  id: string;
++  username: string;
++  displayName: string;
++  avatarUrl: string | null;
++  rank: UserProfile["rank"];
++}
++
++export interface Post {
++  id: string;
++  content: string;
++  imageUrls: string[];
++  linkUrl: string | null;
++  gifUrl: string | null;
++  createdAt: string;
++  author: PostAuthor;
++  likesCount: number;
++  commentsCount: number;
++  repostsCount: number;
++  likedByMe: boolean;
++}
++
++export interface NotificationItem {
++  id: string;
++  type: "LIKE" | "COMMENT" | "REPOST" | "FOLLOW" | "MENTION" | "REWARD" | "SYSTEM";
++  message: string;
++  isRead: boolean;
++  createdAt: string;
++  actor: { username: string; displayName: string; avatarUrl: string | null } | null;
++}
++
++export interface LeaderboardEntry {
++  position: number;
++  username: string;
++  displayName: string;
++  avatarUrl: string | null;
++  rank: UserProfile["rank"];
++  brainPoints: number;
++}
++
++export interface RewardConfigEntry {
++  id: string;
++  action: string;
++  amount: string;
++  dailyCap: string | null;
++  cooldownSeconds: number;
++  enabled: boolean;
++}
++
++export interface WalletInfo {
++  address: string;
++  publicKey: string;
++  chain: "TON" | "SOLANA";
++  tokenBalance: number;
++  brainPoints: number;
++  createdAt: string;
++}
+diff --git a/figabrain-social/frontend/src/components/AchievementShowcase.tsx b/figabrain-social/frontend/src/components/AchievementShowcase.tsx
+new file mode 100644
+index 0000000..9213ad3
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/AchievementShowcase.tsx
+@@ -0,0 +1,52 @@
++import { useEffect, useState } from "react";
++import { motion } from "framer-motion";
++import { api } from "../api/client";
++import type { AchievementItem } from "../api/types";
++import { RARITY_META } from "../lib/rankMeta";
++
++export function AchievementShowcase() {
++  const [achievements, setAchievements] = useState<AchievementItem[]>([]);
++
++  useEffect(() => {
++    api.get<{ data: AchievementItem[] }>("/achievements").then((res) => setAchievements(res.data));
++  }, []);
++
++  const unlockedCount = achievements.filter((a) => a.unlocked).length;
++
++  return (
++    <div className="glass-panel rounded-2xl p-5">
++      <div className="flex justify-between items-center mb-3">
++        <h2 className="font-bold">Досягнення</h2>
++        <span className="text-xs text-white/40">
++          {unlockedCount}/{achievements.length}
++        </span>
++      </div>
++      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
++        {achievements.map((achievement) => {
++          const rarity = RARITY_META[achievement.rarity];
++          return (
++            <motion.div
++              key={achievement.key}
++              initial={{ opacity: 0, scale: 0.9 }}
++              animate={{ opacity: 1, scale: 1 }}
++              title={`${achievement.name} - ${achievement.description}`}
++              className={`aspect-square rounded-xl flex flex-col items-center justify-center text-center p-2 ${
++                achievement.unlocked ? "" : "opacity-30"
++              }`}
++              style={{
++                background: achievement.unlocked ? `${rarity.color}1a` : "rgba(255,255,255,0.04)",
++                border: `1px solid ${achievement.unlocked ? rarity.color + "66" : "rgba(255,255,255,0.08)"}`,
++              }}
++            >
++              <span className="text-2xl">{achievement.icon}</span>
++              <span className="text-[10px] mt-1 leading-tight text-white/70">{achievement.name}</span>
++              <span className="text-[9px] mt-0.5" style={{ color: rarity.color }}>
++                {rarity.label}
++              </span>
++            </motion.div>
++          );
++        })}
++      </div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/LootBoxShelf.tsx b/figabrain-social/frontend/src/components/LootBoxShelf.tsx
+new file mode 100644
+index 0000000..6b95f18
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/LootBoxShelf.tsx
+@@ -0,0 +1,98 @@
++import { useEffect, useState } from "react";
++import { AnimatePresence, motion } from "framer-motion";
++import { api } from "../api/client";
++import type { UserLootBoxItem } from "../api/types";
++import { RARITY_META } from "../lib/rankMeta";
++import { useAuth } from "../context/AuthContext";
++
++interface OpenResult {
++  pointsAwarded: number;
++  xpAwarded: number;
++  boosterKey: string | null;
++}
++
++export function LootBoxShelf() {
++  const { refreshUser } = useAuth();
++  const [boxes, setBoxes] = useState<UserLootBoxItem[]>([]);
++  const [openingId, setOpeningId] = useState<string | null>(null);
++  const [result, setResult] = useState<OpenResult | null>(null);
++
++  function load() {
++    api.get<{ data: UserLootBoxItem[] }>("/lootboxes").then((res) => setBoxes(res.data));
++  }
++
++  useEffect(() => {
++    load();
++  }, []);
++
++  async function openBox(id: string) {
++    setOpeningId(id);
++    setResult(null);
++    try {
++      const res = await api.post<{ data: OpenResult }>(`/lootboxes/${id}/open`);
++      setTimeout(() => {
++        setResult(res.data);
++        load();
++        refreshUser();
++      }, 700);
++    } finally {
++      setTimeout(() => setOpeningId(null), 700);
++    }
++  }
++
++  const unopened = boxes.filter((b) => !b.opened);
++
++  return (
++    <div className="glass-panel rounded-2xl p-5">
++      <h2 className="font-bold mb-3">Лутбокси</h2>
++      {unopened.length === 0 && <p className="text-white/40 text-sm">Немає невідкритих лутбоксів. Заробляй XP, щоб отримати нові!</p>}
++      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
++        {unopened.map((box) => {
++          const rarity = RARITY_META[box.lootBox.rarity];
++          const isOpening = openingId === box.id;
++          return (
++            <button
++              key={box.id}
++              onClick={() => openBox(box.id)}
++              disabled={openingId !== null}
++              className="rounded-xl p-4 flex flex-col items-center gap-2 disabled:opacity-50"
++              style={{ background: `${rarity.color}1a`, border: `1px solid ${rarity.color}66` }}
++            >
++              <motion.span
++                className="text-3xl"
++                animate={isOpening ? { rotate: [0, -10, 10, -10, 10, 0], scale: [1, 1.2, 1.2, 1.2, 1.2, 1] } : {}}
++                transition={{ duration: 0.7 }}
++              >
++                🎁
++              </motion.span>
++              <span className="text-xs font-semibold">{box.lootBox.name}</span>
++              <span className="text-[10px]" style={{ color: rarity.color }}>
++                {rarity.label}
++              </span>
++            </button>
++          );
++        })}
++      </div>
++
++      <AnimatePresence>
++        {result && (
++          <motion.div
++            initial={{ opacity: 0, scale: 0.8 }}
++            animate={{ opacity: 1, scale: 1 }}
++            exit={{ opacity: 0, scale: 0.8 }}
++            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
++            onClick={() => setResult(null)}
++          >
++            <div className="glass-panel rounded-2xl p-8 text-center shadow-glow">
++              <div className="text-4xl mb-3">🎉</div>
++              <div className="text-brain-point font-bold text-lg">+{result.pointsAwarded.toFixed(2)} BP</div>
++              <div className="text-brain-accent2 font-bold text-lg">+{result.xpAwarded} XP</div>
++              {result.boosterKey && <div className="text-brain-accent font-semibold mt-2">🚀 Booster: {result.boosterKey}</div>}
++              <p className="text-white/40 text-xs mt-3">Натисни, щоб закрити</p>
++            </div>
++          </motion.div>
++        )}
++      </AnimatePresence>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/MissionsPanel.tsx b/figabrain-social/frontend/src/components/MissionsPanel.tsx
+new file mode 100644
+index 0000000..b6a1b09
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/MissionsPanel.tsx
+@@ -0,0 +1,56 @@
++import { useEffect, useState } from "react";
++import { api } from "../api/client";
++import type { Mission } from "../api/types";
++
++export function MissionsPanel() {
++  const [daily, setDaily] = useState<Mission[]>([]);
++  const [weekly, setWeekly] = useState<Mission[]>([]);
++
++  useEffect(() => {
++    api.get<{ data: { daily: Mission[]; weekly: Mission[] } }>("/missions").then((res) => {
++      setDaily(res.data.daily);
++      setWeekly(res.data.weekly);
++    });
++  }, []);
++
++  return (
++    <div className="glass-panel rounded-2xl p-5">
++      <h2 className="font-bold mb-3">Місії</h2>
++      <MissionGroup title="Щоденні" missions={daily} />
++      <MissionGroup title="Щотижневі" missions={weekly} className="mt-4" />
++    </div>
++  );
++}
++
++function MissionGroup({ title, missions, className = "" }: { title: string; missions: Mission[]; className?: string }) {
++  if (missions.length === 0) return null;
++  return (
++    <div className={className}>
++      <div className="text-xs uppercase text-white/40 mb-2">{title}</div>
++      <div className="space-y-2">
++        {missions.map((mission) => {
++          const progress = Math.min(1, mission.progress / mission.targetCount);
++          return (
++            <div key={mission.missionId} className={`rounded-xl p-3 ${mission.completed ? "bg-green-500/10 border border-green-500/30" : "bg-white/5"}`}>
++              <div className="flex justify-between text-sm mb-1">
++                <span className={mission.completed ? "text-green-400" : ""}>{mission.completed ? "✅ " : ""}{mission.title}</span>
++                <span className="text-white/40">
++                  {mission.progress}/{mission.targetCount}
++                </span>
++              </div>
++              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mb-1">
++                <div
++                  className="h-full rounded-full bg-gradient-to-r from-brain-accent to-brain-accent2"
++                  style={{ width: `${progress * 100}%` }}
++                />
++              </div>
++              <div className="text-xs text-white/40">
++                +{mission.pointsReward} BP · +{mission.xpReward} XP
++              </div>
++            </div>
++          );
++        })}
++      </div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/RankCard.tsx b/figabrain-social/frontend/src/components/RankCard.tsx
+new file mode 100644
+index 0000000..891aafe
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/RankCard.tsx
+@@ -0,0 +1,43 @@
++import type { UserProfile } from "../api/types";
++import { RANK_META } from "../lib/rankMeta";
++import { XpBar } from "./XpBar";
++
++export function RankCard({ profile }: { profile: UserProfile }) {
++  const meta = RANK_META[profile.rank];
++
++  return (
++    <div className="glass-panel rounded-2xl p-5">
++      <div className="flex items-center gap-3 mb-4">
++        <div
++          className="h-12 w-12 rounded-full flex items-center justify-center text-2xl"
++          style={{ background: `${meta.color}22`, border: `1px solid ${meta.color}66` }}
++        >
++          {meta.emoji}
++        </div>
++        <div>
++          <div className="font-bold" style={{ color: meta.color }}>
++            {meta.label}
++          </div>
++          <div className="text-xs text-white/40">x{meta.multiplier} Brain Points & XP multiplier</div>
++        </div>
++        <div className="ml-auto text-right">
++          <div className="text-xs text-white/40">Reputation</div>
++          <div className="font-bold text-sm">⭐ {profile.reputation}</div>
++        </div>
++      </div>
++
++      <XpBar xp={profile.xp} nextLevelTier={profile.nextLevelTier} rank={profile.rank} />
++
++      <div className="grid grid-cols-2 gap-3 mt-4">
++        <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
++          <div className="text-xs text-white/50">Brain Points</div>
++          <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
++        </div>
++        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3">
++          <div className="text-xs text-white/50">Login Streak</div>
++          <div className="text-lg font-bold text-orange-400">🔥 {profile.loginStreak}d</div>
++        </div>
++      </div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/SeasonProgress.tsx b/figabrain-social/frontend/src/components/SeasonProgress.tsx
+new file mode 100644
+index 0000000..d9c4abf
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/SeasonProgress.tsx
+@@ -0,0 +1,57 @@
++import { useEffect, useState } from "react";
++import { api } from "../api/client";
++import type { SeasonCurrent } from "../api/types";
++import { RANK_META } from "../lib/rankMeta";
++
++function formatTimeLeft(endsAt: string): string {
++  const ms = new Date(endsAt).getTime() - Date.now();
++  if (ms <= 0) return "Завершується...";
++  const days = Math.floor(ms / 86_400_000);
++  const hours = Math.floor((ms % 86_400_000) / 3_600_000);
++  return `${days}д ${hours}г залишилось`;
++}
++
++export function SeasonProgress() {
++  const [data, setData] = useState<SeasonCurrent | null>(null);
++
++  useEffect(() => {
++    api.get<{ data: SeasonCurrent }>("/seasons/current").then((res) => setData(res.data));
++  }, []);
++
++  if (!data || !data.season) {
++    return (
++      <div className="glass-panel rounded-2xl p-5">
++        <h2 className="font-bold mb-1">Сезон</h2>
++        <p className="text-white/40 text-sm">Наразі немає активного сезону.</p>
++      </div>
++    );
++  }
++
++  return (
++    <div className="glass-panel rounded-2xl p-5">
++      <div className="flex justify-between items-baseline mb-3">
++        <h2 className="font-bold">{data.season.name}</h2>
++        <span className="text-xs text-white/40">{formatTimeLeft(data.season.endsAt)}</span>
++      </div>
++
++      {data.me && (
++        <div className="bg-brain-accent/10 border border-brain-accent/30 rounded-xl p-3 mb-4 flex justify-between">
++          <span className="text-sm text-white/60">Твій результат</span>
++          <span className="font-bold text-brain-point">{data.me.seasonPoints.toFixed(1)} BP</span>
++        </div>
++      )}
++
++      <div className="space-y-1.5">
++        {data.leaderboard.slice(0, 10).map((entry) => (
++          <div key={entry.user.username} className="flex items-center gap-2 text-sm py-1">
++            <span className="w-5 text-white/40">{entry.position}</span>
++            <span>{RANK_META[entry.user.rank].emoji}</span>
++            <span className="flex-1 truncate">{entry.user.displayName}</span>
++            <span className="text-brain-point font-semibold">{entry.seasonPoints.toFixed(1)}</span>
++          </div>
++        ))}
++        {data.leaderboard.length === 0 && <p className="text-white/40 text-sm">Ще немає учасників цього сезону.</p>}
++      </div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/Sidebar.tsx b/figabrain-social/frontend/src/components/Sidebar.tsx
+new file mode 100644
+index 0000000..5cf588c
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/Sidebar.tsx
+@@ -0,0 +1,45 @@
++import { NavLink } from "react-router-dom";
++import { motion } from "framer-motion";
++
++const NAV_ITEMS = [
++  { to: "/", label: "Feed" },
++  { to: "/search", label: "Search" },
++  { to: "/notifications", label: "Notifications" },
++  { to: "/messages", label: "Messages" },
++  { to: "/wallet", label: "Wallet" },
++  { to: "/economy", label: "Brain Economy" },
++  { to: "/rewards", label: "Rewards" },
++  { to: "/leaderboard", label: "Leaderboard" },
++  { to: "/settings", label: "Settings" },
++];
++
++export function Sidebar() {
++  return (
++    <aside className="hidden lg:flex flex-col w-64 shrink-0 p-4 gap-1 border-r border-white/5">
++      <motion.div
++        initial={{ opacity: 0, y: -8 }}
++        animate={{ opacity: 1, y: 0 }}
++        className="mb-6 px-3"
++      >
++        <span className="text-xl font-bold bg-gradient-to-r from-brain-accent to-brain-accent2 bg-clip-text text-transparent">
++          FIGABRAIN
++        </span>
++        <span className="block text-xs text-white/40">Social</span>
++      </motion.div>
++
++      {NAV_ITEMS.map((item) => (
++        <NavLink
++          key={item.to}
++          to={item.to}
++          className={({ isActive }) =>
++            `px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
++              isActive ? "bg-white/10 text-white shadow-glow" : "text-white/60 hover:bg-white/5 hover:text-white"
++            }`
++          }
++        >
++          {item.label}
++        </NavLink>
++      ))}
++    </aside>
++  );
++}
+diff --git a/figabrain-social/frontend/src/components/XpBar.tsx b/figabrain-social/frontend/src/components/XpBar.tsx
+new file mode 100644
+index 0000000..78a9b43
+--- /dev/null
++++ b/figabrain-social/frontend/src/components/XpBar.tsx
+@@ -0,0 +1,24 @@
++import { motion } from "framer-motion";
++import type { UserProfile } from "../api/types";
++import { RANK_META } from "../lib/rankMeta";
++
++export function XpBar({ xp, nextLevelTier }: Pick<UserProfile, "xp" | "nextLevelTier" | "rank">) {
++  const progress = nextLevelTier ? Math.min(1, xp / nextLevelTier.minXp) : 1;
++
++  return (
++    <div>
++      <div className="flex justify-between text-xs text-white/50 mb-1">
++        <span>{xp} XP</span>
++        <span>{nextLevelTier ? `${nextLevelTier.minXp} XP -> ${RANK_META[nextLevelTier.rank].label}` : "Max rank"}</span>
++      </div>
++      <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
++        <motion.div
++          className="h-full rounded-full bg-gradient-to-r from-brain-accent to-brain-accent2"
++          initial={{ width: 0 }}
++          animate={{ width: `${progress * 100}%` }}
++          transition={{ duration: 0.6, ease: "easeOut" }}
++        />
++      </div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/context/RewardToastContext.tsx b/figabrain-social/frontend/src/context/RewardToastContext.tsx
+new file mode 100644
+index 0000000..7484489
+--- /dev/null
++++ b/figabrain-social/frontend/src/context/RewardToastContext.tsx
+@@ -0,0 +1,52 @@
++import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
++import { AnimatePresence, motion } from "framer-motion";
++
++interface RewardToastPayload {
++  amount: number;
++  xp: number;
++}
++
++interface RewardToastValue {
++  showReward: (payload: RewardToastPayload) => void;
++}
++
++const RewardToastContext = createContext<RewardToastValue | null>(null);
++
++export function RewardToastProvider({ children }: { children: ReactNode }) {
++  const [toasts, setToasts] = useState<(RewardToastPayload & { id: number })[]>([]);
++
++  const showReward = useCallback((payload: RewardToastPayload) => {
++    if (payload.amount <= 0 && payload.xp <= 0) return;
++    const id = Date.now() + Math.random();
++    setToasts((prev) => [...prev, { ...payload, id }]);
++    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2200);
++  }, []);
++
++  return (
++    <RewardToastContext.Provider value={{ showReward }}>
++      {children}
++      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end pointer-events-none">
++        <AnimatePresence>
++          {toasts.map((toast) => (
++            <motion.div
++              key={toast.id}
++              initial={{ opacity: 0, y: 12, scale: 0.9 }}
++              animate={{ opacity: 1, y: 0, scale: 1 }}
++              exit={{ opacity: 0, y: -8, scale: 0.95 }}
++              className="glass-panel rounded-xl px-4 py-2 shadow-glow flex items-center gap-3"
++            >
++              {toast.amount > 0 && <span className="text-brain-point font-bold text-sm">+{toast.amount.toFixed(2)} BP</span>}
++              {toast.xp > 0 && <span className="text-brain-accent2 font-bold text-sm">+{toast.xp} XP</span>}
++            </motion.div>
++          ))}
++        </AnimatePresence>
++      </div>
++    </RewardToastContext.Provider>
++  );
++}
++
++export function useRewardToast(): RewardToastValue {
++  const ctx = useContext(RewardToastContext);
++  if (!ctx) throw new Error("useRewardToast must be used within RewardToastProvider");
++  return ctx;
++}
+diff --git a/figabrain-social/frontend/src/lib/rankMeta.ts b/figabrain-social/frontend/src/lib/rankMeta.ts
+new file mode 100644
+index 0000000..36ad0b8
+--- /dev/null
++++ b/figabrain-social/frontend/src/lib/rankMeta.ts
+@@ -0,0 +1,20 @@
++import type { AchievementRarity, Rank } from "../api/types";
++
++export const RANK_META: Record<Rank, { label: string; emoji: string; multiplier: number; color: string }> = {
++  NPC: { label: "NPC", emoji: "🥚", multiplier: 1, color: "#8a8f9c" },
++  NORMIE: { label: "Normie", emoji: "🙂", multiplier: 1, color: "#9ca3ff" },
++  SIGMA: { label: "Sigma", emoji: "🐺", multiplier: 1.2, color: "#7c5cff" },
++  GIGACHAD: { label: "Gigachad", emoji: "💪", multiplier: 1.5, color: "#22d3ee" },
++  BRAIN_LORD: { label: "Brain Lord", emoji: "🧠", multiplier: 2, color: "#ffd166" },
++  MEME_EMPEROR: { label: "Meme Emperor", emoji: "👑", multiplier: 3, color: "#ff7c7c" },
++  GALAXY_BRAIN: { label: "Galaxy Brain", emoji: "🌌", multiplier: 4, color: "#c084fc" },
++  NEURAL_GOD: { label: "Neural God", emoji: "⚡", multiplier: 5, color: "#f472b6" },
++};
++
++export const RARITY_META: Record<AchievementRarity, { label: string; color: string }> = {
++  COMMON: { label: "Common", color: "#9ca3af" },
++  RARE: { label: "Rare", color: "#60a5fa" },
++  EPIC: { label: "Epic", color: "#c084fc" },
++  LEGENDARY: { label: "Legendary", color: "#ffd166" },
++  MYTHIC: { label: "Mythic", color: "#ff5c8a" },
++};
+diff --git a/figabrain-social/frontend/src/main.tsx b/figabrain-social/frontend/src/main.tsx
+new file mode 100644
+index 0000000..061b0b6
+--- /dev/null
++++ b/figabrain-social/frontend/src/main.tsx
+@@ -0,0 +1,19 @@
++import React from "react";
++import ReactDOM from "react-dom/client";
++import { BrowserRouter } from "react-router-dom";
++import { App } from "./App";
++import { AuthProvider } from "./context/AuthContext";
++import { RewardToastProvider } from "./context/RewardToastContext";
++import "./styles/index.css";
++
++ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
++  <React.StrictMode>
++    <BrowserRouter>
++      <AuthProvider>
++        <RewardToastProvider>
++          <App />
++        </RewardToastProvider>
++      </AuthProvider>
++    </BrowserRouter>
++  </React.StrictMode>
++);
+diff --git a/figabrain-social/frontend/src/pages/Economy.tsx b/figabrain-social/frontend/src/pages/Economy.tsx
+new file mode 100644
+index 0000000..fbca332
+--- /dev/null
++++ b/figabrain-social/frontend/src/pages/Economy.tsx
+@@ -0,0 +1,44 @@
++import { useEffect, useState } from "react";
++import { api } from "../api/client";
++import type { ActiveBooster } from "../api/types";
++import { useAuth } from "../context/AuthContext";
++import { RankCard } from "../components/RankCard";
++import { MissionsPanel } from "../components/MissionsPanel";
++import { AchievementShowcase } from "../components/AchievementShowcase";
++import { SeasonProgress } from "../components/SeasonProgress";
++import { LootBoxShelf } from "../components/LootBoxShelf";
++
++export function Economy() {
++  const { user } = useAuth();
++  const [boosters, setBoosters] = useState<ActiveBooster[]>([]);
++
++  useEffect(() => {
++    api.get<{ data: ActiveBooster[] }>("/boosters").then((res) => setBoosters(res.data));
++  }, []);
++
++  if (!user) return null;
++
++  return (
++    <div className="space-y-6">
++      <RankCard profile={user} />
++
++      {boosters.length > 0 && (
++        <div className="glass-panel rounded-2xl p-5">
++          <h2 className="font-bold mb-3">Активні бустери</h2>
++          <div className="flex flex-wrap gap-2">
++            {boosters.map((b, i) => (
++              <span key={i} className="bg-brain-accent/15 border border-brain-accent/40 rounded-full px-3 py-1 text-xs font-semibold">
++                {b.booster.name} · x{b.multiplier} · до {new Date(b.expiresAt).toLocaleTimeString()}
++              </span>
++            ))}
++          </div>
++        </div>
++      )}
++
++      <LootBoxShelf />
++      <MissionsPanel />
++      <AchievementShowcase />
++      <SeasonProgress />
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/pages/Feed.tsx b/figabrain-social/frontend/src/pages/Feed.tsx
+new file mode 100644
+index 0000000..eac5b14
+--- /dev/null
++++ b/figabrain-social/frontend/src/pages/Feed.tsx
+@@ -0,0 +1,105 @@
++import { useCallback, useEffect, useState } from "react";
++import { api } from "../api/client";
++import type { Post } from "../api/types";
++import { PostCard } from "../components/PostCard";
++import { useAuth } from "../context/AuthContext";
++import { useRewardToast } from "../context/RewardToastContext";
++
++export function Feed() {
++  const { user, refreshUser } = useAuth();
++  const { showReward } = useRewardToast();
++  const [posts, setPosts] = useState<Post[]>([]);
++  const [content, setContent] = useState("");
++  const [isPosting, setIsPosting] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++
++  const loadFeed = useCallback(async () => {
++    const res = await api.get<{ data: Post[] }>("/posts/feed");
++    setPosts(res.data);
++  }, []);
++
++  useEffect(() => {
++    loadFeed();
++  }, [loadFeed]);
++
++  async function handleSubmit() {
++    if (!content.trim()) return;
++    setIsPosting(true);
++    setError(null);
++    try {
++      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", {
++        content,
++        imageUrls: [],
++      });
++      setPosts((prev) => [res.data, ...prev]);
++      setContent("");
++      if (res.reward) {
++        showReward(res.reward);
++        refreshUser();
++      }
++    } catch (err) {
++      setError(err instanceof Error ? err.message : "Failed to post");
++    } finally {
++      setIsPosting(false);
++    }
++  }
++
++  async function handleLike(post: Post) {
++    const wasLiked = post.likedByMe;
++    setPosts((prev) =>
++      prev.map((p) =>
++        p.id === post.id
++          ? { ...p, likedByMe: !p.likedByMe, likesCount: p.likesCount + (p.likedByMe ? -1 : 1) }
++          : p
++      )
++    );
++    const res = await api.post<{ data: { liked: boolean }; reward?: { amount: number; xp: number } }>(
++      `/posts/${post.id}/like`
++    );
++    if (!wasLiked && res.reward) {
++      showReward(res.reward);
++      refreshUser();
++    }
++  }
++
++  async function handleRepost(post: Post) {
++    try {
++      await api.post(`/posts/${post.id}/repost`);
++      await loadFeed();
++    } catch {
++      // already reposted or rate limited — feed stays as-is
++    }
++  }
++
++  return (
++    <div>
++      {user && (
++        <div className="glass-panel rounded-2xl p-4 mb-6">
++          <textarea
++            value={content}
++            onChange={(e) => setContent(e.target.value)}
++            placeholder="Що відбувається в FIGABRAIN?"
++            className="w-full bg-transparent outline-none resize-none text-sm placeholder:text-white/30"
++            rows={3}
++            maxLength={2000}
++          />
++          {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
++          <div className="flex justify-end">
++            <button
++              onClick={handleSubmit}
++              disabled={isPosting || !content.trim()}
++              className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-5 py-2 rounded-full disabled:opacity-40"
++            >
++              {isPosting ? "Posting..." : "Post"}
++            </button>
++          </div>
++        </div>
++      )}
++
++      {posts.map((post) => (
++        <PostCard key={post.id} post={post} onLike={handleLike} onRepost={handleRepost} />
++      ))}
++      {posts.length === 0 && <p className="text-white/40 text-sm text-center mt-10">No posts yet. Be the first to farm Brain Points.</p>}
++    </div>
++  );
++}
+diff --git a/figabrain-social/frontend/src/pages/Profile.tsx b/figabrain-social/frontend/src/pages/Profile.tsx
+new file mode 100644
+index 0000000..2000afd
+--- /dev/null
++++ b/figabrain-social/frontend/src/pages/Profile.tsx
+@@ -0,0 +1,77 @@
++import { useEffect, useState } from "react";
++import { useParams } from "react-router-dom";
++import { api } from "../api/client";
++import type { UserProfile } from "../api/types";
++import { RankCard } from "../components/RankCard";
++
++export function Profile() {
++  const { username } = useParams<{ username: string }>();
++  const [profile, setProfile] = useState<UserProfile | null>(null);
++
++  useEffect(() => {
++    if (!username) return;
++    api.get<{ data: UserProfile }>(`/users/${username}`).then((res) => setProfile(res.data));
++  }, [username]);
++
++  async function toggleFollow() {
++    if (!profile) return;
++    if (profile.isFollowedByMe) {
++      await api.delete(`/users/${profile.username}/follow`);
++    } else {
++      await api.post(`/users/${profile.username}/follow`);
++    }
++    setProfile({ ...profile, isFollowedByMe: !profile.isFollowedByMe });
++  }
++
++  if (!profile) return <p className="text-white/40 text-sm">Loading profile...</p>;
++
++  return (
++    <div className="glass-panel rounded-2xl p-6">
++      <div className="flex items-center gap-4 mb-4">
++        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-brain-accent to-brain-accent2 flex items-center justify-center text-2xl font-bold">
++          {profile.displayName.slice(0, 1).toUpperCase()}
++        </div>
++        <div>
++          <h1 className="text-xl font-bold">{profile.displayName}</h1>
++          <p className="text-white/40">@{profile.username} · {profile.rank}</p>
++        </div>
++        <button
++          onClick={toggleFollow}
++          className="ml-auto bg-white/10 hover:bg-white/20 text-sm font-semibold px-4 py-2 rounded-full"
++        >
++          {profile.isFollowedByMe ? "Unfollow" : "Follow"}
++        </button>
++      </div>
++
++      <p className="text-sm text-white/70 mb-4">{profile.bio || "No bio yet."}</p>
++
++      <div className="grid grid-cols-3 gap-3 text-center mb-4">
++        <Stat label="Posts" value={profile.postsCount} />
++        <Stat label="Followers" value={profile.followersCount} />
++        <Stat label="Following" value={profile.followingCount} />
++      </div>
++
++      <div className="grid grid-cols-2 gap-3 mb-4">
++        <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
++          <div className="text-xs text-white/50">Brain Points</div>
++          <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
++        </div>
++        <div className="bg-brain-accent2/10 border border-brain-accent2/30 rounded-xl p-3">
++          <div className="text-xs text-white/50">Wallet Balance</div>
++          <div className="text-lg font-bold text-brain-accent2">{profile.walletBalance.toFixed(4)}</div>
++        </div>
++      </div>
++
++      <RankCard profile={profile} />
++    </div>
++  );
++}
++
++function Stat({ label, value }: { label: string; value: number }) {
++  return (
++    <div>
++      <div className="text-lg font-bold">{value}</div>
++      <div className="text-xs text-white/40">{label}</div>
++    </div>
++  );
++}
+diff --git a/figabrain-social/backend/src/modules/auth/auth.routes.ts b/figabrain-social/backend/src/modules/auth/auth.routes.ts
+index 06e4311..675c4bf 100644
+--- a/figabrain-social/backend/src/modules/auth/auth.routes.ts
++++ b/figabrain-social/backend/src/modules/auth/auth.routes.ts
+@@ -4,7 +4,7 @@ import { authRateLimiter } from "../../middleware/rateLimit.js";
+ import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
+ import { validateBody } from "../../middleware/validate.js";
+ import { verifyTelegramLogin } from "./telegramVerify.js";
+-import { loginOrRegisterWithTelegram } from "./auth.service.js";
++import { loginOrRegisterWithTelegram, loginByUsername } from "./auth.service.js";
+ import { verifyRefreshToken, signAccessToken } from "../../lib/jwt.js";
+ import { prisma } from "../../lib/prisma.js";
+ import { flagMultiAccountAbuse } from "../antibot/antibot.service.js";
+@@ -47,22 +47,30 @@ authRouter.post(
+     }
+ 
+     const { username, displayName } = req.body;
++
++    // If this username already exists (e.g. seeded demo data), log straight
++    // into that account instead of minting a fake telegramId — otherwise
++    // dev-login would create a shadow "username1" duplicate every time.
++    const existingLogin = await loginByUsername(username);
++
+     const fakeTelegramId = Math.abs(
+       Array.from(`dev_${username}`).reduce((hash, ch) => (hash * 31 + ch.charCodeAt(0)) % 2_147_483_647, 7)
+     );
+ 
+-    const result = await loginOrRegisterWithTelegram(
+-      {
+-        id: fakeTelegramId,
+-        first_name: displayName ?? username,
+-        username,
+-        auth_date: Math.floor(Date.now() / 1000),
+-        hash: "dev-bypass",
+-      },
+-      undefined,
+-      undefined,
+-      req.ip
+-    );
++    const result =
++      existingLogin ??
++      (await loginOrRegisterWithTelegram(
++        {
++          id: fakeTelegramId,
++          first_name: displayName ?? username,
++          username,
++          auth_date: Math.floor(Date.now() / 1000),
++          hash: "dev-bypass",
++        },
++        undefined,
++        undefined,
++        req.ip
++      ));
+ 
+     res.cookie("refresh_token", result.refreshToken, {
+       httpOnly: true,
+diff --git a/figabrain-social/backend/src/modules/auth/auth.service.ts b/figabrain-social/backend/src/modules/auth/auth.service.ts
+index 8990885..7575520 100644
+--- a/figabrain-social/backend/src/modules/auth/auth.service.ts
++++ b/figabrain-social/backend/src/modules/auth/auth.service.ts
+@@ -33,6 +33,39 @@ export interface LoginResult {
+   userId: string;
+ }
+ 
++type UserRow = Awaited<ReturnType<typeof prisma.user.findUniqueOrThrow>>;
++
++/** Applies the daily-login streak/reward side effects and mints tokens for an already-resolved user row. */
++async function loginExistingUser(user: UserRow): Promise<LoginResult> {
++  const today = new Date();
++  const lastLogin = user.lastLoginAt;
++  const isConsecutiveDay =
++    lastLogin && today.getTime() - lastLogin.getTime() < 48 * 60 * 60 * 1000 && today.toDateString() !== lastLogin.toDateString();
++  const isSameDay = lastLogin && today.toDateString() === lastLogin.toDateString();
++
++  const updated = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: today } });
++
++  if (!isSameDay) {
++    const newStreak = isConsecutiveDay ? user.loginStreak + 1 : 1;
++    await applyStreakUpdate(user.id, newStreak, !isConsecutiveDay);
++    await grantReward(user.id, "DAILY_LOGIN", undefined, { streak: newStreak });
++  }
++
++  return {
++    accessToken: signAccessToken({ sub: updated.id, username: updated.username, isAdmin: updated.isAdmin }),
++    refreshToken: signRefreshToken({ sub: updated.id }),
++    isNewUser: false,
++    userId: updated.id,
++  };
++}
++
++/** Logs into an existing account by username, bypassing telegramId entirely. Dev-only: see /auth/dev-login. */
++export async function loginByUsername(username: string): Promise<LoginResult | null> {
++  const user = await prisma.user.findUnique({ where: { username } });
++  if (!user) return null;
++  return loginExistingUser(user);
++}
++
+ export async function loginOrRegisterWithTelegram(
+   payload: TelegramLoginPayload,
+   referralCode: string | undefined,
+@@ -83,28 +116,14 @@ export async function loginOrRegisterWithTelegram(
+     }
+ 
+     await writeAuditLog({ userId: user.id, action: "USER_REGISTERED", entity: "User", entityId: user.id, ip });
+-  } else {
+-    const today = new Date();
+-    const lastLogin = user.lastLoginAt;
+-    const isConsecutiveDay =
+-      lastLogin && today.getTime() - lastLogin.getTime() < 48 * 60 * 60 * 1000 &&
+-      today.toDateString() !== lastLogin.toDateString();
+-    const isSameDay = lastLogin && today.toDateString() === lastLogin.toDateString();
+-
+-    user = await prisma.user.update({
+-      where: { id: user.id },
+-      data: { lastLoginAt: today },
+-    });
+ 
+-    if (!isSameDay) {
+-      const newStreak = isConsecutiveDay ? user.loginStreak + 1 : 1;
+-      await applyStreakUpdate(user.id, newStreak, !isConsecutiveDay);
+-      await grantReward(user.id, "DAILY_LOGIN", undefined, { streak: newStreak });
+-    }
++    return {
++      accessToken: signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin }),
++      refreshToken: signRefreshToken({ sub: user.id }),
++      isNewUser,
++      userId: user.id,
++    };
+   }
+ 
+-  const accessToken = signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin });
+-  const refreshToken = signRefreshToken({ sub: user.id });
+-
+-  return { accessToken, refreshToken, isNewUser, userId: user.id };
++  return loginExistingUser(user);
+ }

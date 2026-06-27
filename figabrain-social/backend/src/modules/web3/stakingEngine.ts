@@ -3,12 +3,6 @@ import { prisma } from "../../lib/prisma.js";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-/**
- * Off-chain staking bookkeeping: locks a user's tracked balance for
- * `pool.lockDays` and computes simple-interest APR payout on close. No
- * tokens actually move until a ChainProvider exists; this models the
- * product behavior so the UI and reward math are ready in advance.
- */
 export class StakingEngine {
   async open(userId: string, poolId: string, amount: number) {
     const pool = await prisma.stakingPool.findUniqueOrThrow({ where: { id: poolId } });
@@ -32,19 +26,20 @@ export class StakingEngine {
       include: { pool: true },
     });
 
-    if (position.userId !== userId) {
-      throw new Error("Not the owner of this staking position");
-    }
-    if (position.status !== "ACTIVE") {
-      throw new Error(`Position is not active (status: ${position.status})`);
-    }
-    if (position.unlocksAt > new Date()) {
-      throw new Error("Position is still locked");
-    }
+    if (position.userId !== userId) throw new Error("Not the owner of this staking position");
+    if (position.status !== "ACTIVE") throw new Error(`Position is not active (status: ${position.status})`);
+    if (position.unlocksAt > new Date()) throw new Error("Position is still locked");
 
     const stakedDays = new Prisma.Decimal(Date.now() - position.startedAt.getTime()).div(MS_PER_DAY);
     const apr = position.pool.apr.div(100);
-    const payout = position.amount.mul(new Prisma.Decimal(1).add(apr.mul(stakedDays).div(365)));
+    const grossInterest = position.amount.mul(apr).mul(stakedDays).div(365);
+
+    // Platform fee is taken from the interest only (not principal)
+    const feeRate = position.pool.platformFeePercent.div(100);
+    const fee = grossInterest.mul(feeRate);
+    const netInterest = grossInterest.sub(fee);
+
+    const payout = position.amount.add(netInterest);
 
     return prisma.$transaction([
       prisma.stakingPosition.update({
