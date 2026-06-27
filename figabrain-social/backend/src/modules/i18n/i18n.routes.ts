@@ -1,45 +1,71 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { get as redisGet, setex as redisSetex } from "../../lib/redis.js";
 
 export const i18nRouter = Router();
+
+// Public endpoint — no auth — so apply a strict rate limit to prevent abuse
+// of the Google Translate proxy (each uncached language costs ~50 API calls).
+const i18nRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 60,                   // 60 language fetches per IP per hour is generous for normal use
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many translation requests, please try again later." },
+});
 
 // Static bundled translations — served directly, no API calls needed.
 const STATIC: Record<string, unknown> = {
   en: {
     nav: { feed: "Feed", search: "Search", economy: "Brain Economy", messages: "Messages", wallet: "Wallet", leaderboard: "Leaderboard", notifications: "Notifications", profile: "Profile", settings: "Settings", rewards: "Rewards" },
-    settings: { title: "Profile Settings", displayName: "Display name", bio: "Bio", language: "Language", searchLanguage: "Search language...", noLanguages: "No languages found.", save: "Save changes", saving: "Saving...", saved: "Saved!", logout: "Log out", saveError: "Failed to save. Please try again." },
-    feed: { placeholder: "What's on your brain?", post: "Post", posting: "Posting...", like: "Like", comment: "Comment", repost: "Repost", report: "Report", noMore: "No more posts.", empty: "No posts yet. Be the first!" },
-    search: { title: "Search users", placeholder: "@username or display name", searching: "...", search: "Search", notFound: "No users found." },
-    leaderboard: { loading: "Loading leaderboard..." },
+    settings: { title: "Profile Settings", displayName: "Display name", bio: "Bio", avatarUrl: "Avatar URL", language: "Language", searchLanguage: "Search language...", noLanguages: "No languages found.", save: "Save changes", saving: "Saving...", saved: "Saved!", logout: "Log out", saveError: "Failed to save. Please try again." },
+    feed: { placeholder: "What's on your brain?", post: "Post", posting: "Posting...", like: "Like", comment: "Comment", repost: "Repost", report: "Report", noMore: "No more posts.", empty: "No posts yet. Be the first!", filterAll: "All", filterFollowing: "Following", followingEmpty: "Follow some users to see their posts here.", loading: "Loading..." },
+    postDetail: { back: "← Back", edit: "Edit", delete: "Delete", save: "Save", saving: "Saving...", share: "Share", report: "Report", reported: "Reported", commentPlaceholder: "Write a comment...", reply: "Reply", noComments: "No comments yet.", loadMore: "Load more", loadingMore: "Loading...", confirmDelete: "Delete this post?", reportPrompt: "Reason for report (optional):" },
+    season: { noParticipants: "No participants yet.", showLess: "Show less", showAll: "Show all ({{count}})", ending: "Ending soon..." },
+    search: { title: "Search users", placeholder: "@username or display name", searching: "...", search: "Search", notFound: "No users found.", hint: "Enter a name or keyword to search" },
+    leaderboard: { loading: "Loading leaderboard...", empty: "No entries yet.", alltime: "All time", weekly: "This week", daily: "Today" },
     notifications: { empty: "No notifications yet." },
     economy: { activeBoosters: "Active boosters", lootboxes: "Loot Boxes", noLootboxes: "No unopened loot boxes. Earn XP to get new ones!", missions: "Missions", daily: "Daily", weekly: "Weekly", achievements: "Achievements", season: "Season", noSeason: "No active season right now.", seasonEnded: "Ended", yourScore: "Your score", claimReward: "🎁 Claim reward", claiming: "Claiming...", rewardClaimed: "✓ Reward claimed", timeLeft: "{{days}}d {{hours}}h left" },
-    profile: { follow: "Follow", unfollow: "Unfollow", followers: "Followers", following: "Following", posts: "Posts", brainPoints: "Brain Points", loginStreak: "Login Streak", reputation: "Reputation" },
-    messages: { title: "Messages", placeholder: "Message...", send: "Send", sending: "...", newConversation: "Start new conversation", usernamePlaceholder: "@username" },
-    common: { loading: "Loading...", error: "Something went wrong.", retry: "Retry", cancel: "Cancel", close: "Close", back: "Back" },
+    profile: { follow: "Follow", unfollow: "Unfollow", followers: "Followers", following: "Following", posts: "Posts", brainPoints: "Brain Points", loginStreak: "Login Streak", reputation: "Reputation", noBio: "No bio yet.", noPosts: "No posts yet.", loadMore: "Load more", repHistory: "Rep history", longestStreak: "Longest", toNextMilestone: "{{days}}d to next milestone" },
+    rankCard: { multiplier: "x{{multiplier}} BP & XP multiplier" },
+    rewards: { rules: "Reward Rules", history: "Your History", noHistory: "No reward history yet.", total: "Total" },
+    wallet: { title: "Your FIGABRAIN Wallet", chain: "Internal {{chain}} wallet · private key encrypted at rest", convertTitle: "Convert BP → FGB", convertRate: "Rate: {{rate}} FGB per BP · Min: {{min}} BP", convert: "Convert", converting: "...", maxBtn: "MAX", recentConversions: "Recent conversions", tokenLaunch: "Token Launch", tokenLaunchDesc: "FGB token will be deployed on {{chain}}. Converted FGB is credited to your off-chain balance now and will be settled on-chain at launch.", onChainDisabled: "On-chain transfers not yet enabled.", airdrops: "Airdrops Available", claim: "Claim", claiming: "...", stakeTitle: "Stake FGB", selectPool: "Select pool...", stakeBtn: "Stake", yourPositions: "Your positions", collect: "Collect", locked: "Locked", nfts: "Your NFTs", referralTitle: "Referral Program", referralDesc: "Earn +50 BP for each friend who joins via your link." },
+    messages: { title: "Messages", placeholder: "Message...", send: "Send", sending: "...", newConversation: "+ New message", usernamePlaceholder: "@username", to: "To:", noMessages: "No messages yet. Say hello!" },
+    common: { loading: "Loading...", error: "Something went wrong.", retry: "Retry", cancel: "Cancel", close: "Close", back: "Back", loadMore: "Load more" },
   },
   uk: {
     nav: { feed: "Стрічка", search: "Пошук", economy: "Економіка", messages: "Повідомлення", wallet: "Гаманець", leaderboard: "Рейтинг", notifications: "Сповіщення", profile: "Профіль", settings: "Налаштування", rewards: "Нагороди" },
-    settings: { title: "Налаштування профілю", displayName: "Відображуване ім'я", bio: "Про себе", language: "Мова", searchLanguage: "Пошук мови...", noLanguages: "Мов не знайдено.", save: "Зберегти", saving: "Збереження...", saved: "Збережено!", logout: "Вийти", saveError: "Помилка збереження. Спробуйте ще раз." },
-    feed: { placeholder: "Що у тебе на думці?", post: "Опублікувати", posting: "Публікація...", like: "Лайк", comment: "Коментар", repost: "Репост", report: "Поскаржитись", noMore: "Більше дописів немає.", empty: "Ще немає дописів. Будь першим!" },
-    search: { title: "Пошук користувачів", placeholder: "@нікнейм або ім'я", searching: "...", search: "Знайти", notFound: "Користувачів не знайдено." },
-    leaderboard: { loading: "Завантаження рейтингу..." },
+    settings: { title: "Налаштування профілю", displayName: "Відображуване ім'я", bio: "Про себе", avatarUrl: "URL аватара", language: "Мова", searchLanguage: "Пошук мови...", noLanguages: "Мов не знайдено.", save: "Зберегти", saving: "Збереження...", saved: "Збережено!", logout: "Вийти", saveError: "Помилка збереження. Спробуйте ще раз." },
+    feed: { placeholder: "Що у тебе на думці?", post: "Опублікувати", posting: "Публікація...", like: "Лайк", comment: "Коментар", repost: "Репост", report: "Поскаржитись", noMore: "Більше дописів немає.", empty: "Ще немає дописів. Будь першим!", filterAll: "Всі", filterFollowing: "Підписки", followingEmpty: "Підпишись на користувачів, щоб бачити їхні дописи.", loading: "Завантаження..." },
+    postDetail: { back: "← Назад", edit: "Редагувати", delete: "Видалити", save: "Зберегти", saving: "Збереження...", share: "Поділитись", report: "Поскаржитись", reported: "Скарга надіслана", commentPlaceholder: "Написати коментар...", reply: "Відповісти", noComments: "Коментарів ще немає.", loadMore: "Завантажити ще", loadingMore: "Завантаження...", confirmDelete: "Видалити цей допис?", reportPrompt: "Причина скарги (необов'язково):" },
+    season: { noParticipants: "Поки немає учасників.", showLess: "Згорнути", showAll: "Показати всіх ({{count}})", ending: "Завершується..." },
+    search: { title: "Пошук користувачів", placeholder: "@нікнейм або ім'я", searching: "...", search: "Знайти", notFound: "Користувачів не знайдено.", hint: "Введи імʼя або ключове слово для пошуку" },
+    leaderboard: { loading: "Завантаження рейтингу...", empty: "Поки нікого немає.", alltime: "За весь час", weekly: "Цього тижня", daily: "Сьогодні" },
     notifications: { empty: "Поки немає сповіщень." },
     economy: { activeBoosters: "Активні бустери", lootboxes: "Лутбокси", noLootboxes: "Немає невідкритих лутбоксів. Заробляй XP, щоб отримати нові!", missions: "Місії", daily: "Щоденні", weekly: "Щотижневі", achievements: "Досягнення", season: "Сезон", noSeason: "Наразі немає активного сезону.", seasonEnded: "Завершено", yourScore: "Твій результат", claimReward: "🎁 Отримати нагороду", claiming: "Отримання...", rewardClaimed: "✓ Нагороду отримано", timeLeft: "{{days}}д {{hours}}г залишилось" },
-    profile: { follow: "Стежити", unfollow: "Відписатись", followers: "Підписники", following: "Підписки", posts: "Пости", brainPoints: "Brain Points", loginStreak: "Серія входів", reputation: "Репутація" },
-    messages: { title: "Повідомлення", placeholder: "Повідомлення...", send: "Відправити", sending: "...", newConversation: "Нова розмова", usernamePlaceholder: "@нікнейм" },
-    common: { loading: "Завантаження...", error: "Щось пішло не так.", retry: "Спробувати знову", cancel: "Скасувати", close: "Закрити", back: "Назад" },
+    profile: { follow: "Стежити", unfollow: "Відписатись", followers: "Підписники", following: "Підписки", posts: "Пости", brainPoints: "Brain Points", loginStreak: "Серія входів", reputation: "Репутація", noBio: "Немає біо.", noPosts: "Постів ще немає.", loadMore: "Завантажити ще", repHistory: "Історія репутації", longestStreak: "Найдовша", toNextMilestone: "{{days}}д до наступного рубежу" },
+    rankCard: { multiplier: "x{{multiplier}} BP та XP множник" },
+    rewards: { rules: "Правила нагород", history: "Твоя історія", noHistory: "Історія нагород порожня.", total: "Всього" },
+    wallet: { title: "Твій гаманець FIGABRAIN", chain: "Внутрішній {{chain}} гаманець · приватний ключ зашифровано", convertTitle: "Конвертувати BP → FGB", convertRate: "Курс: {{rate}} FGB за BP · Мін: {{min}} BP", convert: "Конвертувати", converting: "...", maxBtn: "МАКС", recentConversions: "Останні конвертації", tokenLaunch: "Запуск токена", tokenLaunchDesc: "Токен FGB буде задеплоєно на {{chain}}. Конвертований FGB зараховується на офф-чейн баланс і буде розподілено на чейн після запуску.", onChainDisabled: "Онлайн-трансфери ще не увімкнено.", airdrops: "Доступні аірдропи", claim: "Отримати", claiming: "...", stakeTitle: "Стейкінг FGB", selectPool: "Обери пул...", stakeBtn: "Застейкати", yourPositions: "Твої позиції", collect: "Зняти", locked: "Заблоковано", nfts: "Твої NFT", referralTitle: "Реферальна програма", referralDesc: "Отримуй +50 BP за кожного друга, який приєднається за твоїм посиланням." },
+    messages: { title: "Повідомлення", placeholder: "Повідомлення...", send: "Відправити", sending: "...", newConversation: "+ Нове повідомлення", usernamePlaceholder: "@нікнейм", to: "Кому:", noMessages: "Повідомлень ще немає. Привітайся!" },
+    common: { loading: "Завантаження...", error: "Щось пішло не так.", retry: "Спробувати знову", cancel: "Скасувати", close: "Закрити", back: "Назад", loadMore: "Завантажити ще" },
   },
   ru: {
     nav: { feed: "Лента", search: "Поиск", economy: "Экономика", messages: "Сообщения", wallet: "Кошелёк", leaderboard: "Рейтинг", notifications: "Уведомления", profile: "Профиль", settings: "Настройки", rewards: "Награды" },
-    settings: { title: "Настройки профиля", displayName: "Отображаемое имя", bio: "О себе", language: "Язык", searchLanguage: "Поиск языка...", noLanguages: "Языков не найдено.", save: "Сохранить", saving: "Сохранение...", saved: "Сохранено!", logout: "Выйти", saveError: "Ошибка сохранения. Попробуйте ещё раз." },
-    feed: { placeholder: "Что у тебя на уме?", post: "Опубликовать", posting: "Публикация...", like: "Лайк", comment: "Комментарий", repost: "Репост", report: "Пожаловаться", noMore: "Больше постов нет.", empty: "Постов ещё нет. Будь первым!" },
-    search: { title: "Поиск пользователей", placeholder: "@никнейм или имя", searching: "...", search: "Найти", notFound: "Пользователи не найдены." },
-    leaderboard: { loading: "Загрузка рейтинга..." },
+    settings: { title: "Настройки профиля", displayName: "Отображаемое имя", bio: "О себе", avatarUrl: "URL аватара", language: "Язык", searchLanguage: "Поиск языка...", noLanguages: "Языков не найдено.", save: "Сохранить", saving: "Сохранение...", saved: "Сохранено!", logout: "Выйти", saveError: "Ошибка сохранения. Попробуйте ещё раз." },
+    feed: { placeholder: "Что у тебя на уме?", post: "Опубликовать", posting: "Публикация...", like: "Лайк", comment: "Комментарий", repost: "Репост", report: "Пожаловаться", noMore: "Больше постов нет.", empty: "Постов ещё нет. Будь первым!", filterAll: "Все", filterFollowing: "Подписки", followingEmpty: "Подпишись на пользователей, чтобы видеть их посты здесь.", loading: "Загрузка..." },
+    postDetail: { back: "← Назад", edit: "Редактировать", delete: "Удалить", save: "Сохранить", saving: "Сохранение...", share: "Поделиться", report: "Пожаловаться", reported: "Жалоба отправлена", commentPlaceholder: "Написать комментарий...", reply: "Ответить", noComments: "Комментариев пока нет.", loadMore: "Загрузить ещё", loadingMore: "Загрузка...", confirmDelete: "Удалить этот пост?", reportPrompt: "Причина жалобы (необязательно):" },
+    season: { noParticipants: "Участников пока нет.", showLess: "Свернуть", showAll: "Показать всех ({{count}})", ending: "Завершается..." },
+    search: { title: "Поиск пользователей", placeholder: "@никнейм или имя", searching: "...", search: "Найти", notFound: "Пользователи не найдены.", hint: "Введи имя или ключевое слово для поиска" },
+    leaderboard: { loading: "Загрузка рейтинга...", empty: "Пока никого нет.", alltime: "За всё время", weekly: "Эта неделя", daily: "Сегодня" },
     notifications: { empty: "Уведомлений пока нет." },
     economy: { activeBoosters: "Активные бустеры", lootboxes: "Лутбоксы", noLootboxes: "Нет неоткрытых лутбоксов. Зарабатывай XP, чтобы получить новые!", missions: "Миссии", daily: "Ежедневные", weekly: "Еженедельные", achievements: "Достижения", season: "Сезон", noSeason: "Сейчас нет активного сезона.", seasonEnded: "Завершён", yourScore: "Твой результат", claimReward: "🎁 Получить награду", claiming: "Получение...", rewardClaimed: "✓ Награда получена", timeLeft: "{{days}}д {{hours}}ч осталось" },
-    profile: { follow: "Подписаться", unfollow: "Отписаться", followers: "Подписчики", following: "Подписки", posts: "Посты", brainPoints: "Brain Points", loginStreak: "Серия входов", reputation: "Репутация" },
-    messages: { title: "Сообщения", placeholder: "Сообщение...", send: "Отправить", sending: "...", newConversation: "Новый разговор", usernamePlaceholder: "@никнейм" },
-    common: { loading: "Загрузка...", error: "Что-то пошло не так.", retry: "Попробовать снова", cancel: "Отмена", close: "Закрыть", back: "Назад" },
+    profile: { follow: "Подписаться", unfollow: "Отписаться", followers: "Подписчики", following: "Подписки", posts: "Посты", brainPoints: "Brain Points", loginStreak: "Серия входов", reputation: "Репутация", noBio: "Биo не заполнено.", noPosts: "Постов пока нет.", loadMore: "Загрузить ещё", repHistory: "История репутации", longestStreak: "Наибольшая", toNextMilestone: "{{days}}д до следующей отметки" },
+    rankCard: { multiplier: "x{{multiplier}} BP и XP множитель" },
+    rewards: { rules: "Правила наград", history: "Твоя история", noHistory: "История наград пуста.", total: "Итого" },
+    wallet: { title: "Твой кошелёк FIGABRAIN", chain: "Внутренний {{chain}} кошелёк · приватный ключ зашифрован", convertTitle: "Конвертировать BP → FGB", convertRate: "Курс: {{rate}} FGB за BP · Мин: {{min}} BP", convert: "Конвертировать", converting: "...", maxBtn: "МАКС", recentConversions: "Последние конвертации", tokenLaunch: "Запуск токена", tokenLaunchDesc: "Токен FGB будет задеплоен на {{chain}}. Конвертированный FGB зачисляется на офф-чейн баланс и будет распределён на чейн после запуска.", onChainDisabled: "Онлайн-переводы ещё не включены.", airdrops: "Доступные аирдропы", claim: "Получить", claiming: "...", stakeTitle: "Стейкинг FGB", selectPool: "Выбери пул...", stakeBtn: "Застейкать", yourPositions: "Твои позиции", collect: "Снять", locked: "Заблокировано", nfts: "Твои NFT", referralTitle: "Реферальная программа", referralDesc: "Получай +50 BP за каждого друга, который присоединится по твоей ссылке." },
+    messages: { title: "Сообщения", placeholder: "Сообщение...", send: "Отправить", sending: "...", newConversation: "+ Новое сообщение", usernamePlaceholder: "@никнейм", to: "Кому:", noMessages: "Сообщений пока нет. Поздоровайся!" },
+    common: { loading: "Загрузка...", error: "Что-то пошло не так.", retry: "Попробовать снова", cancel: "Отмена", close: "Закрыть", back: "Назад", loadMore: "Загрузить ещё" },
   },
 };
 
@@ -114,7 +140,7 @@ async function googleTranslate(text: string, targetLang: string): Promise<string
 const CACHE_TTL = 60 * 60 * 24 * 30; // 30 days in seconds
 
 // GET /api/i18n/:lang  →  returns i18next namespace JSON
-i18nRouter.get("/:lang", async (req, res) => {
+i18nRouter.get("/:lang", i18nRateLimiter, async (req, res) => {
   const { lang } = req.params;
 
   // Serve static translations immediately.
