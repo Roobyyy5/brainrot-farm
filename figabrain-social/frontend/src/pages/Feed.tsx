@@ -16,6 +16,8 @@ export function Feed() {
   const { showReward } = useRewardToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
+  const [imageUrl, setImageUrl] = useState("");
+  const [showImageInput, setShowImageInput] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -66,9 +68,12 @@ export function Feed() {
     setIsPosting(true);
     setError(null);
     try {
-      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", { content, imageUrls: [] });
+      const imageUrls = imageUrl.trim() ? [imageUrl.trim()] : [];
+      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", { content, imageUrls });
       setPosts((prev) => [res.data, ...prev]);
       setContent("");
+      setImageUrl("");
+      setShowImageInput(false);
       localStorage.removeItem(DRAFT_KEY);
       if (res.reward) { showReward(res.reward); refreshUser(); }
     } catch (err) {
@@ -111,10 +116,34 @@ export function Feed() {
             maxLength={2000}
           />
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
+
+          {showImageInput && (
+            <div className="mb-2">
+              <input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Image URL (https://...)"
+                className="w-full bg-black/20 rounded-lg px-3 py-1.5 text-xs outline-none"
+              />
+              {imageUrl && (
+                <img src={imageUrl} alt="" className="mt-2 rounded-xl max-h-48 object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mt-1">
-            <span className={`text-xs ${content.length > 1800 ? "text-red-400" : "text-white/20"}`}>
-              {content.length} / 2000
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setShowImageInput((v) => !v); if (showImageInput) setImageUrl(""); }}
+                className={`text-xs px-2 py-1 rounded-lg transition-colors ${showImageInput ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
+                title="Add image URL"
+              >
+                🖼
+              </button>
+              <span className={`text-xs ${content.length > 1800 ? "text-red-400" : "text-white/20"}`}>
+                {content.length} / 2000
+              </span>
+            </div>
             <button
               onClick={handleSubmit}
               disabled={isPosting || !content.trim()}

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import type { Post } from "../api/types";
+import { RANK_META } from "../lib/rankMeta";
 
 interface PostCardProps {
   post: Post;
@@ -80,7 +81,7 @@ export function PostCard({ post, onLike, onRepost }: PostCardProps) {
             {post.author.displayName}
           </Link>
           <div className="text-xs text-white/40">
-            @{post.author.username} · {post.author.rank}
+            @{post.author.username} · {RANK_META[post.author.rank]?.emoji} {RANK_META[post.author.rank]?.label ?? post.author.rank}
           </div>
         </div>
         <span className="ml-auto text-xs text-white/25">{relativeTime(post.createdAt)}</span>

@@ -63,7 +63,14 @@ export function Rewards() {
       </div>
 
       <div>
-        <h2 className="text-lg font-bold mb-3">Your History</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold">Your History</h2>
+          {history.length > 0 && (
+            <div className="text-sm text-brain-point font-bold">
+              Total: +{history.reduce((sum, e) => sum + Number(e.amount), 0).toFixed(2)} BP
+            </div>
+          )}
+        </div>
         <div className="space-y-2">
           {history.map((entry) => (
             <div key={entry.id} className="glass-panel rounded-xl p-3 flex justify-between items-center text-sm">

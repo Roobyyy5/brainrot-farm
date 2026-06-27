@@ -10,6 +10,7 @@ export function Settings() {
   const { user, refreshUser, logout } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? "");
   const [language, setLanguage] = useState(user?.language ?? "en");
   const [langSearch, setLangSearch] = useState("");
   const [saved, setSaved] = useState(false);
@@ -40,7 +41,7 @@ export function Settings() {
     setIsSaving(true);
     setError(null);
     try {
-      await api.patch("/users/me", { displayName, bio, language });
+      await api.patch("/users/me", { displayName, bio, language, ...(avatarUrl.trim() ? { avatarUrl: avatarUrl.trim() } : {}) });
       await refreshUser();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -63,6 +64,21 @@ export function Settings() {
           maxLength={60}
           className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none"
         />
+      </div>
+
+      <div>
+        <label className="text-xs text-white/40 block mb-1">Avatar URL</label>
+        <div className="flex gap-2 items-center">
+          {avatarUrl && (
+            <img src={avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
+          )}
+          <input
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
+            placeholder="https://..."
+            className="flex-1 bg-black/30 rounded-lg px-3 py-2 text-sm outline-none"
+          />
+        </div>
       </div>
 
       <div>

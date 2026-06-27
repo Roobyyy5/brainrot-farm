@@ -40,7 +40,8 @@
     "placeholder": "@username or display name",
     "searching": "...",
     "search": "Search",
-    "notFound": "No users found."
+    "notFound": "No users found.",
+    "hint": "Enter a name or keyword to search"
   },
   "leaderboard": {
     "loading": "Loading leaderboard..."

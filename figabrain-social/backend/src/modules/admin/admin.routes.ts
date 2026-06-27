@@ -189,6 +189,15 @@ adminRouter.post(
   })
 );
 
+adminRouter.post(
+  "/reports/:id/resolve",
+  asyncHandler(async (req, res) => {
+    await prisma.report.update({ where: { id: req.params.id }, data: { resolved: true } });
+    await writeAuditLog({ userId: req.user!.id, action: "ADMIN_RESOLVE_REPORT", entity: "Report", entityId: req.params.id });
+    res.json({ data: { resolved: true } });
+  })
+);
+
 // ---- Analytics dashboard ----
 
 adminRouter.get(
@@ -241,13 +250,15 @@ adminRouter.get(
 adminRouter.get(
   "/analytics/economy",
   asyncHandler(async (_req, res) => {
-    const [totalBrainPoints, totalXp, lootBoxesOpened, boostersActivated, tokenConversions, rankDistribution] = await Promise.all([
+    const [totalBrainPoints, totalXp, lootBoxesOpened, boostersActivated, tokenConversions, rankDistribution, stakingActive, stakingTotal] = await Promise.all([
       prisma.user.aggregate({ _sum: { brainPoints: true } }),
       prisma.user.aggregate({ _sum: { xp: true } }),
       prisma.userLootBox.count({ where: { opened: true } }),
       prisma.userBooster.count(),
       prisma.tokenConversionRequest.aggregate({ _sum: { brainPointsSpent: true, fgbTokenAmount: true }, _count: { _all: true } }),
       prisma.user.groupBy({ by: ["rank"], _count: { _all: true } }),
+      prisma.stakingPosition.count({ where: { status: "ACTIVE" } }),
+      prisma.stakingPosition.aggregate({ _sum: { amount: true }, where: { status: "ACTIVE" } }),
     ]);
 
     res.json({
@@ -262,6 +273,10 @@ adminRouter.get(
           totalFgbIssued: Number(tokenConversions._sum.fgbTokenAmount ?? 0),
         },
         rankDistribution: rankDistribution.map((r) => ({ rank: r.rank, count: r._count._all })),
+        staking: {
+          activePositions: stakingActive,
+          totalStakedFgb: Number(stakingTotal._sum.amount ?? 0),
+        },
       },
     });
   })

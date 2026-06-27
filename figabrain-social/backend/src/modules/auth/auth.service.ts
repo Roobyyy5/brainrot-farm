@@ -35,14 +35,20 @@ export interface LoginResult {
 type UserRow = Awaited<ReturnType<typeof prisma.user.findUniqueOrThrow>>;
 
 /** Applies the daily-login streak/reward side effects and mints tokens for an already-resolved user row. */
-async function loginExistingUser(user: UserRow): Promise<LoginResult> {
+async function loginExistingUser(user: UserRow, freshAvatarUrl?: string): Promise<LoginResult> {
   const today = new Date();
   const lastLogin = user.lastLoginAt;
   const isConsecutiveDay =
     lastLogin && today.getTime() - lastLogin.getTime() < 48 * 60 * 60 * 1000 && today.toDateString() !== lastLogin.toDateString();
   const isSameDay = lastLogin && today.toDateString() === lastLogin.toDateString();
 
-  const updated = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: today } });
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      lastLoginAt: today,
+      ...(freshAvatarUrl && freshAvatarUrl !== user.avatarUrl ? { avatarUrl: freshAvatarUrl } : {}),
+    },
+  });
 
   if (!isSameDay) {
     const newStreak = isConsecutiveDay ? user.loginStreak + 1 : 1;
@@ -62,8 +68,9 @@ async function loginExistingUser(user: UserRow): Promise<LoginResult> {
 export async function loginByUsername(username: string): Promise<LoginResult | null> {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return null;
-  return loginExistingUser(user);
+  return loginExistingUser(user); // dev-login: no photo_url available
 }
+
 
 export async function loginOrRegisterWithTelegram(
   payload: TelegramLoginPayload,
@@ -124,5 +131,5 @@ export async function loginOrRegisterWithTelegram(
     };
   }
 
-  return loginExistingUser(user);
+  return loginExistingUser(user, payload.photo_url);
 }

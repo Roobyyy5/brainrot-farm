@@ -17,6 +17,7 @@ interface EconomyStats {
   boostersActivated: number;
   tokenConversions: { count: number; totalBrainPointsConverted: number; totalFgbIssued: number };
   rankDistribution: { rank: string; count: number }[];
+  staking: { activePositions: number; totalStakedFgb: number };
 }
 interface RetentionStats { dailyActiveUsers: number; weeklyActiveUsers: number; monthlyActiveUsers: number; streakDistribution: { streak: number; count: number }[] }
 interface EngagementStats { postsPerUser: number; commentsPerUser: number; likesPerUser: number; repostsPerUser: number; missionsCompleted: number; achievementsUnlocked: number }
@@ -45,6 +46,8 @@ export function Admin() {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [usersNextCursor, setUsersNextCursor] = useState<string | null>(null);
+  const [isLoadingMoreUsers, setIsLoadingMoreUsers] = useState(false);
   const [newSeasonName, setNewSeasonName] = useState("");
   const [newSeasonDays, setNewSeasonDays] = useState(30);
   const [editingConfig, setEditingConfig] = useState<{ action: string; field: string; value: string } | null>(null);
@@ -55,10 +58,10 @@ export function Admin() {
     setIsLoading(true);
     try {
       if (t === "overview") {
-        const [u, o] = await Promise.all([api.get<{ data: AdminUser[] }>("/admin/users"), api.get<{ data: Overview }>("/admin/analytics/overview")]);
-        setUsers(u.data); setOverview(o.data);
+        const [u, o] = await Promise.all([api.get<{ data: AdminUser[]; nextCursor: string | null }>("/admin/users"), api.get<{ data: Overview }>("/admin/analytics/overview")]);
+        setUsers(u.data); setUsersNextCursor(u.nextCursor); setOverview(o.data);
       } else if (t === "users") {
-        const u = await api.get<{ data: AdminUser[] }>("/admin/users"); setUsers(u.data);
+        const u = await api.get<{ data: AdminUser[]; nextCursor: string | null }>("/admin/users"); setUsers(u.data); setUsersNextCursor(u.nextCursor);
       } else if (t === "reports") {
         const r = await api.get<{ data: Report[] }>("/admin/reports"); setReports(r.data);
       } else if (t === "economy") {
@@ -95,6 +98,19 @@ export function Admin() {
   async function removePost(postId: string) {
     await api.post(`/admin/posts/${postId}/remove`);
     await loadTab("reports");
+  }
+  async function resolveReport(reportId: string) {
+    await api.post(`/admin/reports/${reportId}/resolve`, {});
+    await loadTab("reports");
+  }
+  async function loadMoreUsers() {
+    if (!usersNextCursor) return;
+    setIsLoadingMoreUsers(true);
+    try {
+      const u = await api.get<{ data: AdminUser[]; nextCursor: string | null }>(`/admin/users?cursor=${usersNextCursor}`);
+      setUsers((prev) => [...prev, ...u.data]);
+      setUsersNextCursor(u.nextCursor);
+    } finally { setIsLoadingMoreUsers(false); }
   }
   async function startSeason() {
     if (!newSeasonName.trim()) return;
@@ -197,6 +213,15 @@ export function Admin() {
               </tbody>
             </table>
           </div>
+          {usersNextCursor && (
+            <button
+              onClick={loadMoreUsers}
+              disabled={isLoadingMoreUsers}
+              className="mt-3 w-full text-xs text-white/40 hover:text-white py-2"
+            >
+              {isLoadingMoreUsers ? "Loading..." : "Load more users"}
+            </button>
+          )}
         </div>
       )}
 
@@ -214,11 +239,16 @@ export function Admin() {
                   <p className="text-sm">{r.reason}</p>
                   <div className="text-xs text-white/30 mt-1 font-mono">{r.targetId}</div>
                 </div>
-                {r.targetType === "POST" && (
-                  <button onClick={() => removePost(r.targetId)} className="text-xs text-red-400 hover:text-red-300 shrink-0 bg-red-500/10 px-3 py-1 rounded-full">
-                    Remove post
+                <div className="flex flex-col gap-1 shrink-0">
+                  {r.targetType === "POST" && (
+                    <button onClick={() => removePost(r.targetId)} className="text-xs text-red-400 hover:text-red-300 bg-red-500/10 px-3 py-1 rounded-full">
+                      Remove post
+                    </button>
+                  )}
+                  <button onClick={() => resolveReport(r.id)} className="text-xs text-white/40 hover:text-white bg-white/5 px-3 py-1 rounded-full">
+                    Dismiss
                   </button>
-                )}
+                </div>
               </div>
             </div>
           ))}
@@ -228,13 +258,17 @@ export function Admin() {
       {/* Economy */}
       {!isLoading && tab === "economy" && economy && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Metric label="BP in circulation" value={economy.totalBrainPointsInCirculation.toFixed(0)} color="text-brain-point" />
             <Metric label="Total XP earned" value={economy.totalXpEarned.toLocaleString()} />
             <Metric label="Loot boxes opened" value={economy.lootBoxesOpened} />
             <Metric label="Boosters activated" value={economy.boostersActivated} />
             <Metric label="Token conversions" value={economy.tokenConversions.count} />
             <Metric label="BP converted" value={economy.tokenConversions.totalBrainPointsConverted.toFixed(0)} />
+            {economy.staking && <>
+              <Metric label="Active stakes" value={economy.staking.activePositions} color="text-brain-accent2" />
+              <Metric label="FGB staked" value={economy.staking.totalStakedFgb.toFixed(2)} color="text-brain-accent2" />
+            </>}
           </div>
           <div className="glass-panel rounded-2xl p-4">
             <h3 className="text-sm font-bold mb-3">Rank distribution</h3>
