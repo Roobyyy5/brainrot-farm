@@ -15,6 +15,7 @@
     "title": "Настройки профиля",
     "displayName": "Отображаемое имя",
     "bio": "О себе",
+    "avatarUrl": "URL аватара",
     "language": "Язык",
     "searchLanguage": "Поиск языка...",
     "noLanguages": "Языков не найдено.",
@@ -33,7 +34,34 @@
     "repost": "Репост",
     "report": "Пожаловаться",
     "noMore": "Больше постов нет.",
-    "empty": "Постов ещё нет. Будь первым!"
+    "empty": "Постов ещё нет. Будь первым!",
+    "filterAll": "Все",
+    "filterFollowing": "Подписки",
+    "followingEmpty": "Подпишись на пользователей, чтобы видеть их посты здесь.",
+    "loading": "Загрузка..."
+  },
+  "postDetail": {
+    "back": "← Назад",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "share": "Поделиться",
+    "report": "Пожаловаться",
+    "reported": "Жалоба отправлена",
+    "commentPlaceholder": "Написать комментарий...",
+    "reply": "Ответить",
+    "noComments": "Комментариев пока нет.",
+    "loadMore": "Загрузить ещё",
+    "loadingMore": "Загрузка...",
+    "confirmDelete": "Удалить этот пост?",
+    "reportPrompt": "Причина жалобы (необязательно):"
+  },
+  "season": {
+    "noParticipants": "Участников пока нет.",
+    "showLess": "Свернуть",
+    "showAll": "Показать всех ({{count}})",
+    "ending": "Завершается..."
   },
   "search": {
     "title": "Поиск пользователей",
@@ -44,7 +72,11 @@
     "hint": "Введи имя или ключевое слово для поиска"
   },
   "leaderboard": {
-    "loading": "Загрузка рейтинга..."
+    "loading": "Загрузка рейтинга...",
+    "empty": "Пока никого нет.",
+    "alltime": "За всё время",
+    "weekly": "Эта неделя",
+    "daily": "Сегодня"
   },
   "notifications": {
     "empty": "Уведомлений пока нет."
@@ -74,7 +106,47 @@
     "posts": "Посты",
     "brainPoints": "Brain Points",
     "loginStreak": "Серия входов",
-    "reputation": "Репутация"
+    "reputation": "Репутация",
+    "noBio": "Биo не заполнено.",
+    "noPosts": "Постов пока нет.",
+    "loadMore": "Загрузить ещё",
+    "repHistory": "История репутации",
+    "longestStreak": "Наибольшая",
+    "toNextMilestone": "{{days}}д до следующей отметки"
+  },
+  "rankCard": {
+    "multiplier": "x{{multiplier}} BP и XP множитель"
+  },
+  "rewards": {
+    "rules": "Правила наград",
+    "history": "Твоя история",
+    "noHistory": "История наград пуста.",
+    "total": "Итого"
+  },
+  "wallet": {
+    "title": "Твой кошелёк FIGABRAIN",
+    "chain": "Внутренний {{chain}} кошелёк · приватный ключ зашифрован",
+    "convertTitle": "Конвертировать BP → FGB",
+    "convertRate": "Курс: {{rate}} FGB за BP · Мин: {{min}} BP",
+    "convert": "Конвертировать",
+    "converting": "...",
+    "maxBtn": "МАКС",
+    "recentConversions": "Последние конвертации",
+    "tokenLaunch": "Запуск токена",
+    "tokenLaunchDesc": "Токен FGB будет задеплоен на {{chain}}. Конвертированный FGB зачисляется на офф-чейн баланс и будет распределён на чейн после запуска.",
+    "onChainDisabled": "Онлайн-переводы ещё не включены.",
+    "airdrops": "Доступные аирдропы",
+    "claim": "Получить",
+    "claiming": "...",
+    "stakeTitle": "Стейкинг FGB",
+    "selectPool": "Выбери пул...",
+    "stakeBtn": "Застейкать",
+    "yourPositions": "Твои позиции",
+    "collect": "Снять",
+    "locked": "Заблокировано",
+    "nfts": "Твои NFT",
+    "referralTitle": "Реферальная программа",
+    "referralDesc": "Получай +50 BP за каждого друга, который присоединится по твоей ссылке."
   },
   "messages": {
     "title": "Сообщения",
@@ -90,6 +162,7 @@
     "retry": "Попробовать снова",
     "cancel": "Отмена",
     "close": "Закрыть",
-    "back": "Назад"
+    "back": "Назад",
+    "loadMore": "Загрузить ещё"
   }
 }

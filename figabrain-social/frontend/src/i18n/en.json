@@ -15,6 +15,7 @@
     "title": "Profile Settings",
     "displayName": "Display name",
     "bio": "Bio",
+    "avatarUrl": "Avatar URL",
     "language": "Language",
     "searchLanguage": "Search language...",
     "noLanguages": "No languages found.",
@@ -33,7 +34,34 @@
     "repost": "Repost",
     "report": "Report",
     "noMore": "No more posts.",
-    "empty": "No posts yet. Be the first!"
+    "empty": "No posts yet. Be the first!",
+    "filterAll": "All",
+    "filterFollowing": "Following",
+    "followingEmpty": "Follow some users to see their posts here.",
+    "loading": "Loading..."
+  },
+  "postDetail": {
+    "back": "← Back",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "saving": "Saving...",
+    "share": "Share",
+    "report": "Report",
+    "reported": "Reported",
+    "commentPlaceholder": "Write a comment...",
+    "reply": "Reply",
+    "noComments": "No comments yet.",
+    "loadMore": "Load more",
+    "loadingMore": "Loading...",
+    "confirmDelete": "Delete this post?",
+    "reportPrompt": "Reason for report (optional):"
+  },
+  "season": {
+    "noParticipants": "No participants yet.",
+    "showLess": "Show less",
+    "showAll": "Show all ({{count}})",
+    "ending": "Ending soon..."
   },
   "search": {
     "title": "Search users",
@@ -44,7 +72,11 @@
     "hint": "Enter a name or keyword to search"
   },
   "leaderboard": {
-    "loading": "Loading leaderboard..."
+    "loading": "Loading leaderboard...",
+    "empty": "No entries yet.",
+    "alltime": "All time",
+    "weekly": "This week",
+    "daily": "Today"
   },
   "notifications": {
     "empty": "No notifications yet."
@@ -74,7 +106,47 @@
     "posts": "Posts",
     "brainPoints": "Brain Points",
     "loginStreak": "Login Streak",
-    "reputation": "Reputation"
+    "reputation": "Reputation",
+    "noBio": "No bio yet.",
+    "noPosts": "No posts yet.",
+    "loadMore": "Load more",
+    "repHistory": "Rep history",
+    "longestStreak": "Longest",
+    "toNextMilestone": "{{days}}d to next milestone"
+  },
+  "rankCard": {
+    "multiplier": "x{{multiplier}} BP & XP multiplier"
+  },
+  "rewards": {
+    "rules": "Reward Rules",
+    "history": "Your History",
+    "noHistory": "No reward history yet.",
+    "total": "Total"
+  },
+  "wallet": {
+    "title": "Your FIGABRAIN Wallet",
+    "chain": "Internal {{chain}} wallet · private key encrypted at rest",
+    "convertTitle": "Convert BP → FGB",
+    "convertRate": "Rate: {{rate}} FGB per BP · Min: {{min}} BP",
+    "convert": "Convert",
+    "converting": "...",
+    "maxBtn": "MAX",
+    "recentConversions": "Recent conversions",
+    "tokenLaunch": "Token Launch",
+    "tokenLaunchDesc": "FGB token will be deployed on {{chain}}. Converted FGB is credited to your off-chain balance now and will be settled on-chain at launch.",
+    "onChainDisabled": "On-chain transfers not yet enabled.",
+    "airdrops": "Airdrops Available",
+    "claim": "Claim",
+    "claiming": "...",
+    "stakeTitle": "Stake FGB",
+    "selectPool": "Select pool...",
+    "stakeBtn": "Stake",
+    "yourPositions": "Your positions",
+    "collect": "Collect",
+    "locked": "Locked",
+    "nfts": "Your NFTs",
+    "referralTitle": "Referral Program",
+    "referralDesc": "Earn +50 BP for each friend who joins via your link."
   },
   "messages": {
     "title": "Messages",
@@ -90,6 +162,7 @@
     "retry": "Retry",
     "cancel": "Cancel",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "loadMore": "Load more"
   }
 }

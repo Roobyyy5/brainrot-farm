@@ -39,16 +39,25 @@ export function NotificationBadgeProvider({ children }: { children: ReactNode })
       } catch { /* ignore */ }
     };
 
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
     es.onerror = () => {
-      // SSE failed — fall back to 30s polling
       es.close();
       esRef.current = null;
       refresh();
-      const t = setInterval(refresh, 30_000);
-      return () => clearInterval(t);
+      if (!pollInterval) {
+        pollInterval = setInterval(refresh, 30_000);
+      }
     };
 
-    return () => { es.close(); esRef.current = null; };
+    return () => {
+      es.close();
+      esRef.current = null;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    };
   }, [user, refresh]);
 
   return (

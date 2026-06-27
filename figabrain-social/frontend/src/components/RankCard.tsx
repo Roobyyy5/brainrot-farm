@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import type { UserProfile } from "../api/types";
 import { RANK_META } from "../lib/rankMeta";
 import { XpBar } from "./XpBar";
 
 export function RankCard({ profile }: { profile: UserProfile }) {
+  const { t } = useTranslation();
   const meta = RANK_META[profile.rank];
 
   return (
@@ -18,10 +20,10 @@ export function RankCard({ profile }: { profile: UserProfile }) {
           <div className="font-bold" style={{ color: meta.color }}>
             {meta.label}
           </div>
-          <div className="text-xs text-white/40">x{meta.multiplier} Brain Points & XP multiplier</div>
+          <div className="text-xs text-white/40">{t("rankCard.multiplier", { multiplier: meta.multiplier })}</div>
         </div>
         <div className="ml-auto text-right">
-          <div className="text-xs text-white/40">Reputation</div>
+          <div className="text-xs text-white/40">{t("profile.reputation")}</div>
           <div className="font-bold text-sm">⭐ {profile.reputation}</div>
         </div>
       </div>
@@ -30,11 +32,11 @@ export function RankCard({ profile }: { profile: UserProfile }) {
 
       <div className="grid grid-cols-2 gap-3 mt-4">
         <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
-          <div className="text-xs text-white/50">Brain Points</div>
+          <div className="text-xs text-white/50">{t("profile.brainPoints")}</div>
           <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
         </div>
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3">
-          <div className="text-xs text-white/50">Login Streak</div>
+          <div className="text-xs text-white/50">{t("profile.loginStreak")}</div>
           <div className="text-lg font-bold text-orange-400">🔥 {profile.loginStreak}d</div>
         </div>
       </div>

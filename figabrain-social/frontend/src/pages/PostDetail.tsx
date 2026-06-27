@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Post, Comment } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +9,7 @@ import { useRewardToast } from "../context/RewardToastContext";
 export function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const { showReward } = useRewardToast();
 
@@ -75,14 +77,14 @@ export function PostDetail() {
   }
 
   async function deletePost() {
-    if (!post || !confirm("Delete this post?")) return;
+    if (!post || !confirm(t("postDetail.confirmDelete"))) return;
     await api.delete(`/posts/${post.id}`);
     navigate("/", { replace: true });
   }
 
   async function reportPost() {
     if (!post || reportDone) return;
-    const reason = prompt("Reason for report (optional):");
+    const reason = prompt(t("postDetail.reportPrompt"));
     if (reason === null) return;
     setIsReporting(true);
     try {
@@ -140,7 +142,7 @@ export function PostDetail() {
   return (
     <div className="max-w-2xl">
       <button onClick={() => navigate(-1)} className="text-white/40 hover:text-white text-sm mb-4 flex items-center gap-1">
-        ← Back
+        {t("postDetail.back")}
       </button>
 
       {/* Post */}
@@ -161,8 +163,12 @@ export function PostDetail() {
           </div>
           {isOwn && !isEditing && (
             <div className="flex gap-2">
-              <button onClick={() => setIsEditing(true)} className="text-xs text-white/40 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5">Edit</button>
-              <button onClick={deletePost} className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded-lg hover:bg-red-500/10">Delete</button>
+              <button onClick={() => setIsEditing(true)} className="text-xs text-white/40 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5">
+                {t("postDetail.edit")}
+              </button>
+              <button onClick={deletePost} className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded-lg hover:bg-red-500/10">
+                {t("postDetail.delete")}
+              </button>
             </div>
           )}
         </div>
@@ -177,9 +183,11 @@ export function PostDetail() {
               className="w-full bg-black/30 rounded-xl px-3 py-2 text-sm outline-none resize-none mb-2"
             />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setIsEditing(false)} className="text-xs text-white/40 hover:text-white px-3 py-1.5 rounded-full">Cancel</button>
+              <button onClick={() => setIsEditing(false)} className="text-xs text-white/40 hover:text-white px-3 py-1.5 rounded-full">
+                {t("common.cancel")}
+              </button>
               <button onClick={saveEdit} disabled={isSavingEdit || !editContent.trim()} className="bg-brain-accent/20 hover:bg-brain-accent/30 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-40">
-                {isSavingEdit ? "Saving..." : "Save"}
+                {isSavingEdit ? t("postDetail.saving") : t("postDetail.save")}
               </button>
             </div>
           </div>
@@ -202,7 +210,7 @@ export function PostDetail() {
             ⟲ {post.repostsCount}
           </button>
           <button onClick={sharePost} className="flex items-center gap-1 hover:text-white transition-colors ml-auto">
-            ↗ Share
+            ↗ {t("postDetail.share")}
           </button>
           {!isOwn && (
             <button
@@ -210,7 +218,7 @@ export function PostDetail() {
               disabled={isReporting || reportDone}
               className={`flex items-center gap-1 transition-colors ${reportDone ? "text-green-400" : "hover:text-red-400"}`}
             >
-              {reportDone ? "✓ Reported" : isReporting ? "..." : "⚑ Report"}
+              {reportDone ? `✓ ${t("postDetail.reported")}` : isReporting ? "..." : `⚑ ${t("postDetail.report")}`}
             </button>
           )}
         </div>
@@ -224,7 +232,7 @@ export function PostDetail() {
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submitComment(); }}
-            placeholder="Write a comment..."
+            placeholder={t("postDetail.commentPlaceholder")}
             rows={2}
             maxLength={1000}
             className="w-full bg-transparent outline-none resize-none text-sm placeholder:text-white/30"
@@ -235,7 +243,7 @@ export function PostDetail() {
               disabled={isSubmitting || !commentText.trim()}
               className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-xs font-semibold px-4 py-1.5 rounded-full disabled:opacity-40"
             >
-              {isSubmitting ? "..." : "Reply"}
+              {isSubmitting ? "..." : t("postDetail.reply")}
             </button>
           </div>
         </div>
@@ -260,10 +268,10 @@ export function PostDetail() {
             <p className="text-sm leading-relaxed">{c.content}</p>
           </div>
         ))}
-        {comments.length === 0 && <p className="text-white/30 text-sm text-center py-6">No comments yet.</p>}
+        {comments.length === 0 && <p className="text-white/30 text-sm text-center py-6">{t("postDetail.noComments")}</p>}
         {nextCursor && (
           <button onClick={loadMore} disabled={isLoadingMore} className="w-full text-xs text-white/40 hover:text-white py-2">
-            {isLoadingMore ? "Loading..." : "Load more"}
+            {isLoadingMore ? t("postDetail.loadingMore") : t("postDetail.loadMore")}
           </button>
         )}
       </div>

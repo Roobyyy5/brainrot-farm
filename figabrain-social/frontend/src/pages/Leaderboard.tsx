@@ -53,7 +53,7 @@ export function Leaderboard() {
               period === p ? "bg-white/10 text-white" : "text-white/40 hover:text-white"
             }`}
           >
-            {p === "alltime" ? "All time" : p === "weekly" ? "This week" : "Today"}
+            {p === "alltime" ? t("leaderboard.alltime") : p === "weekly" ? t("leaderboard.weekly") : t("leaderboard.daily")}
           </button>
         ))}
       </div>
@@ -106,7 +106,7 @@ export function Leaderboard() {
       </div>
 
       {entries.length === 0 && (
-        <p className="text-white/40 text-sm text-center mt-10">{t("leaderboard.loading")}</p>
+        <p className="text-white/40 text-sm text-center mt-10">{t("leaderboard.empty")}</p>
       )}
     </div>
   );

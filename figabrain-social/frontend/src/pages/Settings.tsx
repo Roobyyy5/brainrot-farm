@@ -67,7 +67,7 @@ export function Settings() {
       </div>
 
       <div>
-        <label className="text-xs text-white/40 block mb-1">Avatar URL</label>
+        <label className="text-xs text-white/40 block mb-1">{t("settings.avatarUrl")}</label>
         <div className="flex gap-2 items-center">
           {avatarUrl && (
             <img src={avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />

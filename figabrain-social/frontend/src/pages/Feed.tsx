@@ -165,7 +165,7 @@ export function Feed() {
               filter === f ? "bg-white/10 text-white" : "text-white/40 hover:text-white"
             }`}
           >
-            {f === "all" ? "All" : "Following"}
+            {f === "all" ? t("feed.filterAll") : t("feed.filterFollowing")}
           </button>
         ))}
       </div>
@@ -183,12 +183,12 @@ export function Feed() {
           ))}
           {posts.length === 0 && (
             <p className="text-white/40 text-sm text-center mt-10">
-              {filter === "following" ? "Follow some users to see their posts here." : t("feed.empty")}
+              {filter === "following" ? t("feed.followingEmpty") : t("feed.empty")}
             </p>
           )}
           {/* Infinite scroll sentinel */}
           <div ref={loaderRef} className="py-4 text-center">
-            {isLoadingMore && <span className="text-white/30 text-xs">Loading...</span>}
+            {isLoadingMore && <span className="text-white/30 text-xs">{t("feed.loading")}</span>}
             {!nextCursor && posts.length > 0 && <span className="text-white/20 text-xs">{t("feed.noMore")}</span>}
           </div>
         </>

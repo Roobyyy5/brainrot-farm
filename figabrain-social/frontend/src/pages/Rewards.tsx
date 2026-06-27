@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { RewardConfigEntry } from "../api/types";
 
@@ -14,6 +15,7 @@ function SkeletonCard({ className }: { className?: string }) {
 }
 
 export function Rewards() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<RewardConfigEntry[]>([]);
   const [history, setHistory] = useState<LedgerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +52,7 @@ export function Rewards() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-3">Reward Rules</h2>
+        <h2 className="text-lg font-bold mb-3">{t("rewards.rules")}</h2>
         <div className="grid grid-cols-2 gap-3">
           {config.map((rule) => (
             <div key={rule.id} className="glass-panel rounded-xl p-3">
@@ -64,10 +66,10 @@ export function Rewards() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold">Your History</h2>
+          <h2 className="text-lg font-bold">{t("rewards.history")}</h2>
           {history.length > 0 && (
             <div className="text-sm text-brain-point font-bold">
-              Total: +{history.reduce((sum, e) => sum + Number(e.amount), 0).toFixed(2)} BP
+              {t("rewards.total")}: +{history.reduce((sum, e) => sum + Number(e.amount), 0).toFixed(2)} BP
             </div>
           )}
         </div>
@@ -81,7 +83,7 @@ export function Rewards() {
               <span className="text-brain-point font-semibold">+{Number(entry.amount).toFixed(2)} BP</span>
             </div>
           ))}
-          {history.length === 0 && <p className="text-white/40 text-sm">No reward history yet.</p>}
+          {history.length === 0 && <p className="text-white/40 text-sm">{t("rewards.noHistory")}</p>}
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@
     "title": "Налаштування профілю",
     "displayName": "Відображуване ім'я",
     "bio": "Про себе",
+    "avatarUrl": "URL аватара",
     "language": "Мова",
     "searchLanguage": "Пошук мови...",
     "noLanguages": "Мов не знайдено.",
@@ -33,7 +34,34 @@
     "repost": "Репост",
     "report": "Поскаржитись",
     "noMore": "Більше дописів немає.",
-    "empty": "Ще немає дописів. Будь першим!"
+    "empty": "Ще немає дописів. Будь першим!",
+    "filterAll": "Всі",
+    "filterFollowing": "Підписки",
+    "followingEmpty": "Підпишись на користувачів, щоб бачити їхні дописи.",
+    "loading": "Завантаження..."
+  },
+  "postDetail": {
+    "back": "← Назад",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "save": "Зберегти",
+    "saving": "Збереження...",
+    "share": "Поділитись",
+    "report": "Поскаржитись",
+    "reported": "Скарга надіслана",
+    "commentPlaceholder": "Написати коментар...",
+    "reply": "Відповісти",
+    "noComments": "Коментарів ще немає.",
+    "loadMore": "Завантажити ще",
+    "loadingMore": "Завантаження...",
+    "confirmDelete": "Видалити цей допис?",
+    "reportPrompt": "Причина скарги (необов'язково):"
+  },
+  "season": {
+    "noParticipants": "Поки немає учасників.",
+    "showLess": "Згорнути",
+    "showAll": "Показати всіх ({{count}})",
+    "ending": "Завершується..."
   },
   "search": {
     "title": "Пошук користувачів",
@@ -44,7 +72,11 @@
     "hint": "Введи імʼя або ключове слово для пошуку"
   },
   "leaderboard": {
-    "loading": "Завантаження рейтингу..."
+    "loading": "Завантаження рейтингу...",
+    "empty": "Поки нікого немає.",
+    "alltime": "За весь час",
+    "weekly": "Цього тижня",
+    "daily": "Сьогодні"
   },
   "notifications": {
     "empty": "Поки немає сповіщень."
@@ -74,7 +106,47 @@
     "posts": "Пости",
     "brainPoints": "Brain Points",
     "loginStreak": "Серія входів",
-    "reputation": "Репутація"
+    "reputation": "Репутація",
+    "noBio": "Немає біо.",
+    "noPosts": "Постів ще немає.",
+    "loadMore": "Завантажити ще",
+    "repHistory": "Історія репутації",
+    "longestStreak": "Найдовша",
+    "toNextMilestone": "{{days}}д до наступного рубежу"
+  },
+  "rankCard": {
+    "multiplier": "x{{multiplier}} BP та XP множник"
+  },
+  "rewards": {
+    "rules": "Правила нагород",
+    "history": "Твоя історія",
+    "noHistory": "Історія нагород порожня.",
+    "total": "Всього"
+  },
+  "wallet": {
+    "title": "Твій гаманець FIGABRAIN",
+    "chain": "Внутрішній {{chain}} гаманець · приватний ключ зашифровано",
+    "convertTitle": "Конвертувати BP → FGB",
+    "convertRate": "Курс: {{rate}} FGB за BP · Мін: {{min}} BP",
+    "convert": "Конвертувати",
+    "converting": "...",
+    "maxBtn": "МАКС",
+    "recentConversions": "Останні конвертації",
+    "tokenLaunch": "Запуск токена",
+    "tokenLaunchDesc": "Токен FGB буде задеплоєно на {{chain}}. Конвертований FGB зараховується на офф-чейн баланс і буде розподілено на чейн після запуску.",
+    "onChainDisabled": "Онлайн-трансфери ще не увімкнено.",
+    "airdrops": "Доступні аірдропи",
+    "claim": "Отримати",
+    "claiming": "...",
+    "stakeTitle": "Стейкінг FGB",
+    "selectPool": "Обери пул...",
+    "stakeBtn": "Застейкати",
+    "yourPositions": "Твої позиції",
+    "collect": "Зняти",
+    "locked": "Заблоковано",
+    "nfts": "Твої NFT",
+    "referralTitle": "Реферальна програма",
+    "referralDesc": "Отримуй +50 BP за кожного друга, який приєднається за твоїм посиланням."
   },
   "messages": {
     "title": "Повідомлення",
@@ -90,6 +162,7 @@
     "retry": "Спробувати знову",
     "cancel": "Скасувати",
     "close": "Закрити",
-    "back": "Назад"
+    "back": "Назад",
+    "loadMore": "Завантажити ще"
   }
 }

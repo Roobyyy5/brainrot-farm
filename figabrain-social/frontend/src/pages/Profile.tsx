@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import type { Post, UserProfile, StreakStatus } from "../api/types";
 import { RankCard } from "../components/RankCard";
 import { PostCard } from "../components/PostCard";
+import { RANK_META } from "../lib/rankMeta";
 import { useRewardToast } from "../context/RewardToastContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -140,7 +141,7 @@ export function Profile() {
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold truncate">{profile.displayName}</h1>
-            <p className="text-white/40 text-sm">@{profile.username} · <span className="capitalize">{profile.rank.toLowerCase().replace("_", " ")}</span></p>
+            <p className="text-white/40 text-sm">@{profile.username} · {RANK_META[profile.rank]?.emoji} {RANK_META[profile.rank]?.label ?? profile.rank}</p>
           </div>
           {!isOwnProfile && (
             <button
@@ -157,7 +158,7 @@ export function Profile() {
           )}
         </div>
 
-        <p className="text-sm text-white/70 mb-4">{profile.bio || "No bio yet."}</p>
+        <p className="text-sm text-white/70 mb-4">{profile.bio || t("profile.noBio")}</p>
 
         <div className="grid grid-cols-3 gap-3 text-center mb-4">
           <Stat label={t("profile.posts")} value={profile.postsCount} />
@@ -182,16 +183,16 @@ export function Profile() {
         {isOwnProfile && streakStatus && (
           <div className="mt-4 bg-white/3 border border-white/5 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-white/60">Login Streak</span>
+              <span className="text-xs font-semibold text-white/60">{t("profile.loginStreak")}</span>
               {streakStatus.nextMilestone && (
-                <span className="text-xs text-white/30">{streakStatus.nextMilestone - streakStatus.currentStreak}d to next milestone</span>
+                <span className="text-xs text-white/30">{t("profile.toNextMilestone", { days: streakStatus.nextMilestone - streakStatus.currentStreak })}</span>
               )}
             </div>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-2xl">🔥</span>
               <div>
                 <div className="text-xl font-bold">{streakStatus.currentStreak} days</div>
-                <div className="text-xs text-white/40">Longest: {streakStatus.longestStreak}d</div>
+                <div className="text-xs text-white/40">{t("profile.longestStreak")}: {streakStatus.longestStreak}d</div>
               </div>
             </div>
             {streakStatus.nextMilestone && (
@@ -212,7 +213,7 @@ export function Profile() {
               onClick={() => setShowRepHistory((v) => !v)}
               className="text-xs text-white/30 hover:text-white/60 flex items-center gap-1"
             >
-              Rep history {showRepHistory ? "▲" : "▼"}
+              {t("profile.repHistory")} {showRepHistory ? "▲" : "▼"}
             </button>
             {showRepHistory && (
               <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
@@ -237,11 +238,11 @@ export function Profile() {
           <PostCard key={post.id} post={post} onLike={handleLike} onRepost={handleRepost} />
         ))}
         {posts.length === 0 && (
-          <p className="text-white/30 text-sm text-center py-8">No posts yet.</p>
+          <p className="text-white/30 text-sm text-center py-8">{t("profile.noPosts")}</p>
         )}
         {nextCursor && (
           <button onClick={loadMore} disabled={isLoadingMore} className="w-full text-xs text-white/40 hover:text-white py-3">
-            {isLoadingMore ? "Loading..." : "Load more"}
+            {isLoadingMore ? t("common.loading") : t("profile.loadMore")}
           </button>
         )}
       </div>
