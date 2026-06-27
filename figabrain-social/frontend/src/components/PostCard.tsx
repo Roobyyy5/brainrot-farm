@@ -8,8 +8,52 @@ interface PostCardProps {
   onRepost: (post: Post) => void;
 }
 
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(@[a-zA-Z0-9_]{1,32})/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^@[a-zA-Z0-9_]{1,32}$/.test(part) ? (
+          <Link
+            key={i}
+            to={`/u/${part.slice(1)}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-brain-accent hover:underline"
+          >
+            {part}
+          </Link>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 export function PostCard({ post, onLike, onRepost }: PostCardProps) {
   const navigate = useNavigate();
+
+  function share() {
+    const url = `${window.location.origin}/posts/${post.id}`;
+    if (navigator.share) {
+      navigator.share({ title: `${post.author.displayName} on FIGABRAIN`, text: post.content.slice(0, 100), url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).catch(() => {});
+    }
+  }
 
   return (
     <motion.article
@@ -39,14 +83,14 @@ export function PostCard({ post, onLike, onRepost }: PostCardProps) {
             @{post.author.username} · {post.author.rank}
           </div>
         </div>
-        <span className="ml-auto text-xs text-white/25">{new Date(post.createdAt).toLocaleDateString()}</span>
+        <span className="ml-auto text-xs text-white/25">{relativeTime(post.createdAt)}</span>
       </div>
 
       <p
         className="whitespace-pre-wrap text-sm leading-relaxed mb-3 cursor-pointer"
         onClick={() => navigate(`/posts/${post.id}`)}
       >
-        {post.content}
+        <RichText text={post.content} />
       </p>
 
       {post.imageUrls.length > 0 && (
@@ -63,7 +107,7 @@ export function PostCard({ post, onLike, onRepost }: PostCardProps) {
         </a>
       )}
 
-      <div className="flex gap-6 text-sm text-white/50">
+      <div className="flex gap-5 text-sm text-white/50">
         <button
           onClick={() => onLike(post)}
           className={`flex items-center gap-1 transition-colors ${post.likedByMe ? "text-brain-accent" : "hover:text-white"}`}
@@ -78,6 +122,9 @@ export function PostCard({ post, onLike, onRepost }: PostCardProps) {
         </button>
         <button onClick={() => onRepost(post)} className="flex items-center gap-1 hover:text-white transition-colors">
           ⟲ {post.repostsCount}
+        </button>
+        <button onClick={share} className="ml-auto hover:text-white transition-colors" title="Share">
+          ↗
         </button>
       </div>
     </motion.article>

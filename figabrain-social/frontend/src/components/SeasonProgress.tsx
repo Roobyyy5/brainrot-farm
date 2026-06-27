@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { SeasonCurrent } from "../api/types";
 import { RANK_META } from "../lib/rankMeta";
@@ -15,6 +16,7 @@ export function SeasonProgress() {
   const [data, setData] = useState<SeasonCurrent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   function load() {
     api
@@ -96,16 +98,25 @@ export function SeasonProgress() {
         <p className="text-green-400 text-xs text-center mb-4">✓ Нагороду отримано</p>
       )}
 
-      <div className="space-y-1.5">
-        {data.leaderboard.slice(0, 10).map((entry) => (
-          <div key={entry.user.username} className="flex items-center gap-2 text-sm py-1">
-            <span className="w-5 text-white/40">{entry.position}</span>
-            <span>{RANK_META[entry.user.rank].emoji}</span>
+      <div className="space-y-1">
+        {(showAll ? data.leaderboard : data.leaderboard.slice(0, 10)).map((entry) => (
+          <Link
+            key={entry.user.username}
+            to={`/u/${entry.user.username}`}
+            className="flex items-center gap-2 text-sm py-1.5 px-1 rounded-lg hover:bg-white/5 transition-colors"
+          >
+            <span className="w-5 text-white/40 text-xs font-mono shrink-0">{entry.position}</span>
+            <span className="shrink-0">{RANK_META[entry.user.rank]?.emoji ?? "🧠"}</span>
             <span className="flex-1 truncate">{entry.user.displayName}</span>
-            <span className="text-brain-point font-semibold">{entry.seasonPoints.toFixed(1)}</span>
-          </div>
+            <span className="text-brain-point font-semibold text-xs">{entry.seasonPoints.toFixed(1)} BP</span>
+          </Link>
         ))}
-        {data.leaderboard.length === 0 && <p className="text-white/40 text-sm">Ще немає учасників цього сезону.</p>}
+        {data.leaderboard.length === 0 && <p className="text-white/40 text-sm">No participants yet.</p>}
+        {data.leaderboard.length > 10 && (
+          <button onClick={() => setShowAll((v) => !v)} className="text-xs text-white/30 hover:text-white w-full text-center pt-1">
+            {showAll ? "Show less" : `Show all ${data.leaderboard.length}`}
+          </button>
+        )}
       </div>
     </div>
   );

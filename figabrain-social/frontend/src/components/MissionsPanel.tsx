@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Mission } from "../api/types";
 
 export function MissionsPanel() {
+  const { t } = useTranslation();
   const [daily, setDaily] = useState<Mission[]>([]);
   const [weekly, setWeekly] = useState<Mission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,9 +33,9 @@ export function MissionsPanel() {
 
   return (
     <div className="glass-panel rounded-2xl p-5">
-      <h2 className="font-bold mb-3">Місії</h2>
-      <MissionGroup title="Щоденні" missions={daily} />
-      <MissionGroup title="Щотижневі" missions={weekly} className="mt-4" />
+      <h2 className="font-bold mb-3">{t("economy.missions", "Missions")}</h2>
+      <MissionGroup title={t("economy.daily", "Daily")} missions={daily} />
+      <MissionGroup title={t("economy.weekly", "Weekly")} missions={weekly} className="mt-4" />
     </div>
   );
 }

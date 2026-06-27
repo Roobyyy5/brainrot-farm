@@ -35,7 +35,8 @@ usersRouter.get(
       select: { username: true, _count: { select: { referrals: true } } },
     });
     // Referral link uses Telegram bot deep link: t.me/botname?start=ref_USERNAME
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME ?? "figabrain_bot";
+    const { env } = await import("../../lib/env.js");
+    const botUsername = env.TELEGRAM_BOT_USERNAME;
     res.json({
       data: {
         referralLink: `https://t.me/${botUsername}?start=ref_${user?.username}`,

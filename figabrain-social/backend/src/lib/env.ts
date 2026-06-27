@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_REFRESH_TTL: z.string().default("30d"),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
+  TELEGRAM_BOT_USERNAME: z.string().default("figabrain_bot"),
   WALLET_ENCRYPTION_KEY: z
     .string()
     .regex(/^[0-9a-fA-F]{64}$/, "WALLET_ENCRYPTION_KEY must be a 32-byte hex string"),

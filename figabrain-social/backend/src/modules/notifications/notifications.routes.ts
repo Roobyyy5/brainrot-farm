@@ -23,7 +23,7 @@ notificationsRouter.get(
       orderBy: { createdAt: "desc" },
       take: limit,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-      include: { actor: { select: { username: true, displayName: true, avatarUrl: true } } },
+      select: { id: true, type: true, message: true, isRead: true, createdAt: true, postId: true, actor: { select: { username: true, displayName: true, avatarUrl: true } } },
     });
     res.json({
       data: notifications,
@@ -40,6 +40,32 @@ notificationsRouter.get(
       where: { recipientId: req.user!.id, isRead: false },
     });
     res.json({ data: { unread } });
+  })
+);
+
+// SSE stream — pushes unread count whenever it changes (polling-free)
+notificationsRouter.get(
+  "/stream",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    async function sendCount() {
+      try {
+        const count = await prisma.notification.count({
+          where: { recipientId: req.user!.id, isRead: false },
+        });
+        res.write(`data: ${JSON.stringify({ unread: count })}\n\n`);
+      } catch { /* ignore */ }
+    }
+
+    await sendCount();
+    const interval = setInterval(sendCount, 20_000);
+    req.on("close", () => clearInterval(interval));
   })
 );
 

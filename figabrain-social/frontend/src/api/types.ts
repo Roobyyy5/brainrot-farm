@@ -137,6 +137,7 @@ export interface NotificationItem {
   message: string;
   isRead: boolean;
   createdAt: string;
+  postId?: string | null;
   actor: { username: string; displayName: string; avatarUrl: string | null } | null;
 }
 

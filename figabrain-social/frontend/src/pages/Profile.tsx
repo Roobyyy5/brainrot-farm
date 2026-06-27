@@ -85,13 +85,26 @@ export function Profile() {
 
   if (!profile) {
     return (
-      <div className="glass-panel rounded-2xl p-6 animate-pulse">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="h-16 w-16 rounded-full bg-white/10" />
-          <div className="space-y-2">
-            <div className="h-4 bg-white/10 rounded w-32" />
-            <div className="h-3 bg-white/5 rounded w-24" />
+      <div className="space-y-4">
+        <div className="glass-panel rounded-2xl p-6 animate-pulse">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-16 w-16 rounded-full bg-white/10 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 bg-white/10 rounded w-40" />
+              <div className="h-3 bg-white/5 rounded w-28" />
+            </div>
           </div>
+          <div className="h-3 bg-white/5 rounded w-3/4 mb-4" />
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[1,2,3].map((i) => <div key={i} className="h-10 bg-white/5 rounded-xl" />)}
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {[1,2].map((i) => <div key={i} className="h-16 bg-white/5 rounded-xl" />)}
+          </div>
+          <div className="h-14 bg-white/5 rounded-xl" />
+        </div>
+        <div className="space-y-3">
+          {[1,2,3].map((i) => <div key={i} className="glass-panel rounded-2xl h-28 animate-pulse" />)}
         </div>
       </div>
     );
