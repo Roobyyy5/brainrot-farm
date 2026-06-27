@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { Message } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +19,8 @@ export function Messages() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeConvRef = useRef<ConversationSummary | null>(null);
 
   useEffect(() => {
     refreshConversations();
@@ -28,16 +30,38 @@ export function Messages() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Poll for new messages every 5s when a conversation is open
+  useEffect(() => {
+    activeConvRef.current = activeConv;
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (!activeConv) return;
+    pollRef.current = setInterval(async () => {
+      const conv = activeConvRef.current;
+      if (!conv) return;
+      try {
+        const res = await api.get<{ data: Message[] }>(`/messages/conversations/${conv.id}/messages`);
+        setMessages((prev) => {
+          // Only update if new messages arrived (avoid re-render if unchanged)
+          if (res.data.length !== prev.length || (res.data[res.data.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+            return res.data;
+          }
+          return prev;
+        });
+      } catch { /* ignore poll errors */ }
+    }, 5000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [activeConv]);
+
   async function refreshConversations() {
     const res = await api.get<{ data: ConversationSummary[] }>("/messages/conversations");
     setConversations(res.data);
   }
 
-  async function openConversation(conv: ConversationSummary) {
+  const openConversation = useCallback(async (conv: ConversationSummary) => {
     setActiveConv(conv);
     const res = await api.get<{ data: Message[] }>(`/messages/conversations/${conv.id}/messages`);
     setMessages(res.data);
-  }
+  }, []);
 
   function otherParticipants(conv: ConversationSummary) {
     return conv.participants.filter((p) => p.username !== user?.username);

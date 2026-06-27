@@ -9,14 +9,43 @@ interface LedgerEntry {
   createdAt: string;
 }
 
+function SkeletonCard({ className }: { className?: string }) {
+  return <div className={`glass-panel rounded-xl animate-pulse ${className}`} />;
+}
+
 export function Rewards() {
   const [config, setConfig] = useState<RewardConfigEntry[]>([]);
   const [history, setHistory] = useState<LedgerEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ data: RewardConfigEntry[] }>("/rewards/config").then((res) => setConfig(res.data));
-    api.get<{ data: LedgerEntry[] }>("/rewards/me/history").then((res) => setHistory(res.data));
+    Promise.all([
+      api.get<{ data: RewardConfigEntry[] }>("/rewards/config"),
+      api.get<{ data: LedgerEntry[] }>("/rewards/me/history"),
+    ]).then(([configRes, historyRes]) => {
+      setConfig(configRes.data);
+      setHistory(historyRes.data);
+    }).finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="h-6 w-32 bg-white/5 rounded animate-pulse mb-3" />
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-16" />)}
+          </div>
+        </div>
+        <div>
+          <div className="h-6 w-28 bg-white/5 rounded animate-pulse mb-3" />
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} className="h-11" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -37,8 +66,11 @@ export function Rewards() {
         <h2 className="text-lg font-bold mb-3">Your History</h2>
         <div className="space-y-2">
           {history.map((entry) => (
-            <div key={entry.id} className="glass-panel rounded-xl p-3 flex justify-between text-sm">
-              <span>{entry.action}</span>
+            <div key={entry.id} className="glass-panel rounded-xl p-3 flex justify-between items-center text-sm">
+              <div>
+                <span>{entry.action}</span>
+                <div className="text-xs text-white/30">{new Date(entry.createdAt).toLocaleString()}</div>
+              </div>
               <span className="text-brain-point font-semibold">+{Number(entry.amount).toFixed(2)} BP</span>
             </div>
           ))}
