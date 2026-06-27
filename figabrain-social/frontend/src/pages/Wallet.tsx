@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import type { WalletInfo } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +15,7 @@ interface NftItem { id: string; name: string; tokenUri: string; collection: { na
 const MIN_POINTS = 100;
 
 export function Wallet() {
+  const { t } = useTranslation();
   const { refreshUser } = useAuth();
   const [wallet, setWallet] = useState<WalletInfo | null>(null);
   const [referral, setReferral] = useState<ReferralInfo | null>(null);
@@ -141,8 +143,8 @@ export function Wallet() {
     <div className="space-y-4 max-w-md">
       {/* Balances */}
       <div className="glass-panel rounded-2xl p-6">
-        <h2 className="text-lg font-bold mb-1">Your FIGABRAIN Wallet</h2>
-        <p className="text-xs text-white/40 mb-4">Internal {wallet.chain} wallet · private key encrypted at rest</p>
+        <h2 className="text-lg font-bold mb-1">{t("wallet.title")}</h2>
+        <p className="text-xs text-white/40 mb-4">{t("wallet.chain", { chain: wallet.chain })}</p>
 
         <div
           onClick={copyAddress}
@@ -154,7 +156,7 @@ export function Wallet() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-4">
-            <div className="text-xs text-white/50 mb-1">Brain Points</div>
+            <div className="text-xs text-white/50 mb-1">{t("profile.brainPoints")}</div>
             <div className="text-2xl font-bold text-brain-point">{wallet.brainPoints.toFixed(2)}</div>
           </div>
           <div className="bg-brain-accent2/10 border border-brain-accent2/30 rounded-xl p-4">
@@ -167,7 +169,7 @@ export function Wallet() {
       {/* Airdrop claims */}
       {claimableAirdrops.length > 0 && (
         <div className="glass-panel rounded-2xl p-5 border border-yellow-500/30 bg-yellow-500/5">
-          <h3 className="text-sm font-bold mb-3">🎁 Airdrops Available</h3>
+          <h3 className="text-sm font-bold mb-3">🎁 {t("wallet.airdrops")}</h3>
           <div className="space-y-2">
             {claimableAirdrops.map((c) => (
               <div key={c.id} className="flex items-center justify-between bg-black/20 rounded-xl p-3">
@@ -180,7 +182,7 @@ export function Wallet() {
                   disabled={claimingId === c.campaignId}
                   className="bg-yellow-500/80 hover:bg-yellow-500 text-black text-xs font-bold px-3 py-1.5 rounded-full disabled:opacity-50"
                 >
-                  {claimingId === c.campaignId ? "..." : "Claim"}
+                  {claimingId === c.campaignId ? t("wallet.claiming") : t("wallet.claim")}
                 </button>
               </div>
             ))}
@@ -191,9 +193,9 @@ export function Wallet() {
       {/* BP → FGB Conversion */}
       {conversion && (
         <div className="glass-panel rounded-2xl p-5 border border-brain-accent/20">
-          <h3 className="text-sm font-bold mb-1">🔄 Convert BP → FGB</h3>
+          <h3 className="text-sm font-bold mb-1">🔄 {t("wallet.convertTitle")}</h3>
           <p className="text-xs text-white/40 mb-3">
-            Rate: <span className="text-white/60">{conversion.rate} FGB per BP</span> · Min: <span className="text-white/60">{conversion.minPoints} BP</span>
+            {t("wallet.convertRate", { rate: conversion.rate, min: conversion.minPoints })}
           </p>
           <div className="flex gap-2 mb-2">
             <div className="flex-1 relative">
@@ -210,7 +212,7 @@ export function Wallet() {
                 onClick={() => setConvertAmount(Math.floor(wallet.brainPoints).toString())}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white"
               >
-                MAX
+                {t("wallet.maxBtn")}
               </button>
             </div>
             <button
@@ -218,7 +220,7 @@ export function Wallet() {
               disabled={isConverting || !convertAmount}
               className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-4 rounded-xl disabled:opacity-40 shrink-0"
             >
-              {isConverting ? "..." : "Convert"}
+              {isConverting ? t("wallet.converting") : t("wallet.convert")}
             </button>
           </div>
           {preview !== null && !convertError && !convertSuccess && (
@@ -231,7 +233,7 @@ export function Wallet() {
 
           {conversion.history.length > 0 && (
             <div className="mt-4 pt-3 border-t border-white/5">
-              <p className="text-xs text-white/30 mb-2">Recent conversions</p>
+              <p className="text-xs text-white/30 mb-2">{t("wallet.recentConversions")}</p>
               <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {conversion.history.slice(0, 5).map((h) => (
                   <div key={h.id} className="flex items-center justify-between text-xs">
@@ -249,16 +251,15 @@ export function Wallet() {
       {/* Staking */}
       {stakingPools.length > 0 && (
         <div className="glass-panel rounded-2xl p-5 border border-brain-accent2/20">
-          <h3 className="text-sm font-bold mb-3">🔒 Stake FGB</h3>
+          <h3 className="text-sm font-bold mb-3">🔒 {t("wallet.stakeTitle")}</h3>
 
-          {/* Open position form */}
           <div className="space-y-2 mb-4">
             <select
               value={selectedPool}
               onChange={(e) => setSelectedPool(e.target.value)}
               className="w-full bg-black/30 rounded-xl px-3 py-2.5 text-sm outline-none appearance-none"
             >
-              <option value="">Select pool...</option>
+              <option value="">{t("wallet.selectPool")}</option>
               {stakingPools.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} — {Number(p.apr).toFixed(1)}% APR · {p.lockDays}d lock · min {Number(p.minAmount)} FGB
@@ -278,7 +279,7 @@ export function Wallet() {
                   onClick={() => setStakeAmount(Math.floor(wallet.tokenBalance).toString())}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white"
                 >
-                  MAX
+                  {t("wallet.maxBtn")}
                 </button>
               </div>
               <button
@@ -286,16 +287,15 @@ export function Wallet() {
                 disabled={isStaking || !selectedPool || !stakeAmount}
                 className="bg-brain-accent2/80 hover:bg-brain-accent2 text-sm font-semibold px-4 rounded-xl disabled:opacity-40 shrink-0"
               >
-                {isStaking ? "..." : "Stake"}
+                {isStaking ? t("wallet.converting") : t("wallet.stakeBtn")}
               </button>
             </div>
             {stakeError && <p className="text-xs text-red-400">{stakeError}</p>}
           </div>
 
-          {/* Active positions */}
           {activePositions.length > 0 && (
             <div>
-              <p className="text-xs text-white/30 mb-2">Your positions</p>
+              <p className="text-xs text-white/30 mb-2">{t("wallet.yourPositions")}</p>
               <div className="space-y-2">
                 {activePositions.map((pos) => {
                   const unlocked = new Date(pos.unlocksAt) <= new Date();
@@ -316,7 +316,7 @@ export function Wallet() {
                             : "bg-white/5 text-white/20 cursor-not-allowed"
                         }`}
                       >
-                        {unlocked ? "Collect" : "Locked"}
+                        {unlocked ? t("wallet.collect") : t("wallet.locked")}
                       </button>
                     </div>
                   );
@@ -330,7 +330,7 @@ export function Wallet() {
       {/* NFT Gallery */}
       {nfts.length > 0 && (
         <div className="glass-panel rounded-2xl p-5">
-          <h3 className="text-sm font-bold mb-3">🖼 Your NFTs</h3>
+          <h3 className="text-sm font-bold mb-3">🖼 {t("wallet.nfts")}</h3>
           <div className="grid grid-cols-3 gap-2">
             {nfts.map((nft) => (
               <a
@@ -351,9 +351,9 @@ export function Wallet() {
 
       {/* Token launch info */}
       <div className="glass-panel rounded-2xl p-4 border border-white/5">
-        <h3 className="text-sm font-semibold mb-2">🚀 Token Launch</h3>
+        <h3 className="text-sm font-semibold mb-2">🚀 {t("wallet.tokenLaunch")}</h3>
         <p className="text-xs text-white/50 leading-relaxed">
-          FGB token will be deployed on {wallet.chain}. Converted FGB is credited to your off-chain balance now and will be settled on-chain at launch.
+          {t("wallet.tokenLaunchDesc", { chain: wallet.chain })}
         </p>
       </div>
 
@@ -361,11 +361,11 @@ export function Wallet() {
       {referral && (
         <div className="glass-panel rounded-2xl p-4 border border-brain-accent2/20">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold">👥 Referral Program</h3>
+            <h3 className="text-sm font-semibold">👥 {t("wallet.referralTitle")}</h3>
             <span className="text-xs text-white/40">{referral.referralCount} invited</span>
           </div>
           <p className="text-xs text-white/40 mb-3 leading-relaxed">
-            Earn <span className="text-brain-point font-semibold">+50 BP</span> for each friend who joins via your link.
+            {t("wallet.referralDesc")}
           </p>
           <div
             onClick={copyReferral}
@@ -377,7 +377,7 @@ export function Wallet() {
         </div>
       )}
 
-      <p className="text-xs text-white/20 text-center">On-chain transfers not yet enabled.</p>
+      <p className="text-xs text-white/20 text-center">{t("wallet.onChainDisabled")}</p>
     </div>
   );
 }

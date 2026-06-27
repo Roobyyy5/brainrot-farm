@@ -153,8 +153,10 @@
     "placeholder": "Message...",
     "send": "Send",
     "sending": "...",
-    "newConversation": "Start new conversation",
-    "usernamePlaceholder": "@username"
+    "newConversation": "+ New message",
+    "usernamePlaceholder": "@username",
+    "to": "To:",
+    "noMessages": "No messages yet. Say hello!"
   },
   "common": {
     "loading": "Loading...",

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import type { Message } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -10,6 +11,7 @@ interface ConversationSummary {
 }
 
 export function Messages() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConv, setActiveConv] = useState<ConversationSummary | null>(null);
@@ -41,7 +43,6 @@ export function Messages() {
       try {
         const res = await api.get<{ data: Message[] }>(`/messages/conversations/${conv.id}/messages`);
         setMessages((prev) => {
-          // Only update if new messages arrived (avoid re-render if unchanged)
           if (res.data.length !== prev.length || (res.data[res.data.length - 1]?.id !== prev[prev.length - 1]?.id)) {
             return res.data;
           }
@@ -73,14 +74,12 @@ export function Messages() {
     setError(null);
     try {
       if (activeConv) {
-        // Reply in active conversation
         const others = otherParticipants(activeConv);
         if (!others[0]) return;
         await api.post("/messages/send", { recipientUsername: others[0].username, content: content.trim() });
         const res = await api.get<{ data: Message[] }>(`/messages/conversations/${activeConv.id}/messages`);
         setMessages(res.data);
       } else {
-        // New conversation
         if (!recipient.trim()) return;
         await api.post("/messages/send", { recipientUsername: recipient.trim(), content: content.trim() });
         setRecipient("");
@@ -102,7 +101,7 @@ export function Messages() {
           onClick={() => setActiveConv(null)}
           className="glass-panel rounded-xl px-4 py-2 text-sm font-semibold text-brain-accent hover:bg-white/5 text-left"
         >
-          + New message
+          {t("messages.newConversation")}
         </button>
         {conversations.map((c) => {
           const others = otherParticipants(c);
@@ -155,17 +154,19 @@ export function Messages() {
                   </div>
                 );
               })}
-              {messages.length === 0 && <p className="text-white/30 text-sm text-center mt-10">No messages yet. Say hello!</p>}
+              {messages.length === 0 && (
+                <p className="text-white/30 text-sm text-center mt-10">{t("messages.noMessages")}</p>
+              )}
               <div ref={bottomRef} />
             </div>
           </>
         ) : (
           <div className="p-4 border-b border-white/5">
-            <p className="text-sm text-white/50 mb-2">To:</p>
+            <p className="text-sm text-white/50 mb-2">{t("messages.to")}</p>
             <input
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder="@username"
+              placeholder={t("messages.usernamePlaceholder")}
               className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none"
             />
           </div>
@@ -177,7 +178,7 @@ export function Messages() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder="Message..."
+            placeholder={t("messages.placeholder")}
             rows={1}
             disabled={isSending}
             className="flex-1 bg-black/30 rounded-xl px-3 py-2 text-sm outline-none resize-none disabled:opacity-50"
@@ -187,7 +188,7 @@ export function Messages() {
             disabled={isSending || !content.trim()}
             className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-4 rounded-xl disabled:opacity-40 shrink-0"
           >
-            {isSending ? "..." : "↑"}
+            {isSending ? t("messages.sending") : "↑"}
           </button>
         </div>
         {error && <p className="text-red-400 text-xs px-4 pb-2">{error}</p>}

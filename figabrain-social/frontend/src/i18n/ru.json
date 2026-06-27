@@ -153,8 +153,10 @@
     "placeholder": "Сообщение...",
     "send": "Отправить",
     "sending": "...",
-    "newConversation": "Новый разговор",
-    "usernamePlaceholder": "@никнейм"
+    "newConversation": "+ Новое сообщение",
+    "usernamePlaceholder": "@никнейм",
+    "to": "Кому:",
+    "noMessages": "Сообщений пока нет. Поздоровайся!"
   },
   "common": {
     "loading": "Загрузка...",
