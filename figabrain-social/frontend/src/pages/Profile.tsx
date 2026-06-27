@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import type { Post, UserProfile } from "../api/types";
+import type { Post, UserProfile, StreakStatus } from "../api/types";
 import { RankCard } from "../components/RankCard";
 import { PostCard } from "../components/PostCard";
 import { useRewardToast } from "../context/RewardToastContext";
 import { useAuth } from "../context/AuthContext";
+
+interface ReputationLogEntry { id: string; delta: number; reason: string; createdAt: string }
 
 export function Profile() {
   const { username } = useParams<{ username: string }>();
@@ -18,15 +20,28 @@ export function Profile() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [streakStatus, setStreakStatus] = useState<StreakStatus | null>(null);
+  const [repHistory, setRepHistory] = useState<ReputationLogEntry[]>([]);
+  const [showRepHistory, setShowRepHistory] = useState(false);
 
   useEffect(() => {
     if (!username) return;
     setProfile(null);
     setPosts([]);
     setNextCursor(null);
+    setStreakStatus(null);
+    setRepHistory([]);
     api.get<{ data: UserProfile }>(`/users/${username}`).then((res) => setProfile(res.data));
     loadPosts(username);
   }, [username]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.username === me?.username) {
+      api.get<{ data: StreakStatus }>("/streaks").then((r) => setStreakStatus(r.data)).catch(() => {});
+      api.get<{ data: { history: ReputationLogEntry[] } }>("/reputation").then((r) => setRepHistory(r.data.history)).catch(() => {});
+    }
+  }, [profile, me?.username]);
 
   async function loadPosts(uname: string, cursor?: string) {
     const params = new URLSearchParams({ limit: "15" });
@@ -162,6 +177,57 @@ export function Profile() {
         </div>
 
         <RankCard profile={profile} />
+
+        {/* Streak visualization (own profile only) */}
+        {isOwnProfile && streakStatus && (
+          <div className="mt-4 bg-white/3 border border-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-white/60">Login Streak</span>
+              {streakStatus.nextMilestone && (
+                <span className="text-xs text-white/30">{streakStatus.nextMilestone - streakStatus.currentStreak}d to next milestone</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">🔥</span>
+              <div>
+                <div className="text-xl font-bold">{streakStatus.currentStreak} days</div>
+                <div className="text-xs text-white/40">Longest: {streakStatus.longestStreak}d</div>
+              </div>
+            </div>
+            {streakStatus.nextMilestone && (
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all"
+                  style={{ width: `${Math.min(100, (streakStatus.currentStreak / streakStatus.nextMilestone) * 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reputation history (own profile only) */}
+        {isOwnProfile && repHistory.length > 0 && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowRepHistory((v) => !v)}
+              className="text-xs text-white/30 hover:text-white/60 flex items-center gap-1"
+            >
+              Rep history {showRepHistory ? "▲" : "▼"}
+            </button>
+            {showRepHistory && (
+              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {repHistory.slice(0, 20).map((r) => (
+                  <div key={r.id} className="flex items-center justify-between text-xs">
+                    <span className="text-white/50 truncate max-w-[60%]">{r.reason}</span>
+                    <span className={r.delta >= 0 ? "text-green-400" : "text-red-400"}>
+                      {r.delta >= 0 ? "+" : ""}{r.delta}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Posts */}

@@ -6,8 +6,8 @@ const ITEMS = [
   { to: "/", icon: "🏠", key: "feed" },
   { to: "/search", icon: "🔍", key: "search" },
   { to: "/notifications", icon: "🔔", key: "notifications" },
+  { to: "/messages", icon: "✉️", key: "messages" },
   { to: "/economy", icon: "⚡", key: "economy" },
-  { to: "/settings", icon: "⚙️", key: "settings" },
 ];
 
 export function BottomNav() {

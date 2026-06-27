@@ -48,6 +48,8 @@ export interface AchievementItem {
   pointsReward: number;
   unlocked: boolean;
   unlockedAt: string | null;
+  progressValue: number | null;
+  progressMax: number | null;
 }
 
 export interface StreakStatus {

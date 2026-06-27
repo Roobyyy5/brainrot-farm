@@ -84,10 +84,18 @@ export function Search() {
         ))}
       </div>
 
+      {/* Empty state before first search */}
+      {!searched && !isSearching && (
+        <div className="flex flex-col items-center gap-3 py-16 text-white/30">
+          <span className="text-4xl">🔍</span>
+          <p className="text-sm">{t("search.hint", "Enter a name or keyword to search")}</p>
+        </div>
+      )}
+
       {/* Users tab */}
-      {tab === "users" && (
+      {searched && tab === "users" && (
         <div className="space-y-2">
-          {searched && users.length === 0 && (
+          {users.length === 0 && (
             <p className="text-white/40 text-sm text-center py-6">{t("search.notFound")}</p>
           )}
           {users.map((user) => (
@@ -114,9 +122,9 @@ export function Search() {
       )}
 
       {/* Posts tab */}
-      {tab === "posts" && (
+      {searched && tab === "posts" && (
         <div className="space-y-3">
-          {searched && posts.length === 0 && (
+          {posts.length === 0 && (
             <p className="text-white/40 text-sm text-center py-6">No posts found.</p>
           )}
           {posts.map((post) => (

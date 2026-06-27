@@ -46,10 +46,10 @@ export function requireAdmin(req: Request, _res: Response, next: NextFunction): 
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
-  const header = req.headers.authorization;
-  if (header?.startsWith("Bearer ")) {
+  const token = extractToken(req);
+  if (token) {
     try {
-      const payload = verifyAccessToken(header.slice("Bearer ".length));
+      const payload = verifyAccessToken(token);
       req.user = { id: payload.sub, username: payload.username, isAdmin: payload.isAdmin };
     } catch {
       // ignore invalid token for optional auth

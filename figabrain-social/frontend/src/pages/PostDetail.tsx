@@ -20,6 +20,8 @@ export function PostDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -76,6 +78,37 @@ export function PostDetail() {
     if (!post || !confirm("Delete this post?")) return;
     await api.delete(`/posts/${post.id}`);
     navigate("/", { replace: true });
+  }
+
+  async function reportPost() {
+    if (!post || reportDone) return;
+    const reason = prompt("Reason for report (optional):");
+    if (reason === null) return;
+    setIsReporting(true);
+    try {
+      await api.post(`/posts/${post.id}/report`, { reason: reason.trim() || "inappropriate" });
+      setReportDone(true);
+    } finally {
+      setIsReporting(false);
+    }
+  }
+
+  async function sharePost() {
+    if (!post) return;
+    const url = `${window.location.origin}/posts/${post.id}`;
+    if (navigator.share) {
+      navigator.share({ title: `Post by @${post.author.username}`, text: post.content.slice(0, 100), url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+    }
+  }
+
+  async function repostPost() {
+    if (!post) return;
+    try {
+      await api.post(`/posts/${post.id}/repost`);
+      setPost({ ...post, repostsCount: post.repostsCount + 1 });
+    } catch { /* ignore */ }
   }
 
   async function submitComment() {
@@ -160,11 +193,26 @@ export function PostDetail() {
           </div>
         )}
 
-        <div className="flex gap-6 text-sm text-white/50 pt-3 border-t border-white/5">
+        <div className="flex gap-4 text-sm text-white/50 pt-3 border-t border-white/5">
           <button onClick={handleLike} className={`flex items-center gap-1 transition-colors ${post.likedByMe ? "text-brain-accent" : "hover:text-white"}`}>
             ♥ {post.likesCount}
           </button>
           <span className="flex items-center gap-1">💬 {post.commentsCount}</span>
+          <button onClick={repostPost} className="flex items-center gap-1 hover:text-white transition-colors">
+            ⟲ {post.repostsCount}
+          </button>
+          <button onClick={sharePost} className="flex items-center gap-1 hover:text-white transition-colors ml-auto">
+            ↗ Share
+          </button>
+          {!isOwn && (
+            <button
+              onClick={reportPost}
+              disabled={isReporting || reportDone}
+              className={`flex items-center gap-1 transition-colors ${reportDone ? "text-green-400" : "hover:text-red-400"}`}
+            >
+              {reportDone ? "✓ Reported" : isReporting ? "..." : "⚑ Report"}
+            </button>
+          )}
         </div>
       </div>
 

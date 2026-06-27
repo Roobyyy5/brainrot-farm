@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { UserLootBoxItem } from "../api/types";
 import { RARITY_META } from "../lib/rankMeta";
@@ -12,6 +13,7 @@ interface OpenResult {
 }
 
 export function LootBoxShelf() {
+  const { t } = useTranslation();
   const { refreshUser } = useAuth();
   const [boxes, setBoxes] = useState<UserLootBoxItem[]>([]);
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -44,8 +46,8 @@ export function LootBoxShelf() {
 
   return (
     <div className="glass-panel rounded-2xl p-5">
-      <h2 className="font-bold mb-3">Лутбокси</h2>
-      {unopened.length === 0 && <p className="text-white/40 text-sm">Немає невідкритих лутбоксів. Заробляй XP, щоб отримати нові!</p>}
+      <h2 className="font-bold mb-3">{t("economy.lootboxes", "Loot Boxes")}</h2>
+      {unopened.length === 0 && <p className="text-white/40 text-sm">{t("economy.noLootboxes", "No unopened loot boxes. Earn XP to get new ones!")}</p>}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {unopened.map((box) => {
           const rarity = RARITY_META[box.lootBox.rarity];

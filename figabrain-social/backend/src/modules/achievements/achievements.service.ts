@@ -61,23 +61,47 @@ export async function checkAndGrantAchievements(userId: string) {
   return newlyUnlocked;
 }
 
+const ACHIEVEMENT_PROGRESS: Record<string, (ctx: AchievementContext) => { value: number; max: number }> = {
+  first_post:        (c) => ({ value: Math.min(c.postsCount, 1), max: 1 }),
+  prolific_poster:   (c) => ({ value: Math.min(c.postsCount, 50), max: 50 }),
+  content_legend:    (c) => ({ value: Math.min(c.postsCount, 500), max: 500 }),
+  first_like:        (c) => ({ value: Math.min(c.likesGiven, 1), max: 1 }),
+  social_butterfly:  (c) => ({ value: Math.min(c.likesGiven, 100), max: 100 }),
+  commentator:       (c) => ({ value: Math.min(c.commentsCount, 25), max: 25 }),
+  debate_champion:   (c) => ({ value: Math.min(c.commentsCount, 250), max: 250 }),
+  week_streak:       (c) => ({ value: Math.min(c.loginStreak, 7), max: 7 }),
+  month_streak:      (c) => ({ value: Math.min(c.loginStreak, 30), max: 30 }),
+  year_streak:       (c) => ({ value: Math.min(c.loginStreak, 365), max: 365 }),
+  networker:         (c) => ({ value: Math.min(c.totalReferrals, 1), max: 1 }),
+  recruiter:         (c) => ({ value: Math.min(c.totalReferrals, 10), max: 10 }),
+  community_pillar:  (c) => ({ value: Math.min(c.totalReferrals, 50), max: 50 }),
+  reputable:         (c) => ({ value: Math.min(c.reputation, 100), max: 100 }),
+  highly_trusted:    (c) => ({ value: Math.min(c.reputation, 500), max: 500 }),
+};
+
 export async function getUserAchievements(userId: string) {
   const [unlocked, catalog] = await Promise.all([
     prisma.userAchievement.findMany({ where: { userId }, include: { achievement: true } }),
     prisma.achievement.findMany(),
   ]);
   const unlockedByKey = new Map(unlocked.map((u) => [u.achievement.key, u.unlockedAt]));
+  const ctx = await buildContext(userId);
 
-  return catalog.map((a) => ({
-    key: a.key,
-    name: a.name,
-    description: a.description,
-    category: a.category,
-    rarity: a.rarity,
-    icon: a.icon,
-    xpReward: a.xpReward,
-    pointsReward: Number(a.pointsReward),
-    unlocked: unlockedByKey.has(a.key),
-    unlockedAt: unlockedByKey.get(a.key) ?? null,
-  }));
+  return catalog.map((a) => {
+    const prog = ACHIEVEMENT_PROGRESS[a.key]?.(ctx);
+    return {
+      key: a.key,
+      name: a.name,
+      description: a.description,
+      category: a.category,
+      rarity: a.rarity,
+      icon: a.icon,
+      xpReward: a.xpReward,
+      pointsReward: Number(a.pointsReward),
+      unlocked: unlockedByKey.has(a.key),
+      unlockedAt: unlockedByKey.get(a.key) ?? null,
+      progressValue: prog?.value ?? null,
+      progressMax: prog?.max ?? null,
+    };
+  });
 }
