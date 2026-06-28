@@ -10,6 +10,7 @@ import { shadowBanGate } from "../../middleware/antibot.js";
 import { hashPostContent, isDuplicatePost } from "../antibot/antibot.service.js";
 import { grantReward } from "../rewards/rewards.service.js";
 import { adjustReputation } from "../reputation/reputation.service.js";
+import { createNotification } from "../../utils/createNotification.js";
 
 async function createMentionNotifications(content: string, actorId: string, postId: string) {
   const handles = [...new Set((content.match(/@([a-zA-Z0-9_]{1,32})/g) ?? []).map((h) => h.slice(1).toLowerCase()))];
@@ -20,16 +21,17 @@ async function createMentionNotifications(content: string, actorId: string, post
   });
   if (!mentioned.length) return;
   const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { username: true } });
-  await prisma.notification.createMany({
-    data: mentioned.map((u) => ({
-      recipientId: u.id,
-      actorId,
-      type: "MENTION" as const,
-      postId,
-      message: `@${actor?.username ?? "someone"} mentioned you in a post`,
-    })),
-    skipDuplicates: true,
-  });
+  await Promise.all(
+    mentioned.map((u) =>
+      createNotification({
+        recipient: { connect: { id: u.id } },
+        actor: { connect: { id: actorId } },
+        type: "MENTION",
+        post: { connect: { id: postId } },
+        message: `@${actor?.username ?? "someone"} mentioned you in a post`,
+      }).catch(() => {})
+    )
+  );
 }
 
 export const postsRouter = Router();
@@ -258,14 +260,12 @@ postsRouter.post(
     await prisma.like.create({ data: { postId: post.id, userId: req.user!.id } });
 
     if (post.authorId !== req.user!.id) {
-      await prisma.notification.create({
-        data: {
-          recipientId: post.authorId,
-          actorId: req.user!.id,
-          type: "LIKE",
-          postId: post.id,
-          message: `@${req.user!.username} liked your post`,
-        },
+      await createNotification({
+        recipient: { connect: { id: post.authorId } },
+        actor: { connect: { id: req.user!.id } },
+        type: "LIKE",
+        post: { connect: { id: post.id } },
+        message: `@${req.user!.username} liked your post`,
       });
       await adjustReputation(post.authorId, 1, "LIKE_RECEIVED");
     }
@@ -307,14 +307,12 @@ postsRouter.post(
     ]);
 
     if (post.authorId !== req.user!.id) {
-      await prisma.notification.create({
-        data: {
-          recipientId: post.authorId,
-          actorId: req.user!.id,
-          type: "REPOST",
-          postId: post.id,
-          message: `@${req.user!.username} reposted your post`,
-        },
+      await createNotification({
+        recipient: { connect: { id: post.authorId } },
+        actor: { connect: { id: req.user!.id } },
+        type: "REPOST",
+        post: { connect: { id: post.id } },
+        message: `@${req.user!.username} reposted your post`,
       });
     }
 

@@ -11,6 +11,8 @@ const envSchema = z.object({
   JWT_REFRESH_TTL: z.string().default("30d"),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   TELEGRAM_BOT_USERNAME: z.string().default("figabrain_bot"),
+  TELEGRAM_WEBHOOK_SECRET: z.string().min(8).optional(),
+  APP_URL: z.string().url().optional(),
   WALLET_ENCRYPTION_KEY: z
     .string()
     .regex(/^[0-9a-fA-F]{64}$/, "WALLET_ENCRYPTION_KEY must be a 32-byte hex string"),

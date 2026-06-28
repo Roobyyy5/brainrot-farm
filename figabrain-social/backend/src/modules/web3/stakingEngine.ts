@@ -39,7 +39,8 @@ export class StakingEngine {
     const fee = grossInterest.mul(feeRate);
     const netInterest = grossInterest.sub(fee);
 
-    const payout = position.amount.add(netInterest);
+    // Round to 10 decimal places to match tokenBalance column precision expectations
+    const payout = position.amount.add(netInterest).toDecimalPlaces(10);
 
     return prisma.$transaction([
       prisma.stakingPosition.update({

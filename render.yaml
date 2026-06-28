@@ -1,23 +1,54 @@
 services:
   - type: web
-    name: brainrot-farm-backend
+    name: figabrain-backend
     runtime: node
     plan: free
-    rootDir: backend
-    buildCommand: npm install
+    rootDir: figabrain-social/backend
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
     startCommand: npm start
+    healthCheckPath: /health
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: DATABASE_URL
         sync: false
-      - key: PGSSL
-        value: "true"
-      - key: BOT_TOKEN
+      - key: REDIS_URL
         sync: false
-      - key: MINI_APP_URL
+      - key: JWT_ACCESS_SECRET
         sync: false
-      - key: SKIP_TELEGRAM_AUTH
-        value: "false"
-      - key: ADMIN_KEY
+      - key: JWT_REFRESH_SECRET
         sync: false
-      - key: OWNER_TELEGRAM_ID
+      - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: WALLET_ENCRYPTION_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: APP_URL
+        sync: false
+
+  - type: web
+    name: figabrain-frontend
+    runtime: static
+    plan: free
+    rootDir: figabrain-social/frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_TELEGRAM_BOT_USERNAME
+        value: figabrain_bot

@@ -33,6 +33,9 @@ import { seasonsRouter } from "./modules/seasons/seasons.routes.js";
 import { tokenConversionRouter } from "./modules/web3/tokenConversion.routes.js";
 import { i18nRouter } from "./modules/i18n/i18n.routes.js";
 import { bpPurchaseRouter } from "./modules/web3/bpPurchase.routes.js";
+import { tokenomicsRouter } from "./modules/web3/tokenomics.routes.js";
+import { telegramWebhookRouter } from "./modules/telegram/telegram.webhook.routes.js";
+import { setWebhook } from "./modules/telegram/telegram.service.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -100,10 +103,18 @@ app.use("/api/seasons", seasonsRouter);
 app.use("/api/token-conversion", tokenConversionRouter);
 app.use("/api/i18n", i18nRouter);
 app.use("/api/bp-purchase", bpPurchaseRouter);
+app.use("/api/tokenomics", tokenomicsRouter);
+
+// Telegram webhook — no auth/rate-limit middleware (verified by secret header)
+app.use("/webhook/telegram", telegramWebhookRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(env.PORT, () => {
   console.log(`FIGABRAIN Social backend listening on port ${env.PORT}`);
+  // Auto-register webhook when APP_URL is set (production)
+  if (env.APP_URL && env.TELEGRAM_WEBHOOK_SECRET) {
+    setWebhook(`${env.APP_URL}/webhook/telegram`, env.TELEGRAM_WEBHOOK_SECRET).catch(console.error);
+  }
 });

@@ -2,6 +2,10 @@ import crypto from "node:crypto";
 import { env } from "./env.js";
 
 const ALGORITHM = "aes-256-gcm";
+// AES-256 requires exactly 32 bytes = 64 hex chars
+if (!/^[0-9a-fA-F]{64}$/.test(env.WALLET_ENCRYPTION_KEY)) {
+  throw new Error("WALLET_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)");
+}
 const KEY = Buffer.from(env.WALLET_ENCRYPTION_KEY, "hex");
 
 export interface EncryptedPayload {

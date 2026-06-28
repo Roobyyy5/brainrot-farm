@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
+import { createNotification } from "../../utils/createNotification.js";
 import { ACHIEVEMENT_CHECKS, type AchievementContext } from "./achievements.config.js";
 
 async function buildContext(userId: string): Promise<AchievementContext> {
@@ -47,12 +48,10 @@ export async function checkAndGrantAchievements(userId: string) {
     await prisma.economyLog.create({
       data: { userId, type: "ACHIEVEMENT_UNLOCKED", amount: achievement.pointsReward, metadata: { key: achievement.key } },
     });
-    await prisma.notification.create({
-      data: {
-        recipientId: userId,
-        type: "REWARD",
-        message: `Досягнення розблоковано: ${achievement.icon} ${achievement.name}`,
-      },
+    await createNotification({
+      recipient: { connect: { id: userId } },
+      type: "REWARD",
+      message: `Досягнення розблоковано: ${achievement.icon} ${achievement.name}`,
     });
 
     newlyUnlocked.push(achievement);

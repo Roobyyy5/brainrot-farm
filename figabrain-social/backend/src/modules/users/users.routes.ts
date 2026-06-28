@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
+import { createNotification } from "../../utils/createNotification.js";
 import { requireAuth, optionalAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody, validateQuery } from "../../middleware/validate.js";
@@ -149,13 +150,11 @@ usersRouter.post(
       update: {},
     });
 
-    await prisma.notification.create({
-      data: {
-        recipientId: target.id,
-        actorId: req.user!.id,
-        type: "FOLLOW",
-        message: `@${req.user!.username} started following you`,
-      },
+    await createNotification({
+      recipient: { connect: { id: target.id } },
+      actor: { connect: { id: req.user!.id } },
+      type: "FOLLOW",
+      message: `@${req.user!.username} started following you`,
     });
 
     res.json({ data: { following: true } });

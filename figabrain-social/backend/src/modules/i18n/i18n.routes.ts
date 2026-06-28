@@ -139,9 +139,15 @@ async function googleTranslate(text: string, targetLang: string): Promise<string
 
 const CACHE_TTL = 60 * 60 * 24 * 30; // 30 days in seconds
 
+// BCP-47 lang tag: 2-3 letter code + optional script/region subtag
+const LANG_RE = /^[a-z]{2,3}(-[A-Za-z]{2,8})*$/;
+
 // GET /api/i18n/:lang  →  returns i18next namespace JSON
 i18nRouter.get("/:lang", i18nRateLimiter, async (req, res) => {
   const { lang } = req.params;
+  if (!LANG_RE.test(lang)) {
+    return res.status(400).json({ error: "Invalid language code" });
+  }
 
   // Serve static translations immediately.
   if (STATIC[lang]) {

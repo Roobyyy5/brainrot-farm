@@ -1,15 +1,18 @@
 import { prisma } from "../../lib/prisma.js";
 import { sha256Hex } from "../../lib/encryption.js";
 import { writeAuditLog } from "../../utils/logger.js";
+import { ANTIBOT_CONFIG } from "../../config/antibotConfig.js";
 
-const MULTI_ACCOUNT_DEVICE_THRESHOLD = 3;
-const DUPLICATE_CONTENT_WINDOW_MS = 10 * 60_000;
-const REWARD_VELOCITY_WINDOW_MS = 5 * 60_000;
-const REWARD_VELOCITY_THRESHOLD = 60;
-const POST_VELOCITY_WINDOW_MS = 60 * 60_000;
-const POST_VELOCITY_THRESHOLD = 30;
-const LOW_REPUTATION_THRESHOLD = -50;
-const AUTO_SHADOW_BAN_SCORE_THRESHOLD = 50;
+const {
+  MULTI_ACCOUNT_DEVICE_THRESHOLD,
+  DUPLICATE_CONTENT_WINDOW_MS,
+  REWARD_VELOCITY_WINDOW_MS,
+  REWARD_VELOCITY_THRESHOLD,
+  POST_VELOCITY_WINDOW_MS,
+  POST_VELOCITY_THRESHOLD,
+  LOW_REPUTATION_THRESHOLD,
+  AUTO_SHADOW_BAN_SCORE_THRESHOLD,
+} = ANTIBOT_CONFIG;
 
 /**
  * Flags accounts sharing the same device fingerprint once the count of
@@ -92,9 +95,10 @@ export async function computeSuspiciousScore(userId: string): Promise<Suspicious
     prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { reputation: true, deviceFingerprint: true } }),
   ]);
 
-  const accountsOnDevice = user.deviceFingerprint
-    ? await prisma.user.count({ where: { deviceFingerprint: user.deviceFingerprint } })
-    : 1;
+  const accountsOnDevice =
+    user.deviceFingerprint !== null && user.deviceFingerprint !== ""
+      ? await prisma.user.count({ where: { deviceFingerprint: user.deviceFingerprint } })
+      : 1;
 
   const flags: SuspiciousScore = {
     score: 0,
