@@ -179,7 +179,7 @@ export function Profile() {
             onClick={() => setActiveTab("progress")}
             className={`flex-1 text-sm font-semibold py-2 rounded-lg transition-colors ${activeTab === "progress" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
           >
-            Прогрес
+            {t("profile.progress")}
           </button>
         </div>
       </div>
