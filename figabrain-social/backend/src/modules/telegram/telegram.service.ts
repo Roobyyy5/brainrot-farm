@@ -24,12 +24,23 @@ async function callApi(method: string, body: Record<string, unknown>): Promise<v
   }
 }
 
-export async function sendMessage(chatId: string | number, text: string): Promise<void> {
+interface InlineButton {
+  text: string;
+  url?: string;
+  web_app?: { url: string };
+}
+
+export async function sendMessage(
+  chatId: string | number,
+  text: string,
+  keyboard?: InlineButton[][]
+): Promise<void> {
   await callApi("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
     disable_web_page_preview: true,
+    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
 }
 

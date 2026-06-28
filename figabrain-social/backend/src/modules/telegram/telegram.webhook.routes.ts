@@ -71,7 +71,19 @@ telegramWebhookRouter.post(
     const commandMatch = text.match(/^\/(\w+)/);
     const commandKey = commandMatch?.[1]?.toLowerCase();
 
-    if (commandKey && commandKey in COMMANDS) {
+    if (commandKey === "start") {
+      const miniAppUrl = env.MINI_APP_URL;
+      const channelUrl = env.CHANNEL_URL ?? "https://t.me/figabrainnews";
+      const keyboard = [
+        ...(miniAppUrl ? [[{ text: "🧠 Open Brainrot Farm", web_app: { url: miniAppUrl } }]] : []),
+        [{ text: "📢 Join Channel", url: channelUrl }],
+      ];
+      await sendMessage(
+        chatId,
+        "Welcome to Brainrot Farm! Farm braincells, climb from NPC to Gigachad, and invite friends for bonus points.",
+        keyboard
+      );
+    } else if (commandKey && commandKey in COMMANDS) {
       const raw = await prisma.user
         .findFirst({
           where: { telegramId },
