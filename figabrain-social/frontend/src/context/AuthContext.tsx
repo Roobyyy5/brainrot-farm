@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, setAccessToken, setRefreshFn } from "../api/client";
+
+const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 import type { UserProfile } from "../api/types";
 import i18n from "../i18n";
 
@@ -18,6 +20,7 @@ interface AuthContextValue {
   isLoading: boolean;
   loginWithTelegram: (payload: TelegramLoginPayload, referralCode?: string) => Promise<void>;
   loginDev: (username: string, displayName?: string) => Promise<void>;
+  setTokensFromBotAuth: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -50,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Uses raw fetch (not api.*) to avoid triggering another 401 retry loop.
     setRefreshFn(async () => {
       try {
-        const res = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+        const res = await fetch(`${API_BASE}/api/auth/refresh`, { method: "POST", credentials: "include" });
         if (!res.ok) {
           setAccessToken(null);
           setUser(null);
@@ -95,6 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [refreshUser]
   );
 
+  const setTokensFromBotAuth = useCallback(
+    async (accessToken: string) => {
+      setAccessToken(accessToken);
+      await refreshUser();
+    },
+    [refreshUser]
+  );
+
   const logout = useCallback(async () => {
     await api.post("/auth/logout");
     setAccessToken(null);
@@ -102,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, loginWithTelegram, loginDev, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, loginWithTelegram, loginDev, setTokensFromBotAuth, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -46,6 +46,28 @@ telegramWebhookRouter.post(
     const telegramId = String(msg.from.id);
     const text = msg.text.trim();
 
+    // Handle /start login_TOKEN (bot-based auth flow)
+    const loginMatch = text.match(/^\/start login_([0-9a-f]{48})$/i);
+    if (loginMatch) {
+      const token = loginMatch[1]!;
+      const record = await prisma.telegramAuthToken
+        .findUnique({ where: { token } })
+        .catch(() => null);
+
+      if (record && !record.telegramId && record.expiresAt > new Date()) {
+        await prisma.telegramAuthToken.update({ where: { token }, data: { telegramId } });
+        const appUrl = env.APP_URL?.replace("backend", "frontend") ?? "https://figabrain-frontend.onrender.com";
+        await sendMessage(
+          chatId,
+          `✅ <b>Авторизація підтверджена!</b>\n\nПовернись у FIGABRAIN і ти автоматично увійдеш в акаунт.\n\n<a href="${appUrl}">Відкрити FIGABRAIN</a>`
+        );
+      } else {
+        await sendMessage(chatId, "❌ Посилання недійсне або прострочене. Спробуй увійти знову.");
+      }
+      res.sendStatus(200);
+      return;
+    }
+
     const commandMatch = text.match(/^\/(\w+)/);
     const commandKey = commandMatch?.[1]?.toLowerCase();
 

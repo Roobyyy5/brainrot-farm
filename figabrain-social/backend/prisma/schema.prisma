@@ -668,3 +668,10 @@ model Nft {
 
   @@unique([collectionId, tokenId])
 }
+
+model TelegramAuthToken {
+  token      String   @id
+  telegramId String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+}

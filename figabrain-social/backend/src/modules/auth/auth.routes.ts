@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { randomBytes } from "node:crypto";
 import { authRateLimiter } from "../../middleware/rateLimit.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
@@ -8,6 +9,7 @@ import { loginOrRegisterWithTelegram, loginByUsername } from "./auth.service.js"
 import { verifyRefreshToken, signAccessToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
 import { flagMultiAccountAbuse } from "../antibot/antibot.service.js";
+import { env } from "../../lib/env.js";
 
 export const authRouter = Router();
 
@@ -142,3 +144,43 @@ authRouter.post("/logout", (_req, res) => {
   res.clearCookie("refresh_token");
   res.json({ data: { loggedOut: true } });
 });
+
+// Bot-based Telegram auth (works without Login Widget domain setup)
+authRouter.post(
+  "/telegram-bot/init",
+  authRateLimiter,
+  asyncHandler(async (_req, res) => {
+    const token = randomBytes(24).toString("hex");
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    await prisma.telegramAuthToken.create({ data: { token, telegramId: "", expiresAt } });
+    const botUsername = env.TELEGRAM_BOT_USERNAME;
+    res.json({ data: { token, url: `https://t.me/${botUsername}?start=login_${token}` } });
+  })
+);
+
+authRouter.post(
+  "/telegram-bot/verify",
+  authRateLimiter,
+  validateBody(z.object({ token: z.string().min(1) })),
+  asyncHandler(async (req, res) => {
+    const record = await prisma.telegramAuthToken.findUnique({ where: { token: req.body.token } });
+    if (!record || record.expiresAt < new Date()) {
+      throw new HttpError(401, "Token expired or not found", "UNAUTHENTICATED");
+    }
+    if (!record.telegramId) {
+      // Bot hasn't confirmed yet
+      res.json({ data: { pending: true } });
+      return;
+    }
+    await prisma.telegramAuthToken.delete({ where: { token: req.body.token } });
+    const result = await loginOrRegisterWithTelegram(
+      { id: Number(record.telegramId), first_name: "User", auth_date: Math.floor(Date.now() / 1000), hash: "bot-auth" },
+      undefined, undefined, req.ip
+    );
+    res.cookie("refresh_token", result.refreshToken, {
+      httpOnly: true, secure: isProd(), sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    res.json({ data: { accessToken: result.accessToken, isNewUser: result.isNewUser } });
+  })
+);
