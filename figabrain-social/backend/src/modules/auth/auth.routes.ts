@@ -160,7 +160,6 @@ authRouter.post(
 
 authRouter.post(
   "/telegram-bot/verify",
-  authRateLimiter,
   validateBody(z.object({ token: z.string().min(1) })),
   asyncHandler(async (req, res) => {
     const record = await prisma.telegramAuthToken.findUnique({ where: { token: req.body.token } });

@@ -45,7 +45,7 @@ export function Login() {
           setIsLoggingIn(false);
           setError("Авторизація не вдалась. Спробуй ще раз.");
         }
-      }, 2000);
+      }, 3000);
 
       // Stop polling after 10 min
       setTimeout(() => {
