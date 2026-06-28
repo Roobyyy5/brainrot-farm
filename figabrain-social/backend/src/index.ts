@@ -40,6 +40,9 @@ import { setWebhook } from "./modules/telegram/telegram.service.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Trust Render's reverse proxy so req.ip reflects the real client IP
+app.set("trust proxy", 1);
+
 app.use(helmet());
 const allowedOrigins = new Set(
   env.CORS_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean)

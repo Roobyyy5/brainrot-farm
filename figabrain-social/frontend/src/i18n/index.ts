@@ -12,8 +12,7 @@ i18n
     ns: ["translation"],
     defaultNS: "translation",
     backend: {
-      // Fetches /api/i18n/{lang} — proxied by Vite in dev, served directly in prod
-      loadPath: "/api/i18n/{{lng}}",
+      loadPath: `${(import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "")}/api/i18n/{{lng}}`,
       // Parse the backend response (it's already a flat/nested JSON object)
       parse: (data: string) => JSON.parse(data),
     },
