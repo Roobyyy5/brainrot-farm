@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { requireAuth, requireAdmin } from "../../middleware/auth.js";
 import {
   getFullTokenomicsSnapshot,
@@ -12,7 +12,7 @@ import {
 export const tokenomicsRouter = Router();
 
 /** GET /api/tokenomics — public snapshot */
-tokenomicsRouter.get("/", async (req, res, next) => {
+tokenomicsRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const days = Number(req.query.daysSinceLaunch ?? 0);
     const snapshot = await getFullTokenomicsSnapshot(isNaN(days) ? 0 : days);
@@ -23,7 +23,7 @@ tokenomicsRouter.get("/", async (req, res, next) => {
 });
 
 /** GET /api/tokenomics/supply — current supply metrics */
-tokenomicsRouter.get("/supply", async (_req, res, next) => {
+tokenomicsRouter.get("/supply", async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const metrics = await getSupplyMetrics();
     res.json({ data: metrics });
@@ -33,7 +33,7 @@ tokenomicsRouter.get("/supply", async (_req, res, next) => {
 });
 
 /** GET /api/tokenomics/vesting?months=N — vesting schedules */
-tokenomicsRouter.get("/vesting", async (req, res, next) => {
+tokenomicsRouter.get("/vesting", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const months = Number(req.query.months ?? 0);
     const schedules = getAllVestingSnapshots(isNaN(months) ? 0 : months);
@@ -44,7 +44,7 @@ tokenomicsRouter.get("/vesting", async (req, res, next) => {
 });
 
 /** GET /api/tokenomics/convert?bp=N — preview BP→FGB conversion */
-tokenomicsRouter.get("/convert", requireAuth, async (req, res, next) => {
+tokenomicsRouter.get("/convert", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bp = Number(req.query.bp ?? 0);
     if (isNaN(bp) || bp < 0) {
@@ -58,7 +58,7 @@ tokenomicsRouter.get("/convert", requireAuth, async (req, res, next) => {
 });
 
 /** GET /api/tokenomics/staking-preview?amount=N&lockDays=N&durationDays=N */
-tokenomicsRouter.get("/staking-preview", requireAuth, async (req, res, next) => {
+tokenomicsRouter.get("/staking-preview", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const amount     = Number(req.query.amount ?? 0);
     const lockDays   = Number(req.query.lockDays ?? 0);
@@ -75,6 +75,6 @@ tokenomicsRouter.get("/staking-preview", requireAuth, async (req, res, next) => 
 });
 
 /** GET /api/tokenomics/config — admin: full raw config */
-tokenomicsRouter.get("/config", requireAuth, requireAdmin, (_req, res) => {
+tokenomicsRouter.get("/config", requireAuth, requireAdmin, (_req: Request, res: Response) => {
   res.json({ data: TOKENOMICS_CONFIG });
 });
