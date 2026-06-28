@@ -24,6 +24,7 @@ export function Profile() {
   const [streakStatus, setStreakStatus] = useState<StreakStatus | null>(null);
   const [repHistory, setRepHistory] = useState<ReputationLogEntry[]>([]);
   const [showRepHistory, setShowRepHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState<"posts" | "progress">("posts");
 
   useEffect(() => {
     if (!username) return;
@@ -166,74 +167,92 @@ export function Profile() {
           <Stat label={t("profile.following")} value={profile.followingCount} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
-            <div className="text-xs text-white/50">{t("profile.brainPoints")}</div>
-            <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
-          </div>
-          <div className="bg-brain-accent2/10 border border-brain-accent2/30 rounded-xl p-3">
-            <div className="text-xs text-white/50">{t("profile.reputation")}</div>
-            <div className="text-lg font-bold text-brain-accent2">{profile.reputation}</div>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-1 bg-white/5 rounded-xl p-1 mt-2">
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`flex-1 text-sm font-semibold py-2 rounded-lg transition-colors ${activeTab === "posts" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+          >
+            {t("profile.posts")}
+          </button>
+          <button
+            onClick={() => setActiveTab("progress")}
+            className={`flex-1 text-sm font-semibold py-2 rounded-lg transition-colors ${activeTab === "progress" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+          >
+            Прогрес
+          </button>
         </div>
-
-        <RankCard profile={profile} />
-
-        {/* Streak visualization (own profile only) */}
-        {isOwnProfile && streakStatus && (
-          <div className="mt-4 bg-white/3 border border-white/5 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-white/60">{t("profile.loginStreak")}</span>
-              {streakStatus.nextMilestone && (
-                <span className="text-xs text-white/30">{t("profile.toNextMilestone", { days: streakStatus.nextMilestone - streakStatus.currentStreak })}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">🔥</span>
-              <div>
-                <div className="text-xl font-bold">{streakStatus.currentStreak} days</div>
-                <div className="text-xs text-white/40">{t("profile.longestStreak")}: {streakStatus.longestStreak}d</div>
-              </div>
-            </div>
-            {streakStatus.nextMilestone && (
-              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all"
-                  style={{ width: `${Math.min(100, (streakStatus.currentStreak / streakStatus.nextMilestone) * 100)}%` }}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Reputation history (own profile only) */}
-        {isOwnProfile && repHistory.length > 0 && (
-          <div className="mt-4">
-            <button
-              onClick={() => setShowRepHistory((v) => !v)}
-              className="text-xs text-white/30 hover:text-white/60 flex items-center gap-1"
-            >
-              {t("profile.repHistory")} {showRepHistory ? "▲" : "▼"}
-            </button>
-            {showRepHistory && (
-              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-                {repHistory.slice(0, 20).map((r) => (
-                  <div key={r.id} className="flex items-center justify-between text-xs">
-                    <span className="text-white/50 truncate max-w-[60%]">{r.reason}</span>
-                    <span className={r.delta >= 0 ? "text-green-400" : "text-red-400"}>
-                      {r.delta >= 0 ? "+" : ""}{r.delta}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Posts */}
-      <div>
-        <h2 className="text-sm font-semibold text-white/50 mb-3 uppercase tracking-wider">{t("profile.posts")}</h2>
+      {/* Progress tab content */}
+      {activeTab === "progress" && (
+        <div className="glass-panel rounded-2xl p-4 mb-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-brain-point/10 border border-brain-point/30 rounded-xl p-3">
+              <div className="text-xs text-white/50">{t("profile.brainPoints")}</div>
+              <div className="text-lg font-bold text-brain-point">{profile.brainPoints.toFixed(2)}</div>
+            </div>
+            <div className="bg-brain-accent2/10 border border-brain-accent2/30 rounded-xl p-3">
+              <div className="text-xs text-white/50">{t("profile.reputation")}</div>
+              <div className="text-lg font-bold text-brain-accent2">{profile.reputation}</div>
+            </div>
+          </div>
+
+          <RankCard profile={profile} />
+
+          {isOwnProfile && streakStatus && (
+            <div className="bg-white/3 border border-white/5 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white/60">{t("profile.loginStreak")}</span>
+                {streakStatus.nextMilestone && (
+                  <span className="text-xs text-white/30">{t("profile.toNextMilestone", { days: streakStatus.nextMilestone - streakStatus.currentStreak })}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl">🔥</span>
+                <div>
+                  <div className="text-xl font-bold">{streakStatus.currentStreak} days</div>
+                  <div className="text-xs text-white/40">{t("profile.longestStreak")}: {streakStatus.longestStreak}d</div>
+                </div>
+              </div>
+              {streakStatus.nextMilestone && (
+                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all"
+                    style={{ width: `${Math.min(100, (streakStatus.currentStreak / streakStatus.nextMilestone) * 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {isOwnProfile && repHistory.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowRepHistory((v) => !v)}
+                className="text-xs text-white/30 hover:text-white/60 flex items-center gap-1"
+              >
+                {t("profile.repHistory")} {showRepHistory ? "▲" : "▼"}
+              </button>
+              {showRepHistory && (
+                <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                  {repHistory.slice(0, 20).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between text-xs">
+                      <span className="text-white/50 truncate max-w-[60%]">{r.reason}</span>
+                      <span className={r.delta >= 0 ? "text-green-400" : "text-red-400"}>
+                        {r.delta >= 0 ? "+" : ""}{r.delta}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Posts tab content */}
+      {activeTab === "posts" && <div>
         {posts.map((post) => (
           <PostCard key={post.id} post={post} onLike={handleLike} onRepost={handleRepost} />
         ))}
@@ -245,7 +264,7 @@ export function Profile() {
             {isLoadingMore ? t("common.loading") : t("profile.loadMore")}
           </button>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
