@@ -116,7 +116,8 @@ enum ModerationStatus {
 
 model User {
   id                String    @id @default(uuid())
-  telegramId        String    @unique
+  telegramId        String?   @unique
+  passwordHash      String?
   username          String    @unique
   displayName       String
   bio               String    @default("")

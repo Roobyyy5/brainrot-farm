@@ -1,15 +1,17 @@
 import { Router } from "express";
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { authRateLimiter } from "../../middleware/rateLimit.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
 import { verifyTelegramLogin } from "./telegramVerify.js";
 import { loginOrRegisterWithTelegram, loginByUsername } from "./auth.service.js";
-import { verifyRefreshToken, signAccessToken } from "../../lib/jwt.js";
+import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
 import { flagMultiAccountAbuse } from "../antibot/antibot.service.js";
 import { env } from "../../lib/env.js";
+import { generateWallet } from "../../lib/wallet.js";
 
 export const authRouter = Router();
 
@@ -33,6 +35,68 @@ const devLoginSchema = z.object({
   username: z.string().min(3).max(20).regex(/^[a-z0-9_]+$/),
   displayName: z.string().min(1).max(60).optional(),
 });
+
+const registerSchema = z.object({
+  username: z.string().min(3).max(20).regex(/^[a-z0-9_]+$/, "Only lowercase letters, numbers and _"),
+  displayName: z.string().min(1).max(60),
+  password: z.string().min(6).max(100),
+});
+
+const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
+authRouter.post(
+  "/register",
+  authRateLimiter,
+  validateBody(registerSchema),
+  asyncHandler(async (req, res) => {
+    const { username, displayName, password } = req.body as z.infer<typeof registerSchema>;
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing) throw new HttpError(409, "Username already taken", "USERNAME_TAKEN");
+    const passwordHash = await bcrypt.hash(password, 12);
+    const wallet = generateWallet();
+    const user = await prisma.user.create({
+      data: {
+        username, displayName, passwordHash,
+        lastLoginAt: new Date(), loginStreak: 1,
+        wallet: {
+          create: {
+            address: wallet.address,
+            publicKey: wallet.publicKey,
+            encryptedPrivateKey: wallet.encrypted.ciphertext,
+            encryptionIv: wallet.encrypted.iv,
+            encryptionAuthTag: wallet.encrypted.authTag,
+          },
+        },
+      },
+    });
+    const accessToken = signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin });
+    const refreshToken = signRefreshToken({ sub: user.id });
+    res.cookie("refresh_token", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.status(201).json({ data: { accessToken, isNewUser: true } });
+  })
+);
+
+authRouter.post(
+  "/login",
+  authRateLimiter,
+  validateBody(loginSchema),
+  asyncHandler(async (req, res) => {
+    const { username, password } = req.body as z.infer<typeof loginSchema>;
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (!user || !user.passwordHash) throw new HttpError(401, "Invalid username or password", "INVALID_CREDENTIALS");
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) throw new HttpError(401, "Invalid username or password", "INVALID_CREDENTIALS");
+    if (user.isBanned) throw new HttpError(403, "Account banned", "BANNED");
+    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    const accessToken = signAccessToken({ sub: user.id, username: user.username, isAdmin: user.isAdmin });
+    const refreshToken = signRefreshToken({ sub: user.id });
+    res.cookie("refresh_token", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.json({ data: { accessToken, isNewUser: false } });
+  })
+);
 
 /**
  * Dev-only bypass for the Telegram signature check, so the app is

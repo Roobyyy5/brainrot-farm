@@ -1,78 +1,48 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../api/client";
 
-const DEV_LOGIN_ENABLED = import.meta.env.VITE_ENABLE_DEV_LOGIN === "true";
+type Tab = "login" | "register";
 
-interface InitResponse { data: { token: string; url: string } }
-interface VerifyResponse { data: { pending?: boolean; accessToken?: string; isNewUser?: boolean } }
+interface AuthResponse { data: { accessToken: string; isNewUser: boolean } }
 
 export function Login() {
-  const { loginWithTelegram, loginDev, setTokensFromBotAuth } = useAuth();
+  const { setTokensFromBotAuth } = useAuth();
+  const [tab, setTab] = useState<Tab>("login");
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [devUsername, setDevUsername] = useState("");
-  const [isDevLoggingIn, setIsDevLoggingIn] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
-
-  async function handleTelegramLogin() {
-    setIsLoggingIn(true);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
-      const { data } = await apiFetch<InitResponse>("/auth/telegram-bot/init", { method: "POST" });
-      window.open(data.url, "_blank");
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const result = await apiFetch<VerifyResponse>("/auth/telegram-bot/verify", {
-            method: "POST",
-            body: JSON.stringify({ token: data.token }),
-          });
-          if (!result.data.pending && result.data.accessToken) {
-            clearInterval(pollRef.current!);
-            pollRef.current = null;
-            setTokensFromBotAuth(result.data.accessToken);
-            navigate("/");
-          }
-        } catch {
-          clearInterval(pollRef.current!);
-          pollRef.current = null;
-          setIsLoggingIn(false);
-          setError("Авторизація не вдалась. Спробуй ще раз.");
-        }
-      }, 3000);
-
-      // Stop polling after 10 min
-      setTimeout(() => {
-        if (pollRef.current) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-          setIsLoggingIn(false);
-          setError("Час очікування вийшов. Спробуй ще раз.");
-        }
-      }, 10 * 60 * 1000);
-    } catch {
-      setIsLoggingIn(false);
-      setError("Помилка підключення до сервера.");
-    }
-  }
-
-  async function handleDevLogin() {
-    if (!devUsername.trim()) return;
-    setIsDevLoggingIn(true);
-    setError(null);
-    try {
-      await loginDev(devUsername.trim().toLowerCase());
+      const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
+      const body = tab === "login"
+        ? { username: username.trim().toLowerCase(), password }
+        : { username: username.trim().toLowerCase(), displayName: displayName.trim(), password };
+      const res = await apiFetch<AuthResponse>(endpoint, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      await setTokensFromBotAuth(res.data.accessToken);
       navigate("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Dev login failed");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Помилка";
+      setError(
+        msg.includes("USERNAME_TAKEN") ? "Це ім'я вже зайняте" :
+        msg.includes("INVALID_CREDENTIALS") ? "Невірний логін або пароль" :
+        msg.includes("VALIDATION_ERROR") ? "Перевір правильність даних" :
+        "Помилка з'єднання з сервером"
+      );
     } finally {
-      setIsDevLoggingIn(false);
+      setLoading(false);
     }
   }
 
@@ -81,51 +51,75 @@ export function Login() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel rounded-3xl p-10 text-center max-w-sm"
+        className="glass-panel rounded-3xl p-8 w-full max-w-sm"
       >
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-brain-accent to-brain-accent2 bg-clip-text text-transparent mb-2">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-brain-accent to-brain-accent2 bg-clip-text text-transparent mb-1 text-center">
           FIGABRAIN
         </h1>
-        <p className="text-white/50 text-sm mb-8">Your social profile. Your wallet. Your rewards.</p>
+        <p className="text-white/40 text-xs text-center mb-6">Your social profile. Your wallet. Your rewards.</p>
 
-        <button
-          onClick={handleTelegramLogin}
-          disabled={isLoggingIn}
-          className="w-full flex items-center justify-center gap-3 bg-[#229ED9] hover:bg-[#1a8bbf] disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-2xl transition-colors"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.14 13.748l-2.97-.924c-.645-.203-.658-.645.136-.953l11.57-4.461c.537-.194 1.006.131.686.838z"/>
-          </svg>
-          {isLoggingIn ? "Очікування підтвердження..." : "Увійти через Telegram"}
-        </button>
-
-        {isLoggingIn && (
-          <p className="text-white/40 text-xs mt-3">
-            Підтвердь вхід у боті @figabrain_bot, потім повернись сюди
-          </p>
-        )}
-
-        {DEV_LOGIN_ENABLED && (
-          <div className="mt-8 pt-6 border-t border-white/10 text-left">
-            <p className="text-xs text-white/30 mb-2">Dev login</p>
-            <input
-              value={devUsername}
-              onChange={(e) => setDevUsername(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleDevLogin()}
-              placeholder="username"
-              className="w-full bg-black/30 rounded-lg px-3 py-2 text-sm outline-none mb-2"
-            />
+        {/* Tabs */}
+        <div className="flex gap-1 bg-white/5 rounded-xl p-1 mb-6">
+          {(["login", "register"] as Tab[]).map((t) => (
             <button
-              onClick={handleDevLogin}
-              disabled={isDevLoggingIn || !devUsername.trim()}
-              className="w-full bg-white/10 hover:bg-white/20 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-40"
+              key={t}
+              onClick={() => { setTab(t); setError(null); }}
+              className={`flex-1 text-sm font-semibold py-2 rounded-lg transition-colors ${tab === t ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
             >
-              {isDevLoggingIn ? "Logging in..." : "Continue as dev user"}
+              {t === "login" ? "Вхід" : "Реєстрація"}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {error && <p className="text-red-400 text-xs mt-4">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Логін</label>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="лише a-z, 0-9, _"
+              autoCapitalize="none"
+              autoCorrect="off"
+              required
+              className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-brain-accent/60 transition-colors"
+            />
+          </div>
+
+          {tab === "register" && (
+            <div>
+              <label className="text-xs text-white/40 mb-1 block">Ім'я</label>
+              <input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Як тебе звати?"
+                required
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-brain-accent/60 transition-colors"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Пароль</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={tab === "register" ? "мінімум 6 символів" : "••••••••"}
+              required
+              className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-brain-accent/60 transition-colors"
+            />
+          </div>
+
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-brain-accent to-brain-accent2 text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-opacity mt-2"
+          >
+            {loading ? "..." : tab === "login" ? "Увійти" : "Створити акаунт"}
+          </button>
+        </form>
       </motion.div>
     </div>
   );
