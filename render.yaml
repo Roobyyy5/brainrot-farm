@@ -3,9 +3,8 @@ services:
     name: brainrot-farm-backend
     runtime: node
     plan: free
-    rootDir: figabrain-social/backend
-    buildCommand: npm install && npx prisma generate && npm run build && npx prisma migrate deploy
-    startCommand: npm start
+    buildCommand: cd figabrain-social/backend && npm install && npx prisma generate && npm run build && npx prisma migrate deploy
+    startCommand: cd figabrain-social/backend && node dist/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
