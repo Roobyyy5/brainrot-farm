@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: figabrain-backend
+    name: brainrot-farm-backend
     runtime: node
     plan: free
     rootDir: figabrain-social/backend
