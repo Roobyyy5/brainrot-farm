@@ -41,9 +41,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 app.use(helmet());
+const allowedOrigins = new Set(
+  env.CORS_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean)
+);
+
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: (origin, cb) => {
+      // allow requests with no origin (curl, Postman, server-to-server)
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.has(origin) || origin.endsWith(".onrender.com")) {
+        return cb(null, true);
+      }
+      cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
