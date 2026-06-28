@@ -4,7 +4,7 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "start": "cd ../figabrain-social/backend && npx tsx src/index.ts",
+    "start": "node server.js",
     "dev": "node server.js",
     "bot": "node bot.js"
   },
