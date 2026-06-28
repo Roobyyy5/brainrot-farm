@@ -1,4 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { getAccessToken } from "../api/client";
+
+const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 import { useAuth } from "./AuthContext";
 
 interface BadgeContextValue {
@@ -18,7 +21,8 @@ export function NotificationBadgeProvider({ children }: { children: ReactNode })
 
   // Manual refresh — used after marking notifications read
   const refresh = useCallback(() => {
-    fetch("/api/notifications/unread-count", { credentials: "include", headers: { Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}` } })
+    const token = getAccessToken() ?? "";
+    fetch(`${API_BASE}/api/notifications/unread-count`, { credentials: "include", headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((body) => setUnread(body?.data?.unread ?? 0))
       .catch(() => {});
@@ -28,8 +32,8 @@ export function NotificationBadgeProvider({ children }: { children: ReactNode })
     esRef.current?.close();
     if (!user) { setUnread(0); return; }
 
-    const token = localStorage.getItem("accessToken") ?? "";
-    const es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+    const token = getAccessToken() ?? "";
+    const es = new EventSource(`${API_BASE}/api/notifications/stream?token=${encodeURIComponent(token)}`);
     esRef.current = es;
 
     es.onmessage = (e) => {

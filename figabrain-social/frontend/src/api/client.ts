@@ -1,3 +1,5 @@
+const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
 let accessToken: string | null = null;
 
 export function setAccessToken(token: string | null): void {
@@ -34,7 +36,7 @@ async function apiFetchInner<T>(path: string, init: RequestInit, retried: boolea
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE}/api${path}`, {
     ...init,
     headers,
     credentials: "include",
