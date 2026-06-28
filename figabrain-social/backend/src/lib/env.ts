@@ -17,7 +17,7 @@ const envSchema = z.object({
     .string()
     .regex(/^[0-9a-fA-F]{64}$/, "WALLET_ENCRYPTION_KEY must be a 32-byte hex string"),
   CORS_ORIGIN: z.string().default("http://localhost:5174"),
-  REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
+  REDIS_URL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
