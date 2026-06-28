@@ -101,9 +101,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setTokensFromBotAuth = useCallback(
     async (accessToken: string) => {
       setAccessToken(accessToken);
-      await refreshUser();
+      try {
+        const meUsername = JSON.parse(atob(accessToken.split(".")[1]!)).username as string;
+        const profile = await api.get<{ data: UserProfile }>(`/users/${meUsername}`);
+        setUser(profile.data);
+        if (profile.data.language) i18n.changeLanguage(profile.data.language);
+      } catch {
+        setAccessToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [refreshUser]
+    []
   );
 
   const logout = useCallback(async () => {
