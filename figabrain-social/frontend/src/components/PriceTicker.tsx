@@ -8,7 +8,8 @@ const SYMBOLS: Record<string, string> = {
   "matic-network": "MATIC",
 };
 
-function fmt(n: number): string {
+function fmt(n: number | null): string {
+  if (n == null || isNaN(n)) return "—";
   if (n >= 1000) return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
   if (n >= 1) return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
   return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
@@ -28,7 +29,7 @@ export function PriceTicker() {
         style={{ animation: "ticker 30s linear infinite" }}
       >
         {items.map((p, i) => {
-          const change = p.price_change_percentage_24h;
+          const change = p.price_change_percentage_24h ?? 0;
           const up = change >= 0;
           return (
             <span key={`${p.id}-${i}`} className="inline-flex items-center gap-1.5 text-xs">
