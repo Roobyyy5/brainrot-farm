@@ -268,4 +268,36 @@ usersRouter.get(
   })
 );
 
+// GET /users/suggestions — кого підписати (не підписані, відсортовані за кількістю підписників)
+usersRouter.get(
+  "/suggestions",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const myId = req.user!.id;
+
+    const following = await prisma.follow.findMany({
+      where: { followerId: myId },
+      select: { followingId: true },
+    });
+    const followingIds = new Set(following.map((f) => f.followingId));
+    followingIds.add(myId);
+
+    const suggestions = await prisma.user.findMany({
+      where: { id: { notIn: [...followingIds] } },
+      orderBy: { followers: { _count: "desc" } },
+      take: 6,
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        rank: true,
+        _count: { select: { followers: true } },
+      },
+    });
+
+    res.json({ data: suggestions });
+  })
+);
+
 export { computeRank };

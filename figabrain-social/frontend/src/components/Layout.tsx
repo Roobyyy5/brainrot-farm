@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { PriceTicker } from "./PriceTicker";
+import { RightSidebar } from "./RightSidebar";
 import { useAuth } from "../context/AuthContext";
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -31,8 +32,10 @@ export function Layout({ children }: { children: ReactNode }) {
             </Link>
           )}
         </header>
-        {/* pb-20 ensures content isn't hidden under the mobile bottom nav */}
-        <main className="flex-1 p-4 lg:p-6 pb-24 lg:pb-6 max-w-3xl w-full mx-auto">{children}</main>
+        <div className="flex flex-1 gap-6 p-4 lg:p-6 pb-24 lg:pb-6 max-w-6xl w-full mx-auto">
+          <main className="flex-1 min-w-0">{children}</main>
+          <RightSidebar />
+        </div>
       </div>
       <BottomNav />
     </div>

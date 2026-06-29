@@ -20,13 +20,13 @@ export function Sidebar() {
     { to: "/search", label: t("nav.search"), icon: "🔍" },
     { to: "/notifications", label: t("nav.notifications"), icon: "🔔" },
     { to: "/messages", label: t("nav.messages"), icon: "✉️" },
-    { to: "/bookmarks", label: "Bookmarks", icon: "🔖" },
+    { to: "/bookmarks", label: t("nav.bookmarks"), icon: "🔖" },
     { to: "/wallet", label: t("nav.wallet"), icon: "💎" },
     { to: "/economy", label: t("nav.economy"), icon: "⚡" },
     { to: "/rewards", label: t("nav.rewards"), icon: "🎁" },
     { to: "/leaderboard", label: t("nav.leaderboard"), icon: "🏆" },
-    { to: "/news", label: "Crypto News", icon: "📰" },
-    { to: "/governance", label: "Governance", icon: "⚖️" },
+    { to: "/news", label: t("nav.news"), icon: "📰" },
+    { to: "/governance", label: t("nav.governance"), icon: "⚖️" },
     { to: "/settings", label: t("nav.settings"), icon: "⚙️" },
   ];
 
