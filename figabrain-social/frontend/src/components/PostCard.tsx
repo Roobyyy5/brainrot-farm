@@ -5,6 +5,33 @@ import type { Post } from "../api/types";
 import { RANK_META } from "../lib/rankMeta";
 import { api } from "../api/client";
 
+type ParsedMedia =
+  | { type: "image"; url: string }
+  | { type: "video"; url: string; name: string }
+  | { type: "file"; url: string; name: string };
+
+function parseMedia(raw: string): ParsedMedia {
+  if (raw.startsWith("{")) {
+    try {
+      const obj = JSON.parse(raw) as { t: string; data: string; name: string };
+      if (obj.t === "vid") return { type: "video", url: obj.data, name: obj.name };
+      if (obj.t === "file") return { type: "file", url: obj.data, name: obj.name };
+    } catch { /* fall through */ }
+  }
+  return { type: "image", url: raw };
+}
+
+function fileIcon(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "pdf") return "📄";
+  if (["doc", "docx"].includes(ext)) return "📝";
+  if (["xls", "xlsx"].includes(ext)) return "📊";
+  if (["ppt", "pptx"].includes(ext)) return "📑";
+  if (["zip", "rar", "7z"].includes(ext)) return "🗜️";
+  if (["mp3", "wav", "ogg", "flac"].includes(ext)) return "🎵";
+  return "📁";
+}
+
 interface PostCardProps {
   post: Post;
   onLike: (post: Post) => void;
@@ -149,9 +176,23 @@ export function PostCard({ post, onLike, onRepost, onBookmark }: PostCardProps) 
 
       {post.imageUrls.length > 0 && (
         <div className={`grid gap-2 mb-3 ${post.imageUrls.length === 1 ? "" : "grid-cols-2"}`}>
-          {post.imageUrls.map((url) => (
-            <img key={url} src={url} alt="" className="rounded-xl object-cover max-h-72 w-full" />
-          ))}
+          {post.imageUrls.map((raw, i) => {
+            const media = parseMedia(raw);
+            if (media.type === "video")
+              return <video key={i} src={media.url} controls className="rounded-xl max-h-72 w-full bg-black" />;
+            if (media.type === "file")
+              return (
+                <a key={i} href={media.url} download={media.name}
+                  className="flex items-center gap-3 bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors">
+                  <span className="text-3xl shrink-0">{fileIcon(media.name)}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{media.name}</p>
+                    <p className="text-xs text-white/40">Натисни щоб завантажити</p>
+                  </div>
+                </a>
+              );
+            return <img key={i} src={media.url} alt="" className="rounded-xl object-cover max-h-72 w-full" />;
+          })}
         </div>
       )}
       {post.gifUrl && (

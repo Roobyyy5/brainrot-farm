@@ -6,10 +6,25 @@ import { PostCard } from "../components/PostCard";
 import { StoriesBar } from "../components/StoriesBar";
 import { useAuth } from "../context/AuthContext";
 import { useRewardToast } from "../context/RewardToastContext";
-import { useImageUpload } from "../hooks/useImageUpload";
+import { resizeAndEncode } from "../hooks/useImageUpload";
 
 type FeedFilter = "all" | "following";
-type MediaMode = "none" | "image" | "gif" | "upload";
+
+type Attachment = {
+  type: "image" | "video" | "file";
+  preview: string;
+  encoded: string;
+  name: string;
+};
+
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
 
 const DRAFT_KEY = "feed:draft";
 
@@ -19,12 +34,14 @@ export function Feed() {
   const { showReward } = useRewardToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
-  const [imageUrl, setImageUrl] = useState("");
-  const [gifUrl, setGifUrl] = useState("");
-  const [uploadedDataUrl, setUploadedDataUrl] = useState("");
-  const [mediaMode, setMediaMode] = useState<MediaMode>("none");
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [attError, setAttError] = useState<string | null>(null);
+  const [attLoading, setAttLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const vidInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { upload, uploading, error: uploadError } = useImageUpload();
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -32,6 +49,40 @@ export function Feed() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const loaderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    function onDown(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowPicker(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [showPicker]);
+
+  async function handleFile(file: File, type: "image" | "video" | "file") {
+    setAttError(null);
+    setAttLoading(true);
+    setShowPicker(false);
+    try {
+      const MAX = type === "image" ? 10 : 30;
+      if (file.size > MAX * 1024 * 1024) {
+        setAttError(`Файл занадто великий (макс. ${MAX} МБ)`);
+        return;
+      }
+      if (type === "image") {
+        const dataUrl = await resizeAndEncode(file);
+        setAttachment({ type: "image", preview: dataUrl, encoded: dataUrl, name: file.name });
+      } else {
+        const dataUrl = await fileToDataUrl(file);
+        const encoded = JSON.stringify({ t: type === "video" ? "vid" : "file", data: dataUrl, name: file.name });
+        setAttachment({ type, preview: dataUrl, encoded, name: file.name });
+      }
+    } catch {
+      setAttError("Не вдалось обробити файл");
+    } finally {
+      setAttLoading(false);
+    }
+  }
 
   const loadFeed = useCallback(async (f: FeedFilter, cursor?: string) => {
     if (!cursor) setIsLoading(true);
@@ -75,20 +126,14 @@ export function Feed() {
     setIsPosting(true);
     setError(null);
     try {
-      const imageUrls = uploadedDataUrl
-        ? [uploadedDataUrl]
-        : imageUrl.trim() ? [imageUrl.trim()] : [];
+      const imageUrls = attachment ? [attachment.encoded] : [];
       const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", {
         content,
         imageUrls,
-        ...(gifUrl.trim() ? { gifUrl: gifUrl.trim() } : {}),
       });
       setPosts((prev) => [res.data, ...prev]);
       setContent("");
-      setImageUrl("");
-      setGifUrl("");
-      setUploadedDataUrl("");
-      setMediaMode("none");
+      setAttachment(null);
       localStorage.removeItem(DRAFT_KEY);
       if (res.reward) { showReward(res.reward); refreshUser(); }
     } catch (err) {
@@ -134,86 +179,64 @@ export function Feed() {
           />
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
 
-          {/* Upload */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const result = await upload(file);
-              if (result) { setUploadedDataUrl(result); setMediaMode("upload"); }
-              e.target.value = "";
-            }}
-          />
+          {/* Hidden file inputs */}
+          <input ref={imgInputRef} type="file" accept="image/*" className="hidden"
+            onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleFile(f, "image"); e.target.value = ""; }} />
+          <input ref={vidInputRef} type="file" accept="video/*" className="hidden"
+            onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleFile(f, "video"); e.target.value = ""; }} />
+          <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" className="hidden"
+            onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleFile(f, "file"); e.target.value = ""; }} />
 
-          {mediaMode === "upload" && uploadedDataUrl && (
-            <div className="mb-2 relative">
-              <img src={uploadedDataUrl} alt="" className="rounded-xl max-h-56 object-cover w-full" />
+          {/* Attachment preview */}
+          {attachment && (
+            <div className="mb-3 relative">
+              {attachment.type === "image" && (
+                <img src={attachment.preview} alt="" className="rounded-xl max-h-56 object-cover w-full" />
+              )}
+              {attachment.type === "video" && (
+                <video src={attachment.preview} controls className="rounded-xl max-h-56 w-full bg-black" />
+              )}
+              {attachment.type === "file" && (
+                <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3">
+                  <span className="text-3xl">📄</span>
+                  <p className="text-sm font-medium truncate">{attachment.name}</p>
+                </div>
+              )}
               <button
-                onClick={() => { setUploadedDataUrl(""); setMediaMode("none"); }}
-                className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-black"
+                onClick={() => setAttachment(null)}
+                className="absolute top-2 right-2 bg-black/70 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-black"
               >✕</button>
             </div>
           )}
-
-          {mediaMode === "image" && (
-            <div className="mb-2">
-              <input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Image URL (https://...)"
-                className="w-full bg-black/20 rounded-lg px-3 py-1.5 text-xs outline-none"
-              />
-              {imageUrl && (
-                <img src={imageUrl} alt="" className="mt-2 rounded-xl max-h-48 object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
-              )}
-            </div>
-          )}
-
-          {mediaMode === "gif" && (
-            <div className="mb-2">
-              <input
-                value={gifUrl}
-                onChange={(e) => setGifUrl(e.target.value)}
-                placeholder="GIF URL (https://media.giphy.com/...)"
-                className="w-full bg-black/20 rounded-lg px-3 py-1.5 text-xs outline-none"
-              />
-              {gifUrl && (
-                <img src={gifUrl} alt="" className="mt-2 rounded-xl max-h-48 object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />
-              )}
-            </div>
-          )}
-
-          {(uploadError) && <p className="text-red-400 text-xs mb-1">{uploadError}</p>}
+          {attError && <p className="text-red-400 text-xs mb-1">{attError}</p>}
 
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-2">
-              {/* Завантажити файл */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "upload" ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
-                title="Завантажити фото"
-              >
-                {uploading ? "⏳" : "📎"}
-              </button>
-              <button
-                onClick={() => setMediaMode((m) => m === "image" ? "none" : "image")}
-                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "image" ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
-                title="URL зображення"
-              >
-                🖼
-              </button>
-              <button
-                onClick={() => setMediaMode((m) => m === "gif" ? "none" : "gif")}
-                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "gif" ? "text-brain-accent2 bg-brain-accent2/10" : "text-white/30 hover:text-white"}`}
-                title="GIF"
-              >
-                GIF
-              </button>
+              {/* Media picker */}
+              <div className="relative" ref={pickerRef}>
+                <button
+                  onClick={() => setShowPicker((v) => !v)}
+                  disabled={attLoading}
+                  className={`text-xs px-2 py-1 rounded-lg transition-colors ${attachment ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
+                  title="Додати медіа"
+                >
+                  {attLoading ? "⏳" : "📎"}
+                </button>
+                {showPicker && (
+                  <div className="absolute bottom-full mb-2 left-0 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 min-w-[160px]">
+                    {[
+                      { label: "Фото", icon: "🖼️", action: () => imgInputRef.current?.click() },
+                      { label: "Відео", icon: "🎬", action: () => vidInputRef.current?.click() },
+                      { label: "Документ", icon: "📄", action: () => fileInputRef.current?.click() },
+                    ].map(({ label, icon, action }) => (
+                      <button key={label} onClick={action}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-white/10 transition-colors text-left">
+                        <span>{icon}</span><span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <span className={`text-xs ${content.length > 1800 ? "text-red-400" : "text-white/20"}`}>
                 {content.length} / 2000
               </span>
