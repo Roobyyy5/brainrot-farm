@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Post } from "../api/types";
+import { RANK_META } from "../lib/rankMeta";
 
 interface UserResult {
   username: string;
@@ -16,25 +17,33 @@ type Tab = "users" | "posts";
 export function Search() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<Tab>("users");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQ = searchParams.get("q") ?? "";
+
+  const [query, setQuery] = useState(initialQ);
+  const [tab, setTab] = useState<Tab>(initialQ.startsWith("#") ? "posts" : "users");
   const [users, setUsers] = useState<UserResult[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  async function search() {
-    const q = query.trim();
-    if (!q) return;
+  async function search(q?: string) {
+    const term = (q ?? query).trim();
+    if (!term) return;
     setIsSearching(true);
     setSearched(false);
+    setSearchParams({ q: term });
     try {
+      const isHashtag = term.startsWith("#");
       const [uRes, pRes] = await Promise.all([
-        api.get<{ data: UserResult[] }>(`/users/search?q=${encodeURIComponent(q)}`),
-        api.get<{ data: Post[] }>(`/posts/search?q=${encodeURIComponent(q)}&limit=20`),
+        isHashtag
+          ? Promise.resolve({ data: [] as UserResult[] })
+          : api.get<{ data: UserResult[] }>(`/users/search?q=${encodeURIComponent(term)}`),
+        api.get<{ data: Post[] }>(`/posts/search?q=${encodeURIComponent(term)}&limit=20`),
       ]);
       setUsers(uRes.data);
       setPosts(pRes.data);
+      if (isHashtag) setTab("posts");
     } catch {
       setUsers([]);
       setPosts([]);
@@ -43,6 +52,22 @@ export function Search() {
       setSearched(true);
     }
   }
+
+  // Auto-search when query is pre-filled from URL or hashtag click
+  useEffect(() => {
+    if (initialQ) { search(initialQ); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-search when URL param changes (e.g., clicking different hashtags)
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && q !== query) {
+      setQuery(q);
+      search(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="max-w-2xl">
@@ -53,16 +78,21 @@ export function Search() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && search()}
           placeholder={t("search.placeholder")}
-          className="flex-1 bg-black/30 rounded-xl px-4 py-2.5 text-sm outline-none"
+          className="flex-1 bg-black/30 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-brain-accent/40"
         />
         <button
-          onClick={search}
+          onClick={() => search()}
           disabled={isSearching || !query.trim()}
           className="bg-gradient-to-r from-brain-accent to-brain-accent2 text-sm font-semibold px-5 py-2.5 rounded-xl disabled:opacity-50"
         >
           {isSearching ? "..." : t("search.search")}
         </button>
       </div>
+
+      {/* Hashtag hint */}
+      {query.startsWith("#") && (
+        <p className="text-xs text-brain-accent2/70 mb-3">Searching for hashtag: {query}</p>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-4">
@@ -89,6 +119,7 @@ export function Search() {
         <div className="flex flex-col items-center gap-3 py-16 text-white/30">
           <span className="text-4xl">🔍</span>
           <p className="text-sm">{t("search.hint", "Enter a name or keyword to search")}</p>
+          <p className="text-xs text-white/20">Tip: search #hashtag to find posts by topic</p>
         </div>
       )}
 
@@ -115,7 +146,9 @@ export function Search() {
                 <div className="text-sm font-semibold truncate">{user.displayName ?? user.username}</div>
                 <div className="text-xs text-white/40">@{user.username}</div>
               </div>
-              <span className="text-xs text-white/30 capitalize shrink-0">{user.rank.toLowerCase().replace("_", " ")}</span>
+              <span className="text-xs text-white/40 shrink-0">
+                {RANK_META[user.rank as keyof typeof RANK_META]?.emoji} {(RANK_META[user.rank as keyof typeof RANK_META]?.label ?? user.rank).toLowerCase()}
+              </span>
             </Link>
           ))}
         </div>
@@ -134,9 +167,13 @@ export function Search() {
               className="glass-panel rounded-xl p-4 cursor-pointer hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-full bg-brain-accent/20 flex items-center justify-center text-xs font-bold shrink-0">
-                  {post.author.displayName[0].toUpperCase()}
-                </div>
+                {post.author.avatarUrl ? (
+                  <img src={post.author.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-brain-accent/20 flex items-center justify-center text-xs font-bold shrink-0">
+                    {post.author.displayName[0].toUpperCase()}
+                  </div>
+                )}
                 <span className="text-sm font-semibold">{post.author.displayName}</span>
                 <span className="text-xs text-white/30">@{post.author.username}</span>
                 <span className="ml-auto text-xs text-white/25">{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -145,6 +182,7 @@ export function Search() {
               <div className="flex gap-4 mt-2 text-xs text-white/30">
                 <span>♥ {post.likesCount}</span>
                 <span>💬 {post.commentsCount}</span>
+                <span>⟲ {post.repostsCount}</span>
               </div>
             </div>
           ))}

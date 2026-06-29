@@ -36,6 +36,9 @@ import { bpPurchaseRouter } from "./modules/web3/bpPurchase.routes.js";
 import { tokenomicsRouter } from "./modules/web3/tokenomics.routes.js";
 import { telegramWebhookRouter } from "./modules/telegram/telegram.webhook.routes.js";
 import { setWebhook } from "./modules/telegram/telegram.service.js";
+import { storiesRouter } from "./modules/stories/stories.routes.js";
+import { governanceRouter } from "./modules/governance/governance.routes.js";
+import { supportRouter } from "./modules/support/support.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -118,6 +121,9 @@ app.use("/api/token-conversion", tokenConversionRouter);
 app.use("/api/i18n", i18nRouter);
 app.use("/api/bp-purchase", bpPurchaseRouter);
 app.use("/api/tokenomics", tokenomicsRouter);
+app.use("/api/stories", storiesRouter);
+app.use("/api/governance", governanceRouter);
+app.use("/api/support", supportRouter);
 
 // Telegram webhook — no auth/rate-limit middleware (verified by secret header)
 app.use("/webhook/telegram", telegramWebhookRouter);

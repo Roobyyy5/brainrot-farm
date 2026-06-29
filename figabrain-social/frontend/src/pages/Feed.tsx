@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Post } from "../api/types";
 import { PostCard } from "../components/PostCard";
+import { StoriesBar } from "../components/StoriesBar";
 import { useAuth } from "../context/AuthContext";
 import { useRewardToast } from "../context/RewardToastContext";
 
 type FeedFilter = "all" | "following";
+type MediaMode = "none" | "image" | "gif";
 
 const DRAFT_KEY = "feed:draft";
 
@@ -17,7 +19,8 @@ export function Feed() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
   const [imageUrl, setImageUrl] = useState("");
-  const [showImageInput, setShowImageInput] = useState(false);
+  const [gifUrl, setGifUrl] = useState("");
+  const [mediaMode, setMediaMode] = useState<MediaMode>("none");
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -69,11 +72,16 @@ export function Feed() {
     setError(null);
     try {
       const imageUrls = imageUrl.trim() ? [imageUrl.trim()] : [];
-      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", { content, imageUrls });
+      const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", {
+        content,
+        imageUrls,
+        ...(gifUrl.trim() ? { gifUrl: gifUrl.trim() } : {}),
+      });
       setPosts((prev) => [res.data, ...prev]);
       setContent("");
       setImageUrl("");
-      setShowImageInput(false);
+      setGifUrl("");
+      setMediaMode("none");
       localStorage.removeItem(DRAFT_KEY);
       if (res.reward) { showReward(res.reward); refreshUser(); }
     } catch (err) {
@@ -104,6 +112,8 @@ export function Feed() {
 
   return (
     <div>
+      <StoriesBar />
+
       {user && (
         <div className="glass-panel rounded-2xl p-4 mb-6">
           <textarea
@@ -117,7 +127,7 @@ export function Feed() {
           />
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
 
-          {showImageInput && (
+          {mediaMode === "image" && (
             <div className="mb-2">
               <input
                 value={imageUrl}
@@ -131,14 +141,35 @@ export function Feed() {
             </div>
           )}
 
+          {mediaMode === "gif" && (
+            <div className="mb-2">
+              <input
+                value={gifUrl}
+                onChange={(e) => setGifUrl(e.target.value)}
+                placeholder="GIF URL (https://media.giphy.com/...)"
+                className="w-full bg-black/20 rounded-lg px-3 py-1.5 text-xs outline-none"
+              />
+              {gifUrl && (
+                <img src={gifUrl} alt="" className="mt-2 rounded-xl max-h-48 object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setShowImageInput((v) => !v); if (showImageInput) setImageUrl(""); }}
-                className={`text-xs px-2 py-1 rounded-lg transition-colors ${showImageInput ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
+                onClick={() => setMediaMode((m) => m === "image" ? "none" : "image")}
+                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "image" ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
                 title="Add image URL"
               >
                 🖼
+              </button>
+              <button
+                onClick={() => setMediaMode((m) => m === "gif" ? "none" : "gif")}
+                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "gif" ? "text-brain-accent2 bg-brain-accent2/10" : "text-white/30 hover:text-white"}`}
+                title="Add GIF"
+              >
+                GIF
               </button>
               <span className={`text-xs ${content.length > 1800 ? "text-red-400" : "text-white/20"}`}>
                 {content.length} / 2000

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNotificationBadge } from "../context/NotificationBadgeContext";
 
 const ITEMS = [
-  { to: "/", icon: "🏠", key: "feed" },
+  { to: "/", icon: "🏠", key: "feed", exact: true },
   { to: "/search", icon: "🔍", key: "search" },
   { to: "/notifications", icon: "🔔", key: "notifications" },
   { to: "/messages", icon: "✉️", key: "messages" },
@@ -20,7 +20,7 @@ export function BottomNav() {
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.to === "/"}
+          end={item.exact}
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors relative ${
               isActive ? "text-brain-accent" : "text-white/40"

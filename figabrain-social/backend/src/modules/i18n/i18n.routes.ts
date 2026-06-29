@@ -17,8 +17,8 @@ const i18nRateLimiter = rateLimit({
 // Static bundled translations — served directly, no API calls needed.
 const STATIC: Record<string, unknown> = {
   en: {
-    nav: { feed: "Feed", search: "Search", economy: "Brain Economy", messages: "Messages", wallet: "Wallet", leaderboard: "Leaderboard", notifications: "Notifications", profile: "Profile", settings: "Settings", rewards: "Rewards" },
-    settings: { title: "Profile Settings", displayName: "Display name", bio: "Bio", avatarUrl: "Avatar URL", language: "Language", searchLanguage: "Search language...", noLanguages: "No languages found.", save: "Save changes", saving: "Saving...", saved: "Saved!", logout: "Log out", saveError: "Failed to save. Please try again." },
+    nav: { feed: "Feed", search: "Search", economy: "Brain Economy", messages: "Messages", wallet: "Wallet", leaderboard: "Leaderboard", notifications: "Notifications", profile: "Profile", settings: "Settings", rewards: "Rewards", news: "Crypto News", governance: "Governance", bookmarks: "Bookmarks" },
+    settings: { title: "Profile Settings", displayName: "Display name", bio: "Bio", avatarUrl: "Avatar URL", language: "Language", save: "Save changes", saving: "Saving...", saved: "Saved!", logout: "Log out", saveError: "Failed to save. Please try again." },
     feed: { placeholder: "What's on your brain?", post: "Post", posting: "Posting...", like: "Like", comment: "Comment", repost: "Repost", report: "Report", noMore: "No more posts.", empty: "No posts yet. Be the first!", filterAll: "All", filterFollowing: "Following", followingEmpty: "Follow some users to see their posts here.", loading: "Loading..." },
     postDetail: { back: "← Back", edit: "Edit", delete: "Delete", save: "Save", saving: "Saving...", share: "Share", report: "Report", reported: "Reported", commentPlaceholder: "Write a comment...", reply: "Reply", noComments: "No comments yet.", loadMore: "Load more", loadingMore: "Loading...", confirmDelete: "Delete this post?", reportPrompt: "Reason for report (optional):" },
     season: { noParticipants: "No participants yet.", showLess: "Show less", showAll: "Show all ({{count}})", ending: "Ending soon..." },
@@ -35,7 +35,7 @@ const STATIC: Record<string, unknown> = {
   },
   uk: {
     nav: { feed: "Стрічка", search: "Пошук", economy: "Економіка", messages: "Повідомлення", wallet: "Гаманець", leaderboard: "Рейтинг", notifications: "Сповіщення", profile: "Профіль", settings: "Налаштування", rewards: "Нагороди" },
-    settings: { title: "Налаштування профілю", displayName: "Відображуване ім'я", bio: "Про себе", avatarUrl: "URL аватара", language: "Мова", searchLanguage: "Пошук мови...", noLanguages: "Мов не знайдено.", save: "Зберегти", saving: "Збереження...", saved: "Збережено!", logout: "Вийти", saveError: "Помилка збереження. Спробуйте ще раз." },
+    settings: { title: "Налаштування профілю", displayName: "Відображуване ім'я", bio: "Про себе", avatarUrl: "URL аватара", language: "Мова", save: "Зберегти", saving: "Збереження...", saved: "Збережено!", logout: "Вийти", saveError: "Помилка збереження. Спробуйте ще раз." },
     feed: { placeholder: "Що у тебе на думці?", post: "Опублікувати", posting: "Публікація...", like: "Лайк", comment: "Коментар", repost: "Репост", report: "Поскаржитись", noMore: "Більше дописів немає.", empty: "Ще немає дописів. Будь першим!", filterAll: "Всі", filterFollowing: "Підписки", followingEmpty: "Підпишись на користувачів, щоб бачити їхні дописи.", loading: "Завантаження..." },
     postDetail: { back: "← Назад", edit: "Редагувати", delete: "Видалити", save: "Зберегти", saving: "Збереження...", share: "Поділитись", report: "Поскаржитись", reported: "Скарга надіслана", commentPlaceholder: "Написати коментар...", reply: "Відповісти", noComments: "Коментарів ще немає.", loadMore: "Завантажити ще", loadingMore: "Завантаження...", confirmDelete: "Видалити цей допис?", reportPrompt: "Причина скарги (необов'язково):" },
     season: { noParticipants: "Поки немає учасників.", showLess: "Згорнути", showAll: "Показати всіх ({{count}})", ending: "Завершується..." },
@@ -52,7 +52,7 @@ const STATIC: Record<string, unknown> = {
   },
   ru: {
     nav: { feed: "Лента", search: "Поиск", economy: "Экономика", messages: "Сообщения", wallet: "Кошелёк", leaderboard: "Рейтинг", notifications: "Уведомления", profile: "Профиль", settings: "Настройки", rewards: "Награды" },
-    settings: { title: "Настройки профиля", displayName: "Отображаемое имя", bio: "О себе", avatarUrl: "URL аватара", language: "Язык", searchLanguage: "Поиск языка...", noLanguages: "Языков не найдено.", save: "Сохранить", saving: "Сохранение...", saved: "Сохранено!", logout: "Выйти", saveError: "Ошибка сохранения. Попробуйте ещё раз." },
+    settings: { title: "Настройки профиля", displayName: "Отображаемое имя", bio: "О себе", avatarUrl: "URL аватара", language: "Язык", save: "Сохранить", saving: "Сохранение...", saved: "Сохранено!", logout: "Выйти", saveError: "Ошибка сохранения. Попробуйте ещё раз." },
     feed: { placeholder: "Что у тебя на уме?", post: "Опубликовать", posting: "Публикация...", like: "Лайк", comment: "Комментарий", repost: "Репост", report: "Пожаловаться", noMore: "Больше постов нет.", empty: "Постов ещё нет. Будь первым!", filterAll: "Все", filterFollowing: "Подписки", followingEmpty: "Подпишись на пользователей, чтобы видеть их посты здесь.", loading: "Загрузка..." },
     postDetail: { back: "← Назад", edit: "Редактировать", delete: "Удалить", save: "Сохранить", saving: "Сохранение...", share: "Поделиться", report: "Пожаловаться", reported: "Жалоба отправлена", commentPlaceholder: "Написать комментарий...", reply: "Ответить", noComments: "Комментариев пока нет.", loadMore: "Загрузить ещё", loadingMore: "Загрузка...", confirmDelete: "Удалить этот пост?", reportPrompt: "Причина жалобы (необязательно):" },
     season: { noParticipants: "Участников пока нет.", showLess: "Свернуть", showAll: "Показать всех ({{count}})", ending: "Завершается..." },
@@ -139,14 +139,13 @@ async function googleTranslate(text: string, targetLang: string): Promise<string
 
 const CACHE_TTL = 60 * 60 * 24 * 30; // 30 days in seconds
 
-// BCP-47 lang tag: 2-3 letter code + optional script/region subtag
-const LANG_RE = /^[a-z]{2,3}(-[A-Za-z]{2,8})*$/;
+const ALLOWED_LANGS = new Set(["en","zh","es","hi","ar","bn","pt","ru","ja","fr","de","ko","tr","uk","id"]);
 
 // GET /api/i18n/:lang  →  returns i18next namespace JSON
 i18nRouter.get("/:lang", i18nRateLimiter, async (req, res) => {
   const { lang } = req.params;
-  if (!LANG_RE.test(lang)) {
-    return res.status(400).json({ error: "Invalid language code" });
+  if (!ALLOWED_LANGS.has(lang)) {
+    return res.status(400).json({ error: "Unsupported language" });
   }
 
   // Serve static translations immediately.

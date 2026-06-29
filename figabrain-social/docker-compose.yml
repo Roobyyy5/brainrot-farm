@@ -2,9 +2,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes
     ports:
       - "6379:6379"
+    volumes:
+      - figabrain_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -16,7 +18,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: figabrain
-      POSTGRES_PASSWORD: figabrain
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-figabrain}
       POSTGRES_DB: figabrain_social
     ports:
       - "5433:5432"
@@ -27,6 +29,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   backend:
     build:
@@ -40,26 +46,50 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4100
-      DATABASE_URL: postgresql://figabrain:figabrain@postgres:5432/figabrain_social?schema=public
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      DATABASE_URL: postgresql://figabrain:${POSTGRES_PASSWORD:-figabrain}@postgres:5432/figabrain_social?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
       JWT_ACCESS_TTL: 15m
       JWT_REFRESH_TTL: 30d
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      WALLET_ENCRYPTION_KEY: ${WALLET_ENCRYPTION_KEY}
-      CORS_ORIGIN: http://localhost:8080
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      WALLET_ENCRYPTION_KEY: ${WALLET_ENCRYPTION_KEY:?required}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       REDIS_URL: redis://redis:6379
+      # Antibot — tunable at runtime
+      ANTIBOT_MULTI_ACCOUNT_THRESHOLD: ${ANTIBOT_MULTI_ACCOUNT_THRESHOLD:-3}
+      ANTIBOT_REWARD_VELOCITY_THRESHOLD: ${ANTIBOT_REWARD_VELOCITY_THRESHOLD:-60}
+      ANTIBOT_POST_VELOCITY_THRESHOLD: ${ANTIBOT_POST_VELOCITY_THRESHOLD:-30}
+      ANTIBOT_SHADOW_BAN_SCORE: ${ANTIBOT_SHADOW_BAN_SCORE:-50}
     ports:
       - "4100:4100"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4100/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4100}
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   figabrain_postgres_data:
+  figabrain_redis_data:

@@ -15,6 +15,10 @@ import { Settings } from "./pages/Settings";
 import { Search } from "./pages/Search";
 import { Admin } from "./pages/Admin";
 import { Login } from "./pages/Login";
+import { News } from "./pages/News";
+import { Governance } from "./pages/Governance";
+import { Bookmarks } from "./pages/Bookmarks";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -36,6 +40,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedLayout><Feed /></ProtectedLayout>} />
       <Route path="/u/:username" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
       <Route path="/posts/:id" element={<ProtectedLayout><PostDetail /></ProtectedLayout>} />
@@ -48,6 +53,9 @@ export function App() {
       <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
       <Route path="/search" element={<ProtectedLayout><Search /></ProtectedLayout>} />
       <Route path="/admin" element={<ProtectedLayout><Admin /></ProtectedLayout>} />
+      <Route path="/news" element={<ProtectedLayout><News /></ProtectedLayout>} />
+      <Route path="/governance" element={<ProtectedLayout><Governance /></ProtectedLayout>} />
+      <Route path="/bookmarks" element={<ProtectedLayout><Bookmarks /></ProtectedLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

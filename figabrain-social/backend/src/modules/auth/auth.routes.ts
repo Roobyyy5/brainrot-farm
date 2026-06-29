@@ -12,6 +12,7 @@ import { prisma } from "../../lib/prisma.js";
 import { flagMultiAccountAbuse } from "../antibot/antibot.service.js";
 import { env } from "../../lib/env.js";
 import { generateWallet } from "../../lib/wallet.js";
+import { sendPasswordResetEmail } from "../../lib/mailer.js";
 
 export const authRouter = Router();
 
@@ -247,5 +248,142 @@ authRouter.post(
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     res.json({ data: { accessToken: result.accessToken, isNewUser: result.isNewUser } });
+  })
+);
+
+// ── Password reset ────────────────────────────────────────────────────────────
+
+const forgotPasswordSchema = z.object({
+  login: z.string().min(1), // username або email
+});
+
+authRouter.post(
+  "/forgot-password",
+  authRateLimiter,
+  validateBody(forgotPasswordSchema),
+  asyncHandler(async (req, res) => {
+    const { login } = req.body as { login: string };
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: login.toLowerCase() },
+          { email: login.toLowerCase() },
+        ],
+      },
+    });
+
+    // Завжди повертаємо OK, щоб не розкривати чи існує акаунт
+    if (!user || !user.passwordHash) {
+      res.json({ data: { sent: true } });
+      return;
+    }
+
+    const token = randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 година
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken: token, passwordResetExpiry: expiry },
+    });
+
+    const appUrl = env.APP_URL ?? `http://localhost:${env.PORT}`;
+    const emailSent = user.email
+      ? await sendPasswordResetEmail(user.email, token, appUrl).catch(() => false)
+      : false;
+
+    // В dev-режимі або якщо немає email — повертаємо токен прямо у відповіді
+    const devToken = (!emailSent && env.NODE_ENV !== "production") ? token : undefined;
+
+    res.json({ data: { sent: true, devToken } });
+  })
+);
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(6).max(100),
+});
+
+authRouter.post(
+  "/reset-password",
+  authRateLimiter,
+  validateBody(resetPasswordSchema),
+  asyncHandler(async (req, res) => {
+    const { token, password } = req.body as z.infer<typeof resetPasswordSchema>;
+
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new HttpError(400, "Токен недійсний або вичерпаний", "INVALID_RESET_TOKEN");
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null },
+    });
+
+    res.json({ data: { reset: true } });
+  })
+);
+
+// Оновлення email у налаштуваннях
+const updateEmailSchema = z.object({
+  email: z.string().email(),
+});
+
+authRouter.patch(
+  "/me/email",
+  asyncHandler(async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) throw new HttpError(401, "Unauthorized", "UNAUTHENTICATED");
+
+    const { email } = updateEmailSchema.parse(req.body);
+    const normalizedEmail = email.toLowerCase();
+
+    const token = authHeader.split(" ")[1];
+    const { sub } = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()) as { sub: string };
+
+    const existing = await prisma.user.findFirst({ where: { email: normalizedEmail, NOT: { id: sub } } });
+    if (existing) throw new HttpError(409, "Email вже використовується", "EMAIL_TAKEN");
+
+    await prisma.user.update({ where: { id: sub }, data: { email: normalizedEmail } });
+    res.json({ data: { updated: true } });
+  })
+);
+
+// Зміна пароля (потребує старий пароль)
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(1),
+  newPassword: z.string().min(6).max(100),
+});
+
+authRouter.post(
+  "/change-password",
+  authRateLimiter,
+  validateBody(changePasswordSchema),
+  asyncHandler(async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) throw new HttpError(401, "Unauthorized", "UNAUTHENTICATED");
+
+    const { oldPassword, newPassword } = req.body as z.infer<typeof changePasswordSchema>;
+    const token = authHeader.split(" ")[1];
+    const { sub } = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()) as { sub: string };
+
+    const user = await prisma.user.findUnique({ where: { id: sub } });
+    if (!user || !user.passwordHash) throw new HttpError(401, "Invalid credentials", "INVALID_CREDENTIALS");
+
+    const valid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!valid) throw new HttpError(401, "Invalid credentials", "INVALID_CREDENTIALS");
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({ where: { id: sub }, data: { passwordHash } });
+
+    res.json({ data: { changed: true } });
   })
 );

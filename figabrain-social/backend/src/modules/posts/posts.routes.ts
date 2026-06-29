@@ -347,3 +347,114 @@ postsRouter.post(
     res.json({ data: { reported: true } });
   })
 );
+
+// ── Bookmarks ────────────────────────────────────────────────────────────────
+
+postsRouter.get(
+  "/bookmarks/me",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId: req.user!.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        post: {
+          include: {
+            ...postInclude,
+            likes: { where: { userId: req.user!.id }, select: { userId: true } },
+          },
+        },
+      },
+    });
+    res.json({ data: bookmarks.map((b) => serializePost(b.post as RawPost, req.user!.id)) });
+  })
+);
+
+postsRouter.post(
+  "/:id/bookmark",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+    if (!post || post.moderation !== "ACTIVE") throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
+
+    const existing = await prisma.bookmark.findUnique({
+      where: { userId_postId: { userId: req.user!.id, postId: post.id } },
+    });
+
+    if (existing) {
+      await prisma.bookmark.delete({ where: { id: existing.id } });
+      res.json({ data: { bookmarked: false } });
+    } else {
+      await prisma.bookmark.create({ data: { userId: req.user!.id, postId: post.id } });
+      res.json({ data: { bookmarked: true } });
+    }
+  })
+);
+
+// ── Tips ─────────────────────────────────────────────────────────────────────
+
+const tipSchema = z.object({ amount: z.number().positive().max(10000) });
+
+postsRouter.post(
+  "/:id/tip",
+  requireAuth,
+  writeActionRateLimiter,
+  validateBody(tipSchema),
+  asyncHandler(async (req, res) => {
+    const { amount } = req.body as { amount: number };
+    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+    if (!post || post.moderation !== "ACTIVE") throw new HttpError(404, "Post not found", "POST_NOT_FOUND");
+    if (post.authorId === req.user!.id) throw new HttpError(400, "Cannot tip your own post", "INVALID_OPERATION");
+
+    const tipper = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!tipper || Number(tipper.brainPoints) < amount) {
+      throw new HttpError(400, "Insufficient Brain Points", "INSUFFICIENT_POINTS");
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: req.user!.id }, data: { brainPoints: { decrement: amount } } }),
+      prisma.user.update({ where: { id: post.authorId }, data: { brainPoints: { increment: amount } } }),
+      prisma.postTip.create({ data: { postId: post.id, fromUserId: req.user!.id, toUserId: post.authorId, amount } }),
+    ]);
+
+    createNotification({
+      recipient: { connect: { id: post.authorId } },
+      actor: { connect: { id: req.user!.id } },
+      type: "REWARD",
+      post: { connect: { id: post.id } },
+      message: `@${req.user!.username} tipped you ${amount} BP!`,
+    }).catch(() => {});
+
+    res.json({ data: { tipped: true, amount } });
+  })
+);
+
+// ── Trending hashtags ─────────────────────────────────────────────────────────
+
+postsRouter.get(
+  "/trending/hashtags",
+  asyncHandler(async (_req, res) => {
+    const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const posts = await prisma.post.findMany({
+      where: { moderation: "ACTIVE", createdAt: { gte: since } },
+      select: { content: true },
+      take: 500,
+    });
+
+    const counts: Record<string, number> = {};
+    for (const { content } of posts) {
+      const tags = content.match(/#([a-zA-Z]\w{0,49})/g) ?? [];
+      for (const tag of tags) {
+        const key = tag.toLowerCase();
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    }
+
+    const trending = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag, count]) => ({ tag, count }));
+
+    res.json({ data: trending });
+  })
+);

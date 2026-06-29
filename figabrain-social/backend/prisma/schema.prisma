@@ -118,6 +118,9 @@ model User {
   id                String    @id @default(uuid())
   telegramId        String?   @unique
   passwordHash      String?
+  email             String?   @unique
+  passwordResetToken  String?  @unique
+  passwordResetExpiry DateTime?
   username          String    @unique
   displayName       String
   bio               String    @default("")
@@ -169,6 +172,13 @@ model User {
   tokenConversions     TokenConversionRequest[]
   streakClaims         StreakMilestoneClaim[]
   bpPurchases          BpPurchase[]
+  bookmarks            Bookmark[]
+  stories              Story[]
+  storyViews           StoryView[]
+  tipsSent             PostTip[]            @relation("TipsSent")
+  tipsReceived         PostTip[]            @relation("TipsReceived")
+  governanceProposals  GovernanceProposal[]
+  governanceVotes      GovernanceVote[]
 
   @@index([brainPoints])
   @@index([xp])
@@ -407,6 +417,8 @@ model Post {
   likes         Like[]
   reposts       Repost[]
   notifications Notification[]
+  bookmarks     Bookmark[]
+  tips          PostTip[]
 
   @@index([authorId, createdAt])
   @@index([contentHash])
@@ -675,4 +687,86 @@ model TelegramAuthToken {
   telegramId String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([userId, createdAt])
+}
+
+model Story {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  imageUrl  String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  views StoryView[]
+
+  @@index([authorId, expiresAt])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  id        String   @id @default(uuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@unique([storyId, userId])
+}
+
+model PostTip {
+  id         String   @id @default(uuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fromUserId String
+  fromUser   User     @relation("TipsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User     @relation("TipsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+  amount     Decimal  @db.Decimal(20, 4)
+  createdAt  DateTime @default(now())
+
+  @@index([postId])
+  @@index([toUserId, createdAt])
+}
+
+model GovernanceProposal {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  endsAt      DateTime
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  votes GovernanceVote[]
+
+  @@index([status, endsAt])
+}
+
+model GovernanceVote {
+  id         String             @id @default(uuid())
+  proposalId String
+  proposal   GovernanceProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice     String
+  votingPower Decimal           @default(1) @db.Decimal(20, 4)
+  createdAt  DateTime           @default(now())
+
+  @@unique([proposalId, userId])
+  @@index([proposalId])
 }

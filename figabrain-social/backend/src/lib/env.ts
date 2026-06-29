@@ -20,6 +20,11 @@ const envSchema = z.object({
     .regex(/^[0-9a-fA-F]{64}$/, "WALLET_ENCRYPTION_KEY must be a 32-byte hex string"),
   CORS_ORIGIN: z.string().default("http://localhost:5174,http://localhost:5173"),
   REDIS_URL: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default("noreply@figabrain.com"),
 });
 
 const parsed = envSchema.safeParse(process.env);

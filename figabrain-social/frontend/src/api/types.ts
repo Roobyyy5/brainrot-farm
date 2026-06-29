@@ -117,6 +117,8 @@ export interface Post {
   commentsCount: number;
   repostsCount: number;
   likedByMe: boolean;
+  bookmarkedByMe?: boolean;
+  tipsTotal?: number;
 }
 
 export interface Comment {
@@ -168,4 +170,40 @@ export interface WalletInfo {
   tokenBalance: number;
   brainPoints: number;
   createdAt: string;
+}
+
+export interface Story {
+  id: string;
+  content: string;
+  imageUrl: string | null;
+  expiresAt: string;
+  createdAt: string;
+  author: { id: string; username: string; displayName: string; avatarUrl: string | null };
+  viewedByMe: boolean;
+}
+
+export interface GovernanceProposal {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  endsAt: string;
+  createdAt: string;
+  author: { username: string; displayName: string; avatarUrl: string | null };
+  _count?: { votes: number };
+  tally?: Record<string, number>;
+  myVote?: string | null;
+}
+
+export interface TrendingHashtag {
+  tag: string;
+  count: number;
+}
+
+export interface CryptoPrice {
+  id: string;
+  symbol: string;
+  name: string;
+  current_price: number;
+  price_change_percentage_24h: number;
 }
