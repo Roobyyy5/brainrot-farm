@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-import { apiFetch } from "../api/client";
+import { apiFetch, ApiError } from "../api/client";
 
 type Tab = "login" | "register";
 
@@ -55,12 +55,15 @@ export function Login() {
       await setTokensFromBotAuth(res.data.accessToken);
       navigate("/");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Помилка";
+      const code = err instanceof ApiError ? err.code : "";
+      const status = err instanceof ApiError ? err.status : 0;
       setError(
-        msg.includes("USERNAME_TAKEN") ? "Це ім'я вже зайняте" :
-        msg.includes("INVALID_CREDENTIALS") ? "Невірний логін або пароль" :
-        msg.includes("VALIDATION_ERROR") ? "Перевір правильність даних" :
-        "Помилка з'єднання з сервером"
+        code === "USERNAME_TAKEN" ? "Це ім'я вже зайняте" :
+        code === "INVALID_CREDENTIALS" ? "Невірний логін або пароль" :
+        code === "VALIDATION_ERROR" || status === 400 ? "Перевір правильність даних (мін. 3 символи, лише a-z 0-9 _)" :
+        code === "RATE_LIMITED" || status === 429 ? "Забагато спроб. Зачекай хвилину." :
+        code === "BANNED" ? "Акаунт заблоковано." :
+        "Сервер недоступний. Спробуй ще раз."
       );
     } finally {
       setLoading(false);
