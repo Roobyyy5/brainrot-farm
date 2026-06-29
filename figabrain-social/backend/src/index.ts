@@ -39,6 +39,7 @@ import { setWebhook } from "./modules/telegram/telegram.service.js";
 import { storiesRouter } from "./modules/stories/stories.routes.js";
 import { governanceRouter } from "./modules/governance/governance.routes.js";
 import { supportRouter } from "./modules/support/support.routes.js";
+import { pushRouter } from "./modules/push/push.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -124,6 +125,7 @@ app.use("/api/tokenomics", tokenomicsRouter);
 app.use("/api/stories", storiesRouter);
 app.use("/api/governance", governanceRouter);
 app.use("/api/support", supportRouter);
+app.use("/api/push", pushRouter);
 
 // Telegram webhook — no auth/rate-limit middleware (verified by secret header)
 app.use("/webhook/telegram", telegramWebhookRouter);

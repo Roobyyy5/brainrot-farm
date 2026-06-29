@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, apiFetch } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { LANGUAGES, getLanguageByCode } from "../lib/languages";
+import { useImageUpload } from "../hooks/useImageUpload";
 import i18n from "../i18n";
 
 export function Settings() {
@@ -56,6 +57,8 @@ export function Settings() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [isSavingPw, setIsSavingPw] = useState(false);
 
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const { upload: uploadAvatar, uploading: uploadingAvatar } = useImageUpload();
   const selectedLang = getLanguageByCode(language);
 
   function pickLanguage(code: string) {
@@ -145,19 +148,30 @@ export function Settings() {
 
         <div>
           <label className="text-xs text-white/40 block mb-1">{t("settings.avatarUrl")}</label>
+          <input ref={avatarFileRef} type="file" accept="image/*" className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const result = await uploadAvatar(file);
+              if (result) setAvatarUrl(result);
+              e.target.value = "";
+            }}
+          />
           <div className="flex gap-2 items-center">
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt=""
-                className="h-10 w-10 rounded-full object-cover shrink-0"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-            )}
+            <div className="relative shrink-0 cursor-pointer group" onClick={() => avatarFileRef.current?.click()}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center text-lg">👤</div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-xs">
+                {uploadingAvatar ? "⏳" : "📷"}
+              </div>
+            </div>
             <input
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://... або завантаж фото"
               className="flex-1 bg-black/30 rounded-lg px-3 py-2 text-sm outline-none"
             />
           </div>

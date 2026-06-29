@@ -6,6 +6,7 @@ import { requireAuth } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/errorHandler.js";
 import { validateBody } from "../../middleware/validate.js";
 import { writeActionRateLimiter } from "../../middleware/rateLimit.js";
+import { sendPushToUser } from "../../lib/webpush.js";
 
 export const messagesRouter = Router();
 
@@ -93,6 +94,14 @@ messagesRouter.post(
     const message = await prisma.message.create({
       data: { conversationId: conversation.id, senderId: req.user!.id, content: req.body.content },
     });
+
+    // Web push до отримувача
+    const sender = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { displayName: true } });
+    sendPushToUser(recipient.id, {
+      title: `💬 ${sender?.displayName ?? "FIGABRAIN"}`,
+      body: req.body.content.slice(0, 100),
+      url: "/messages",
+    }).catch(() => {});
 
     res.status(201).json({ data: message });
   })

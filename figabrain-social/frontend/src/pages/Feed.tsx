@@ -6,9 +6,10 @@ import { PostCard } from "../components/PostCard";
 import { StoriesBar } from "../components/StoriesBar";
 import { useAuth } from "../context/AuthContext";
 import { useRewardToast } from "../context/RewardToastContext";
+import { useImageUpload } from "../hooks/useImageUpload";
 
 type FeedFilter = "all" | "following";
-type MediaMode = "none" | "image" | "gif";
+type MediaMode = "none" | "image" | "gif" | "upload";
 
 const DRAFT_KEY = "feed:draft";
 
@@ -20,7 +21,10 @@ export function Feed() {
   const [content, setContent] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
   const [imageUrl, setImageUrl] = useState("");
   const [gifUrl, setGifUrl] = useState("");
+  const [uploadedDataUrl, setUploadedDataUrl] = useState("");
   const [mediaMode, setMediaMode] = useState<MediaMode>("none");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { upload, uploading, error: uploadError } = useImageUpload();
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -71,7 +75,9 @@ export function Feed() {
     setIsPosting(true);
     setError(null);
     try {
-      const imageUrls = imageUrl.trim() ? [imageUrl.trim()] : [];
+      const imageUrls = uploadedDataUrl
+        ? [uploadedDataUrl]
+        : imageUrl.trim() ? [imageUrl.trim()] : [];
       const res = await api.post<{ data: Post; reward?: { amount: number; xp: number } }>("/posts", {
         content,
         imageUrls,
@@ -81,6 +87,7 @@ export function Feed() {
       setContent("");
       setImageUrl("");
       setGifUrl("");
+      setUploadedDataUrl("");
       setMediaMode("none");
       localStorage.removeItem(DRAFT_KEY);
       if (res.reward) { showReward(res.reward); refreshUser(); }
@@ -127,6 +134,31 @@ export function Feed() {
           />
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
 
+          {/* Upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const result = await upload(file);
+              if (result) { setUploadedDataUrl(result); setMediaMode("upload"); }
+              e.target.value = "";
+            }}
+          />
+
+          {mediaMode === "upload" && uploadedDataUrl && (
+            <div className="mb-2 relative">
+              <img src={uploadedDataUrl} alt="" className="rounded-xl max-h-56 object-cover w-full" />
+              <button
+                onClick={() => { setUploadedDataUrl(""); setMediaMode("none"); }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-black"
+              >✕</button>
+            </div>
+          )}
+
           {mediaMode === "image" && (
             <div className="mb-2">
               <input
@@ -155,19 +187,30 @@ export function Feed() {
             </div>
           )}
 
+          {(uploadError) && <p className="text-red-400 text-xs mb-1">{uploadError}</p>}
+
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-2">
+              {/* Завантажити файл */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "upload" ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
+                title="Завантажити фото"
+              >
+                {uploading ? "⏳" : "📎"}
+              </button>
               <button
                 onClick={() => setMediaMode((m) => m === "image" ? "none" : "image")}
                 className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "image" ? "text-brain-accent bg-brain-accent/10" : "text-white/30 hover:text-white"}`}
-                title="Add image URL"
+                title="URL зображення"
               >
                 🖼
               </button>
               <button
                 onClick={() => setMediaMode((m) => m === "gif" ? "none" : "gif")}
                 className={`text-xs px-2 py-1 rounded-lg transition-colors ${mediaMode === "gif" ? "text-brain-accent2 bg-brain-accent2/10" : "text-white/30 hover:text-white"}`}
-                title="Add GIF"
+                title="GIF"
               >
                 GIF
               </button>

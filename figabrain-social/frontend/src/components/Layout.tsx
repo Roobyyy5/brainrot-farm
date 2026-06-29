@@ -5,9 +5,11 @@ import { BottomNav } from "./BottomNav";
 import { PriceTicker } from "./PriceTicker";
 import { RightSidebar } from "./RightSidebar";
 import { useAuth } from "../context/AuthContext";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export function Layout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  usePushNotifications(!!user);
 
   return (
     <div className="min-h-screen flex bg-brain-950 bg-brain-glow">

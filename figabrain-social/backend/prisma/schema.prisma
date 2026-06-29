@@ -179,6 +179,7 @@ model User {
   tipsReceived         PostTip[]            @relation("TipsReceived")
   governanceProposals  GovernanceProposal[]
   governanceVotes      GovernanceVote[]
+  pushSubscriptions    PushSubscription[]
 
   @@index([brainPoints])
   @@index([xp])
@@ -755,6 +756,18 @@ model GovernanceProposal {
   votes GovernanceVote[]
 
   @@index([status, endsAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model GovernanceVote {
