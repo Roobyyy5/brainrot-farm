@@ -14,7 +14,40 @@ const {
   TAP_STREAK_BONUS_PCT,
   TAP_STREAK_MAX_DAYS,
   BRAIN_SKINS,
+  SKILL_POINTS_PER_TAPS,
+  BATTLE_PASS_XP_PER_ENERGY,
+  TALENTS,
 } = require('../gameConfig');
+
+// Build skill-level map for a user (key → level)
+async function getUserSkills(client, telegramId) {
+  const { rows } = await client.query('SELECT skill_key, level FROM user_skills WHERE telegram_id=$1', [telegramId]);
+  const map = {};
+  for (const r of rows) map[r.skill_key] = r.level;
+  return map;
+}
+
+// Compute effective stat bonuses from skills + talents
+function skillBonuses(skills, talents) {
+  const t = new Set(talents || []);
+  return {
+    extraTapPower: skills.tap_force || 0,
+    extraCritChance: (skills.crit_chance || 0) * 0.03 + (t.has('crit_storm') ? 0.10 : 0),
+    critMultiplier: 10 + (skills.crit_multi || 0) * 5,
+    extraEnergyMax: (skills.energy_cap || 0) * 500 + (t.has('energy_god') ? 1000 : 0),
+    extraRegen: skills.regen_boost || 0,
+    efficiencyPct: (skills.efficiency || 0) * 10,
+    gemDropChance: (skills.gem_drops || 0) * 0.015 + (t.has('gem_magnet') ? 0.05 : 0),
+    cardBoostPct: (skills.card_boost || 0) * 15,
+    offlineAmpPct: (skills.offline_amp || 0) * 25,
+    bossLootBoostPct: (skills.boss_loot || 0) * 25 + (t.has('boss_slayer') ? 100 : 0),
+    skillRegenPerTap: skills.skill_regen || 0,
+    passiveLord: t.has('passive_lord'),
+    autoMaster: t.has('auto_master'),
+    eternalStreak: t.has('eternal_streak'),
+    doubleGlory: t.has('double_glory'),
+  };
+}
 const { computeCardOfflineIncome } = require('./cards');
 
 const router = express.Router();
@@ -130,8 +163,10 @@ router.get('/', asyncHandler(async (req, res) => {
     const profile = await getOrCreateProfile(client, telegramId);
     const now = Date.now();
 
-    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level);
-    const regenRate  = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level);
+    const skills = await getUserSkills(client, telegramId);
+    const bonuses = skillBonuses(skills, profile.talents_chosen || []);
+    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax;
+    const regenRate  = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen;
     const energy     = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
 
     // Credit all offline passive income atomically
@@ -146,8 +181,27 @@ router.get('/', asyncHandler(async (req, res) => {
       [telegramId]
     );
     const referralBoostPct = refRows[0].count * 2;
-    const boostedCardBP = Math.floor(cardBP * (1 + referralBoostPct / 100));
-    const offlineBP = autoBrainBP + boostedCardBP;
+    const cardMultiplier = (1 + referralBoostPct / 100) * (1 + bonuses.cardBoostPct / 100) * (bonuses.passiveLord ? 1.5 : 1);
+    const offlineMultiplier = 1 + bonuses.offlineAmpPct / 100;
+    const boostedCardBP = Math.floor(cardBP * cardMultiplier);
+    const boostedAutoBP = Math.floor(autoBrainBP * offlineMultiplier * (bonuses.autoMaster ? 2 : 1));
+
+    // Auto-tapper income (if boost active)
+    const autoTapperBoost = await client.query(
+      "SELECT expires_at, activated_at FROM user_boosts WHERE telegram_id=$1 AND boost_type='auto_tapper' AND expires_at>$2 ORDER BY expires_at DESC LIMIT 1",
+      [telegramId, now]
+    );
+    let autoTapperBP = 0;
+    if (autoTapperBoost.rows[0]) {
+      const tapPower = TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level);
+      const since = Math.min(now, Number(autoTapperBoost.rows[0].expires_at));
+      const activated = Number(autoTapperBoost.rows[0].activated_at);
+      const lastSeen = profile.last_seen_at || activated;
+      const elapsedSec = Math.max(0, (since - Math.max(lastSeen, activated)) / 1000);
+      autoTapperBP = Math.floor(elapsedSec * 3 * tapPower); // 3 taps/sec
+    }
+
+    const offlineBP = boostedAutoBP + boostedCardBP + autoTapperBP;
 
     if (offlineBP > 0) {
       await client.query(
@@ -173,7 +227,7 @@ router.get('/', asyncHandler(async (req, res) => {
       energy,
       energyMax,
       regenRate,
-      tapPower:        TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level),
+      tapPower:        TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower,
       multiTap:        TAPPER_UPGRADES.MULTI_TAP.getEffect(profile.multi_tap_level),
       autoBrainPerMin: TAPPER_UPGRADES.AUTO_BRAIN.getEffect(profile.auto_brain_level),
       levels: {
@@ -187,8 +241,11 @@ router.get('/', asyncHandler(async (req, res) => {
       totalBpEarned:    profile.total_bp_earned,
       prestige:         profile.prestige,
       offlineBP:        offlineBP,
-      cardIncomePerHour: Math.floor(cardPerHour * (1 + referralBoostPct / 100)),
+      cardIncomePerHour: Math.floor(cardPerHour * cardMultiplier),
       referralBoostPct,
+      skillPoints: profile.skill_points || 0,
+      talentPoints: profile.talent_points || 0,
+      talentsChosen: profile.talents_chosen || [],
       rank:             rankForTaps(profile.total_taps),
       tapStreak:        profile.tap_streak || 0,
       streakBonusPct:   Math.min((profile.tap_streak || 0) * TAP_STREAK_BONUS_PCT, TAP_STREAK_MAX_DAYS * TAP_STREAK_BONUS_PCT),
@@ -220,11 +277,14 @@ router.post('/tap', asyncHandler(async (req, res) => {
   const result = await withTransaction(async (client) => {
     const profile = await getOrCreateProfile(client, telegramId);
 
-    const energyMax = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level);
-    const regenRate = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level);
-    const tapPower  = TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level);
+    const skills  = await getUserSkills(client, telegramId);
+    const bonuses = skillBonuses(skills, profile.talents_chosen || []);
+    const energyMax = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax;
+    const regenRate = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen;
+    const tapPower  = TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower;
     const multiTap  = TAPPER_UPGRADES.MULTI_TAP.getEffect(profile.multi_tap_level);
     const now       = Date.now();
+    const prevRank  = rankForTaps(profile.total_taps);
 
     // Anti-cheat: cap by elapsed time since last batch
     const elapsedSec = profile.last_energy_at > 0
@@ -234,18 +294,23 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const effectiveClicks = Math.min(count, maxClicks);
 
     const currentEnergy = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
-    const energyUsed = Math.min(effectiveClicks * multiTap, currentEnergy);
+    const energyUsed = Math.min(effectiveClicks * effectiveMultiTap, currentEnergy);
 
     if (energyUsed === 0) {
       return { bpEarned: 0, energy: currentEnergy, energyMax, isCrit: false, unlockedAchievements: [] };
     }
+
+    // Efficiency skill: reduce energy cost
+    const efficiencyMult = 1 - (bonuses.efficiencyPct / 100);
+    const effectiveMultiTap = Math.max(1, Math.floor(multiTap * efficiencyMult));
 
     // Tap streak
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(now - 86_400_000).toISOString().slice(0, 10);
     let newStreak = profile.tap_streak || 0;
     if (profile.last_tap_date !== today) {
-      newStreak = profile.last_tap_date === yesterday ? newStreak + 1 : 1;
+      const resetStreak = bonuses.eternalStreak ? newStreak : 1;
+      newStreak = profile.last_tap_date === yesterday ? newStreak + 1 : resetStreak;
     }
     const streakBonusPct = Math.min(newStreak * TAP_STREAK_BONUS_PCT, TAP_STREAK_MAX_DAYS * TAP_STREAK_BONUS_PCT);
 
@@ -257,9 +322,21 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const boostMultiplier = boostRow.rows[0] ? 2 : 1;
 
     const effectiveTapPower = tapPower * (1 + streakBonusPct / 100) * boostMultiplier;
-    const isCrit    = Math.random() < TAPPER_CRIT_CHANCE;
-    const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? 10 : 1));
+    const critChance = TAPPER_CRIT_CHANCE + bonuses.extraCritChance;
+    const isCrit    = Math.random() < critChance;
+    const critMult  = bonuses.critMultiplier;
+    const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? critMult : 1));
     const newEnergy = currentEnergy - energyUsed;
+
+    // Gem drop luck
+    const gemDrop = Math.random() < bonuses.gemDropChance ? 1 : 0;
+
+    // Skill points earned
+    const skillPtsEarned = Math.floor(energyUsed / SKILL_POINTS_PER_TAPS)
+      + Math.floor(energyUsed * (bonuses.skillRegenPerTap / 25));
+
+    // Battle Pass XP
+    const bpXpEarned = Math.floor(energyUsed * BATTLE_PASS_XP_PER_ENERGY);
 
     // Schedule energy-full notification
     const energyNotifAt  = newEnergy < energyMax
@@ -272,10 +349,15 @@ router.post('/tap', asyncHandler(async (req, res) => {
          total_taps = total_taps + $3,
          total_bp_earned = total_bp_earned + $4,
          tap_streak = $5, last_tap_date = $6,
-         energy_notif_at = $7, energy_notif_sent = FALSE
+         energy_notif_at = $7, energy_notif_sent = FALSE,
+         skill_points = skill_points + $9,
+         bp_xp = bp_xp + $10
        WHERE telegram_id = $8`,
-      [newEnergy, now, energyUsed, bpEarned, newStreak, today, energyNotifAt, telegramId]
+      [newEnergy, now, energyUsed, bpEarned, newStreak, today, energyNotifAt, telegramId, skillPtsEarned, bpXpEarned]
     );
+    if (gemDrop > 0) {
+      await client.query('UPDATE users SET gems=gems+$1 WHERE telegram_id=$2', [gemDrop, telegramId]);
+    }
     await client.query(
       'UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2',
       [bpEarned, telegramId]
@@ -289,10 +371,13 @@ router.post('/tap', asyncHandler(async (req, res) => {
       'SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]
     );
     const unlockedAchievements = await checkTapperAchievements(client, telegramId, updatedProfile.rows[0]);
+    const newRank = rankForTaps(updatedProfile.rows[0].total_taps);
+    const rankUp = newRank.name !== prevRank.name ? newRank : null;
 
     return {
-      bpEarned, energy: newEnergy, energyMax, isCrit, unlockedAchievements,
+      bpEarned, energy: newEnergy, energyMax, isCrit, critMult, unlockedAchievements,
       streakBonusPct, boostActive: !!boostRow.rows[0],
+      gemDrop, skillPtsEarned, rankUp,
     };
   });
 
@@ -364,16 +449,62 @@ router.post('/prestige', asyncHandler(async (req, res) => {
          energy = 1000, last_energy_at = $1,
          tap_power_level = 0, energy_max_level = 0, regen_rate_level = 0,
          multi_tap_level = 0, auto_brain_level = 0,
-         prestige = prestige + 1
+         prestige = prestige + 1,
+         talent_points = talent_points + 1
        WHERE telegram_id = $2`,
       [Date.now(), telegramId]
     );
     const unlocked = await checkTapperAchievements(client, telegramId,
       { ...profile, prestige: profile.prestige + 1 }
     );
-    return { success: true, unlockedAchievements: unlocked };
+    // Offer 3 random talent choices the user doesn't yet have
+    const chosen = profile.talents_chosen || [];
+    const available = TALENTS.filter((t) => !chosen.includes(t.key));
+    const shuffled = available.sort(() => Math.random() - 0.5).slice(0, 3);
+    return { success: true, unlockedAchievements: unlocked, talentChoices: shuffled };
   });
 
+  if (result.error) return res.status(400).json({ error: result.error });
+  res.json(result);
+}));
+
+// GET /tapper/talents
+router.get('/talents', asyncHandler(async (req, res) => {
+  const telegramId = req.tgUser.id;
+  const { rows } = await pool.query(
+    'SELECT talent_points, talents_chosen FROM tapper_profiles WHERE telegram_id=$1', [telegramId]
+  );
+  const talent_points = rows[0]?.talent_points || 0;
+  const chosen = rows[0]?.talents_chosen || [];
+  const available = TALENTS.filter((t) => !chosen.includes(t.key));
+  res.json({
+    talentPoints: talent_points,
+    talents: TALENTS.map((t) => ({ ...t, owned: chosen.includes(t.key) })),
+    choices: talent_points > 0 ? available.sort(() => Math.random() - 0.5).slice(0, 3) : [],
+  });
+}));
+
+// POST /tapper/talent
+router.post('/talent', asyncHandler(async (req, res) => {
+  const telegramId = req.tgUser.id;
+  const { talentKey } = req.body;
+  if (!TALENTS.find((t) => t.key === talentKey)) return res.status(400).json({ error: 'Unknown talent' });
+
+  const result = await withTransaction(async (client) => {
+    const { rows } = await client.query(
+      'SELECT talent_points, talents_chosen FROM tapper_profiles WHERE telegram_id=$1 FOR UPDATE', [telegramId]
+    );
+    if (!rows[0] || rows[0].talent_points < 1) return { error: 'No talent points' };
+    if ((rows[0].talents_chosen || []).includes(talentKey)) return { error: 'Already have this talent' };
+    await client.query(
+      `UPDATE tapper_profiles SET
+         talent_points = talent_points - 1,
+         talents_chosen = array_append(talents_chosen, $1)
+       WHERE telegram_id = $2`,
+      [talentKey, telegramId]
+    );
+    return { success: true };
+  });
   if (result.error) return res.status(400).json({ error: result.error });
   res.json(result);
 }));

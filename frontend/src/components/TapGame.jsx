@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import BossCard from './BossCard';
 import OfflineModal from './OfflineModal';
+import RankUpModal from './RankUpModal';
 
 const PARTICLE_COLORS = ['#ff4fa3', '#8b5cf6', '#00e5ff', '#f5c344', '#34d399'];
 const RANK_DATA = [
@@ -35,6 +36,10 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [loading, setLoading] = useState(true);
   const [prestiging, setPrestiging] = useState(false);
   const [boostSecsLeft, setBoostSecsLeft] = useState(0);
+  const [rankUpRank, setRankUpRank] = useState(null);
+  const [critFlash, setCritFlash] = useState(false);
+  const [talentChoices, setTalentChoices] = useState(null);
+  const [choosingTalent, setChoosingTalent] = useState(null);
 
   const pendingTaps = useRef(0);
   const lastTapAt = useRef(0);
@@ -89,8 +94,10 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       if (res.isCrit) {
         haptic('heavy');
         setShaking(true);
-        setTimeout(() => setShaking(false), 350);
+        setCritFlash(true);
+        setTimeout(() => { setShaking(false); setCritFlash(false); }, 400);
       }
+      if (res.rankUp) setRankUpRank(res.rankUp);
     }).catch(() => {});
   };
 
@@ -157,12 +164,25 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     try {
       const res = await api.tapper.prestige();
       if (res.unlockedAchievements?.length) onAchRef.current?.(res.unlockedAchievements);
+      if (res.talentChoices?.length) setTalentChoices(res.talentChoices);
       const fresh = await api.tapper.me();
       setProfile(fresh);
       setEnergy(fresh.energy);
       setEnergyMax(fresh.energyMax);
     } catch (err) { alert(err.message || 'Cannot prestige yet'); }
     finally { setPrestiging(false); }
+  };
+
+  const handleChooseTalent = async (talentKey) => {
+    if (choosingTalent) return;
+    setChoosingTalent(talentKey);
+    try {
+      await api.tapper.chooseTalent(talentKey);
+      setTalentChoices(null);
+      const fresh = await api.tapper.me();
+      setProfile(fresh);
+    } catch (err) { alert(err.message); }
+    finally { setChoosingTalent(null); }
   };
 
   if (loading) return <div className="tap-loading">Loading tapper...</div>;
@@ -181,9 +201,33 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const streakBonus = profile?.streakBonusPct || 0;
 
   return (
-    <div className={`tap-game${shaking ? ' tap-game--shaking' : ''}`}>
+    <div className={`tap-game${shaking ? ' tap-game--shaking' : ''}${critFlash ? ' tap-game--crit' : ''}`}>
       {offlineBP > 0 && (
         <OfflineModal bp={offlineBP} onClose={() => setOfflineBP(0)} />
+      )}
+      <RankUpModal rank={rankUpRank} onClose={() => setRankUpRank(null)} />
+
+      {talentChoices && (
+        <div className="talent-modal-overlay">
+          <div className="talent-modal">
+            <div className="talent-modal-title">🌟 Choose Your Talent!</div>
+            <div className="talent-modal-sub">Pick one permanent upgrade:</div>
+            {talentChoices.map((t) => (
+              <button
+                key={t.key}
+                className="talent-choice-btn"
+                onClick={() => handleChooseTalent(t.key)}
+                disabled={!!choosingTalent}
+              >
+                <span className="talent-choice-icon">{t.icon}</span>
+                <div>
+                  <div className="talent-choice-name">{t.name}</div>
+                  <div className="talent-choice-desc">{t.desc}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Top row: rank + streak + boost */}

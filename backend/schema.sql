@@ -182,3 +182,104 @@ CREATE TABLE IF NOT EXISTS user_boosts (
 ALTER TABLE boss_fights ADD COLUMN IF NOT EXISTS notif_sent BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_user_boosts_user ON user_boosts(telegram_id, expires_at);
+
+-- ── Round 4: Skill Tree ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_skills (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  skill_key   TEXT    NOT NULL,
+  level       INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (telegram_id, skill_key)
+);
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS skill_points   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS talent_points  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS talents_chosen TEXT[]  NOT NULL DEFAULT '{}';
+
+-- ── Round 4: Battle Pass ──────────────────────────────────────────────────────
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS bp_xp     INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS bp_premium BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE TABLE IF NOT EXISTS battle_pass_claims (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  season      INTEGER NOT NULL,
+  level       INTEGER NOT NULL,
+  is_premium  BOOLEAN NOT NULL DEFAULT FALSE,
+  claimed_at  BIGINT  NOT NULL,
+  UNIQUE (telegram_id, season, level, is_premium)
+);
+
+-- ── Round 4: Login Streak ─────────────────────────────────────────────────────
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_streak    INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_date TEXT    NOT NULL DEFAULT '';
+
+-- ── Round 4: Guilds ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guilds (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name        TEXT    NOT NULL UNIQUE,
+  tag         TEXT    NOT NULL UNIQUE,
+  owner_id    TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  description TEXT    NOT NULL DEFAULT '',
+  level       INTEGER NOT NULL DEFAULT 1,
+  xp          BIGINT  NOT NULL DEFAULT 0,
+  created_at  BIGINT  NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guild_members (
+  id                   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id             INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  telegram_id          TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  role                 TEXT    NOT NULL DEFAULT 'member',
+  weekly_contribution  BIGINT  NOT NULL DEFAULT 0,
+  joined_at            BIGINT  NOT NULL,
+  UNIQUE (telegram_id)
+);
+CREATE TABLE IF NOT EXISTS guild_boss_fights (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id    INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  name        TEXT    NOT NULL,
+  hp          BIGINT  NOT NULL,
+  max_hp      BIGINT  NOT NULL,
+  reward_gems INTEGER NOT NULL DEFAULT 0,
+  ends_at     BIGINT  NOT NULL,
+  completed   BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  BIGINT  NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guild_boss_hits (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  fight_id    INTEGER NOT NULL REFERENCES guild_boss_fights(id) ON DELETE CASCADE,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  damage      BIGINT  NOT NULL DEFAULT 0,
+  rewarded    BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (fight_id, telegram_id)
+);
+
+-- ── Round 4: Tap Duels ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tap_duels (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  challenger_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  opponent_id   TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  stake_gems    INTEGER NOT NULL DEFAULT 5,
+  challenger_bp BIGINT  NOT NULL DEFAULT 0,
+  opponent_bp   BIGINT  NOT NULL DEFAULT 0,
+  status        TEXT    NOT NULL DEFAULT 'pending',
+  winner_id     TEXT,
+  starts_at     BIGINT,
+  ends_at       BIGINT,
+  created_at    BIGINT  NOT NULL
+);
+
+-- ── Round 4: Daily Shop ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS daily_shop_purchases (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  item_key    TEXT    NOT NULL,
+  date_key    TEXT    NOT NULL,
+  bought_at   BIGINT  NOT NULL,
+  UNIQUE (telegram_id, item_key, date_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_skills_user         ON user_skills(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_bp_claims_user           ON battle_pass_claims(telegram_id, season);
+CREATE INDEX IF NOT EXISTS idx_guild_members_guild      ON guild_members(guild_id);
+CREATE INDEX IF NOT EXISTS idx_guild_boss_fights_guild  ON guild_boss_fights(guild_id, completed);
+CREATE INDEX IF NOT EXISTS idx_tap_duels_players        ON tap_duels(challenger_id, opponent_id, status);
+CREATE INDEX IF NOT EXISTS idx_daily_shop_purchases     ON daily_shop_purchases(telegram_id, date_key);

@@ -41,6 +41,8 @@ export const api = {
     leaderboard: () => request('/tapper/leaderboard'),
     boss: () => request('/tapper/boss'),
     bossTap: (bossId, count) => request('/tapper/boss/tap', { method: 'POST', body: { bossId, count } }),
+    talents: () => request('/tapper/talents'),
+    chooseTalent: (talentKey) => request('/tapper/talent', { method: 'POST', body: { talentKey } }),
   },
 
   cards: {
@@ -62,5 +64,44 @@ export const api = {
     status: () => request('/gemshop'),
     buy: (key) => request('/gemshop/buy', { method: 'POST', body: { key } }),
     equipSkin: (skin) => request('/gemshop/skin', { method: 'POST', body: { skin } }),
+  },
+
+  skills: {
+    list: () => request('/skills'),
+    upgrade: (skillKey) => request('/skills/upgrade', { method: 'POST', body: { skillKey } }),
+  },
+
+  battlepass: {
+    status: () => request('/battlepass'),
+    claim: (level, premium) => request('/battlepass/claim', { method: 'POST', body: { level, premium } }),
+    buyPremium: () => request('/battlepass/buy-premium', { method: 'POST' }),
+  },
+
+  loginstreak: {
+    status: () => request('/loginstreak'),
+    claim: () => request('/loginstreak/claim', { method: 'POST' }),
+  },
+
+  guilds: {
+    my: () => request('/guilds/my'),
+    search: (q) => request(`/guilds/search?q=${encodeURIComponent(q)}`),
+    create: (name, tag, description) => request('/guilds/create', { method: 'POST', body: { name, tag, description } }),
+    join: (guildId) => request('/guilds/join', { method: 'POST', body: { guildId } }),
+    leave: () => request('/guilds/leave', { method: 'POST' }),
+    bossTap: (count) => request('/guilds/boss/tap', { method: 'POST', body: { count } }),
+  },
+
+  duels: {
+    list: () => request('/duels'),
+    challenge: (username, stakeGems) => request('/duels/challenge', { method: 'POST', body: { username, stakeGems } }),
+    accept: (duelId) => request('/duels/accept', { method: 'POST', body: { duelId } }),
+    decline: (duelId) => request('/duels/decline', { method: 'POST', body: { duelId } }),
+    tap: (duelId, bp) => request('/duels/tap', { method: 'POST', body: { duelId, bp } }),
+    resolve: (duelId) => request('/duels/resolve', { method: 'POST', body: { duelId } }),
+  },
+
+  dailyshop: {
+    status: () => request('/dailyshop'),
+    buy: (itemKey) => request('/dailyshop/buy', { method: 'POST', body: { itemKey } }),
   },
 };

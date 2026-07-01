@@ -18,6 +18,12 @@ const cardsRoute = require('./routes/cards');
 const wheelRoute = require('./routes/wheel');
 const missionsRoute = require('./routes/missions');
 const gemshopRoute = require('./routes/gemshop');
+const skillsRoute = require('./routes/skills');
+const battlepassRoute = require('./routes/battlepass');
+const loginstreakRoute = require('./routes/loginstreak');
+const guildsRoute = require('./routes/guilds');
+const duelsRoute = require('./routes/duels');
+const { router: dailyshopRoute } = require('./routes/dailyshop');
 
 const app = express();
 app.use(cors());
@@ -64,7 +70,13 @@ app.use('/tapper', telegramAuthMiddleware, tapperLimiter, tapperRoute);
 app.use('/cards', telegramAuthMiddleware, actionLimiter, cardsRoute);
 app.use('/wheel', telegramAuthMiddleware, actionLimiter, wheelRoute);
 app.use('/missions', telegramAuthMiddleware, actionLimiter, missionsRoute);
-app.use('/gemshop', telegramAuthMiddleware, actionLimiter, gemshopRoute);
+app.use('/gemshop',     telegramAuthMiddleware, actionLimiter, gemshopRoute);
+app.use('/skills',     telegramAuthMiddleware, actionLimiter, skillsRoute);
+app.use('/battlepass', telegramAuthMiddleware, actionLimiter, battlepassRoute);
+app.use('/loginstreak',telegramAuthMiddleware, actionLimiter, loginstreakRoute);
+app.use('/guilds',     telegramAuthMiddleware, actionLimiter, guildsRoute);
+app.use('/duels',      telegramAuthMiddleware, actionLimiter, duelsRoute);
+app.use('/dailyshop',  telegramAuthMiddleware, actionLimiter, dailyshopRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would

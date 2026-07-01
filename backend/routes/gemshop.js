@@ -1,7 +1,8 @@
 const express = require('express');
 const { withTransaction, pool } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
-const { GEMSHOP_ITEMS, BRAIN_SKINS, TAPPER_UPGRADES, TAPPER_MAX_OFFLINE_HOURS } = require('../gameConfig');
+const { GEMSHOP_ITEMS, BRAIN_SKINS, TAPPER_UPGRADES, TAPPER_MAX_OFFLINE_HOURS, pickLootBoxPrize } = require('../gameConfig');
+const { applyLootPrize } = require('./dailyshop');
 const { computeCardOfflineIncome } = require('./cards');
 
 const router = express.Router();
@@ -31,6 +32,12 @@ router.get('/', asyncHandler(async (req, res) => {
 
   const allUnlocked = [...new Set([...profile.skins_unlocked, ...autoUnlocked, 'default'])];
 
+  const autoTapperBoost = await pool.query(
+    "SELECT expires_at FROM user_boosts WHERE telegram_id=$1 AND boost_type='auto_tapper' AND expires_at>$2 ORDER BY expires_at DESC LIMIT 1",
+    [telegramId, now]
+  );
+  const autoTapperExpiresAt = autoTapperBoost.rows[0]?.expires_at || null;
+
   const items = GEMSHOP_ITEMS.map((item) => ({
     ...item,
     owned: item.type === 'skin' ? allUnlocked.includes(item.key) : false,
@@ -47,6 +54,7 @@ router.get('/', asyncHandler(async (req, res) => {
     })),
     selectedSkin: profile.selected_skin,
     activeBoostExpiresAt,
+    autoTapperExpiresAt,
   });
 }));
 
@@ -103,6 +111,25 @@ router.post('/buy', asyncHandler(async (req, res) => {
         }
         return { success: true, bonusCoins: total };
       }
+    }
+
+    if (key === 'loot_box') {
+      const prize = pickLootBoxPrize();
+      await applyLootPrize(client, telegramId, prize, now);
+      return { success: true, lootResult: prize };
+    }
+
+    if (key === 'auto_tapper') {
+      await client.query(
+        'INSERT INTO user_boosts (telegram_id,boost_type,expires_at,activated_at) VALUES($1,$2,$3,$4)',
+        [telegramId, 'auto_tapper', now + item.durationMs, now]
+      );
+      return { success: true };
+    }
+
+    if (item.type === 'skill_points') {
+      await client.query('UPDATE tapper_profiles SET skill_points=skill_points+$1 WHERE telegram_id=$2', [item.amount, telegramId]);
+      return { success: true };
     }
 
     if (item.type === 'skin') {

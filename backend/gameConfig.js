@@ -155,17 +155,174 @@ module.exports = {
   // ─── Gem shop ────────────────────────────────────────────────────────────────
 
   GEMSHOP_ITEMS: [
-    { key: 'energy_refill', name: 'Energy Refill',   icon: '⚡', description: 'Instantly fill energy to max',         cost: 10,  type: 'instant' },
-    { key: '2x_tap',        name: '2× Tap Boost',    icon: '🔥', description: '2× tap power for 5 minutes',          cost: 15,  type: 'boost', durationMs: 5 * 60 * 1000 },
-    { key: 'auto_income',   name: '8h Passive Claim',icon: '🤖', description: 'Instantly collect 8h passive income', cost: 20,  type: 'instant' },
-    { key: 'skin_fire',     name: 'Fire Brain 🔥',   icon: '🔥', description: '🔥🧠 blazing brain skin',             cost: 50,  type: 'skin' },
-    { key: 'skin_diamond',  name: 'Diamond Brain 💎',icon: '💎', description: '💎🧠 crystalline prestige skin',       cost: 75,  type: 'skin' },
-    { key: 'skin_crown',    name: 'Crown Brain 👑',  icon: '👑', description: '👑🧠 royal skin for true legends',     cost: 100, type: 'skin' },
+    { key: 'energy_refill', name: 'Energy Refill',     icon: '⚡', description: 'Instantly fill energy to max',          cost: 10,  type: 'instant' },
+    { key: '2x_tap',        name: '2× Tap Boost',      icon: '🔥', description: '2× tap power for 5 minutes',           cost: 15,  type: 'boost',  durationMs: 5 * 60 * 1000 },
+    { key: 'auto_income',   name: '8h Passive Claim',  icon: '🤖', description: 'Instantly collect 8h passive income',  cost: 20,  type: 'instant' },
+    { key: 'loot_box',      name: 'Mystery Brain',     icon: '🎁', description: 'Random prize: gems, boost or rare skin', cost: 30, type: 'loot_box' },
+    { key: 'auto_tapper',   name: 'Auto-Tapper 1h',   icon: '🦾', description: 'Auto-taps 3/sec for 1 hour',           cost: 40,  type: 'auto_tapper', durationMs: 60 * 60 * 1000 },
+    { key: 'skin_fire',     name: 'Fire Brain 🔥',     icon: '🔥', description: '🔥🧠 blazing brain skin',              cost: 50,  type: 'skin' },
+    { key: 'skin_diamond',  name: 'Diamond Brain 💎',  icon: '💎', description: '💎🧠 crystalline prestige skin',        cost: 75,  type: 'skin' },
+    { key: 'skin_crown',    name: 'Crown Brain 👑',    icon: '👑', description: '👑🧠 royal skin for true legends',      cost: 100, type: 'skin' },
   ],
 
   // ─── Weekly league ───────────────────────────────────────────────────────────
 
   WEEKLY_LEAGUE_GEMS: [100, 75, 50, 30, 25, 25, 20, 20, 15, 15],
+
+  // ─── Skill tree ──────────────────────────────────────────────────────────────
+
+  SKILL_TREE: {
+    power: {
+      label: 'Power', icon: '⚡',
+      skills: [
+        { key: 'tap_force',   name: 'Tap Force',    maxLevel: 5, costs: [200,500,1000,2000,5000],    desc: '+1 tap power per level' },
+        { key: 'crit_chance', name: 'Critical Eye', maxLevel: 5, costs: [300,700,1500,3000,7000],    desc: '+3% crit chance per level' },
+        { key: 'crit_multi',  name: 'Crit Amp',     maxLevel: 3, costs: [1000,3000,8000],             desc: 'Crit multiplier +5× per level' },
+        { key: 'tap_fury',    name: 'Tap Fury',     maxLevel: 3, costs: [2000,6000,15000],            desc: '+10% tap batch speed per level' },
+      ],
+    },
+    energy: {
+      label: 'Energy', icon: '🔋',
+      skills: [
+        { key: 'energy_cap',  name: 'Brain Vessel', maxLevel: 5, costs: [400,900,1800,4000,9000],    desc: '+500 max energy per level' },
+        { key: 'regen_boost', name: 'Fast Regen',   maxLevel: 5, costs: [350,800,1600,3500,8000],    desc: '+1 regen/sec per level' },
+        { key: 'efficiency',  name: 'Efficiency',   maxLevel: 3, costs: [1500,4000,10000],            desc: '-10% energy cost per level' },
+        { key: 'overflow',    name: 'Overflow',     maxLevel: 1, costs: [20000],                      desc: 'Taps beyond max at 50% power' },
+      ],
+    },
+    passive: {
+      label: 'Passive', icon: '💰',
+      skills: [
+        { key: 'card_boost',   name: 'Card Master',  maxLevel: 5, costs: [500,1200,2500,5000,12000],  desc: '+15% card income per level' },
+        { key: 'offline_amp',  name: 'Brain AFK',    maxLevel: 5, costs: [400,1000,2000,4500,10000],  desc: '+25% offline income per level' },
+        { key: 'skill_regen',  name: 'Grind Master', maxLevel: 3, costs: [800,2000,5000],              desc: '+1 skill pt per 25 taps per level' },
+        { key: 'referral_amp', name: 'Network King', maxLevel: 3, costs: [600,1800,5000],              desc: '+2% per referral bonus per level' },
+      ],
+    },
+    luck: {
+      label: 'Luck', icon: '🍀',
+      skills: [
+        { key: 'gem_drops',   name: 'Gem Finder',   maxLevel: 5, costs: [600,1500,3000,7000,15000],   desc: '+1.5% gem drop chance per level' },
+        { key: 'boss_loot',   name: 'Boss Looter',  maxLevel: 3, costs: [900,2500,7000],               desc: '+25% boss reward per level' },
+        { key: 'wheel_luck',  name: 'Lucky Spin',   maxLevel: 3, costs: [700,2000,6000],               desc: 'Wheel prizes ×1.1 per level' },
+        { key: 'loot_master', name: 'Loot Master',  maxLevel: 3, costs: [1200,3500,9000],              desc: '+1 loot reroll per level' },
+      ],
+    },
+  },
+
+  SKILL_POINTS_PER_TAPS: 50,
+
+  // ─── Talents (chosen on prestige) ────────────────────────────────────────────
+
+  TALENTS: [
+    { key: 'double_glory',   name: 'Double Glory',   desc: 'Prestige gives +2 tap power instead of +1', icon: '⚡' },
+    { key: 'energy_god',     name: 'Energy God',      desc: 'Max energy permanently +1000',              icon: '🔋' },
+    { key: 'passive_lord',   name: 'Passive Lord',    desc: 'Card income ×1.5 permanently',              icon: '💰' },
+    { key: 'crit_storm',     name: 'Crit Storm',      desc: '+10% crit chance permanently',              icon: '🌪️' },
+    { key: 'gem_magnet',     name: 'Gem Magnet',      desc: '+5% gem drop chance permanently',           icon: '💎' },
+    { key: 'boss_slayer',    name: 'Boss Slayer',     desc: 'Double damage to bosses',                   icon: '⚔️' },
+    { key: 'eternal_streak', name: 'Eternal Streak',  desc: 'Tap streak never resets on missed day',     icon: '🔥' },
+    { key: 'auto_master',    name: 'Auto Master',     desc: 'Auto-income rate ×2',                       icon: '🤖' },
+  ],
+
+  // ─── Battle Pass ─────────────────────────────────────────────────────────────
+
+  BATTLE_PASS_XP_PER_ENERGY: 1,
+  BATTLE_PASS_LEVEL_XP: 500,
+  BATTLE_PASS_LEVELS: 30,
+  BATTLE_PASS_PREMIUM_COST: 200,
+
+  BATTLE_PASS_FREE: {
+    3:  { type: 'coins',        amount: 1000 },
+    5:  { type: 'gems',         amount: 5 },
+    8:  { type: 'skill_points', amount: 30 },
+    10: { type: 'gems',         amount: 10 },
+    12: { type: 'energy_refill' },
+    15: { type: 'gems',         amount: 20 },
+    18: { type: 'skill_points', amount: 50 },
+    20: { type: 'gems',         amount: 30 },
+    25: { type: '2x_boost',     durationMs: 10 * 60 * 1000 },
+    30: { type: 'gems',         amount: 100 },
+  },
+
+  BATTLE_PASS_PREMIUM: {
+    1:  { type: 'gems',         amount: 10 },
+    5:  { type: 'skin',         skin: 'skin_fire' },
+    8:  { type: 'gems',         amount: 20 },
+    10: { type: '2x_boost',     durationMs: 30 * 60 * 1000 },
+    12: { type: 'gems',         amount: 30 },
+    15: { type: 'skin',         skin: 'skin_diamond' },
+    18: { type: 'gems',         amount: 50 },
+    20: { type: '2x_boost',     durationMs: 60 * 60 * 1000 },
+    25: { type: 'skin',         skin: 'skin_crown' },
+    30: { type: 'gems',         amount: 200 },
+  },
+
+  // ─── Login Streak ─────────────────────────────────────────────────────────────
+
+  LOGIN_STREAK_REWARDS: [
+    { type: 'coins', amount: 500 },
+    { type: 'coins', amount: 1000 },
+    { type: 'gems',  amount: 5 },
+    { type: 'coins', amount: 2000 },
+    { type: 'gems',  amount: 10 },
+    { type: 'energy_refill' },
+    { type: 'gems',  amount: 25 },
+  ],
+
+  // ─── Guild system ─────────────────────────────────────────────────────────────
+
+  GUILD_MAX_MEMBERS: 10,
+  GUILD_BOSS_SCHEDULE: [
+    { name: 'Neuron Titan',  maxHp: 500_000,    rewardGems: 20 },
+    { name: 'Synapse Beast', maxHp: 1_000_000,  rewardGems: 35 },
+    { name: 'Cortex Dragon', maxHp: 2_000_000,  rewardGems: 60 },
+    { name: 'Axon Colossus', maxHp: 5_000_000,  rewardGems: 100 },
+  ],
+
+  // ─── Loot Box ────────────────────────────────────────────────────────────────
+
+  LOOT_BOX_PRIZES: [
+    { weight: 35, type: 'gems',         amount: 10,                                    label: '💎 10 Gems' },
+    { weight: 25, type: 'gems',         amount: 25,                                    label: '💎 25 Gems' },
+    { weight: 15, type: 'gems',         amount: 50,                                    label: '💎 50 Gems' },
+    { weight: 12, type: 'boost',        boost: '2x_tap', durationMs: 10 * 60 * 1000,  label: '🔥 2× Tap 10m' },
+    { weight: 8,  type: 'skill_points', amount: 100,                                   label: '🧪 100 Skill Pts' },
+    { weight: 4,  type: 'skin',         skin: 'skin_fire',                             label: '🔥🧠 Fire Brain' },
+    { weight: 1,  type: 'skin',         skin: 'skin_diamond',                          label: '💎🧠 Diamond Brain' },
+  ],
+
+  pickLootBoxPrize() {
+    const prizes = module.exports.LOOT_BOX_PRIZES;
+    const total = prizes.reduce((s, p) => s + p.weight, 0);
+    let rand = Math.random() * total;
+    for (const p of prizes) { rand -= p.weight; if (rand <= 0) return p; }
+    return prizes[0];
+  },
+
+  // ─── Daily Shop ──────────────────────────────────────────────────────────────
+
+  DAILY_SHOP_POOL: [
+    { key: 'ds_boost_15m',   name: '2× Boost 15min',   icon: '🔥', cost: 12, type: 'boost',        durationMs: 15 * 60 * 1000 },
+    { key: 'ds_boost_30m',   name: '2× Boost 30min',   icon: '🔥', cost: 20, type: 'boost',        durationMs: 30 * 60 * 1000 },
+    { key: 'ds_boost_1h',    name: '2× Boost 1h',      icon: '🔥', cost: 35, type: 'boost',        durationMs: 60 * 60 * 1000 },
+    { key: 'ds_energy_x2',   name: '2× Energy Refill', icon: '⚡', cost: 15, type: 'energy_x2' },
+    { key: 'ds_lootbox',     name: 'Mystery Brain',    icon: '🎁', cost: 25, type: 'loot_box' },
+    { key: 'ds_skill_50',    name: '50 Skill Points',  icon: '🧪', cost: 18, type: 'skill_points',  amount: 50 },
+    { key: 'ds_skill_100',   name: '100 Skill Points', icon: '🧪', cost: 30, type: 'skill_points',  amount: 100 },
+    { key: 'ds_auto_2h',     name: 'Auto-Tapper 2h',  icon: '🤖', cost: 22, type: 'auto_tapper',  durationMs: 2 * 60 * 60 * 1000 },
+  ],
+
+  getDailyShopItems() {
+    const pool = module.exports.DAILY_SHOP_POOL;
+    const dayKey = new Date().toISOString().slice(0, 10);
+    let seed = dayKey.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const shuffled = [...pool].sort(() => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return (seed / 233280) - 0.5;
+    });
+    return shuffled.slice(0, 3);
+  },
 
   // ─── Daily missions ──────────────────────────────────────────────────────────
 

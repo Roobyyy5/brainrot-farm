@@ -17,12 +17,19 @@ import PassiveCards from './components/PassiveCards';
 import WheelSpin from './components/WheelSpin';
 import TapperMissions from './components/TapperMissions';
 import GemShop from './components/GemShop';
+import SkillTree from './components/SkillTree';
+import BattlePass from './components/BattlePass';
+import LoginStreak from './components/LoginStreak';
+import DailyShop from './components/DailyShop';
+import Guilds from './components/Guilds';
+import TapDuel from './components/TapDuel';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
   { id: 'tap',   icon: '🧠', label: 'Tap' },
   { id: 'cards', icon: '🃏', label: 'Cards' },
   { id: 'boost', icon: '⚡', label: 'Boost' },
+  { id: 'club',  icon: '🏰', label: 'Club' },
   { id: 'board', icon: '🏆', label: 'Board' },
 ];
 
@@ -96,10 +103,21 @@ export default function App() {
 
       {tab === 'boost' && (
         <>
+          <LoginStreak onEarned={handleCoinsEarned} onGemsChanged={handleGemsChanged} />
+          <DailyShop onGemsChanged={handleGemsChanged} />
           <GemShop onGemsChanged={handleGemsChanged} onCoinsChanged={handleCoinsEarned} />
           <WheelSpin onEarned={handleCoinsEarned} />
           <TapperMissions onEarned={handleCoinsEarned} />
+          <SkillTree />
+          <BattlePass onGemsChanged={handleGemsChanged} />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
+        </>
+      )}
+
+      {tab === 'club' && (
+        <>
+          <Guilds onGemsChanged={handleGemsChanged} />
+          <TapDuel currentUserId={user?.telegram_id} />
         </>
       )}
 
