@@ -28,7 +28,7 @@ services:
       - key: APP_URL
         sync: false
       - key: MINI_APP_URL
-        value: https://figabrain-frontend.onrender.com
+        value: https://brainrot-farm-app.onrender.com
       - key: CHANNEL_URL
         value: https://t.me/figabrainnews
 
