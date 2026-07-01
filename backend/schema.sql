@@ -160,3 +160,25 @@ CREATE TABLE IF NOT EXISTS mission_claims (
 CREATE INDEX IF NOT EXISTS idx_user_cards_user    ON user_cards(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_wheel_spins_user   ON wheel_spins(telegram_id, spun_at);
 CREATE INDEX IF NOT EXISTS idx_mission_claims_user ON mission_claims(telegram_id, date_key);
+
+-- Tap streak & skins
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS tap_streak       INTEGER  NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS last_tap_date    TEXT     NOT NULL DEFAULT '';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS selected_skin    TEXT     NOT NULL DEFAULT 'default';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS skins_unlocked   TEXT[]   NOT NULL DEFAULT '{}';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS energy_notif_at  BIGINT   NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS energy_notif_sent BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Active boosts (e.g. 2× tap power for N minutes)
+CREATE TABLE IF NOT EXISTS user_boosts (
+  id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id  TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  boost_type   TEXT    NOT NULL,
+  expires_at   BIGINT  NOT NULL,
+  activated_at BIGINT  NOT NULL
+);
+
+-- Boss spawn notification flag
+ALTER TABLE boss_fights ADD COLUMN IF NOT EXISTS notif_sent BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_user_boosts_user ON user_boosts(telegram_id, expires_at);

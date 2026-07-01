@@ -1893,3 +1893,286 @@ body {
 }
 
 .mission-claim-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Tap top row (rank + streak + boost) ---------- */
+
+.tap-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(255,140,0,0.12);
+  border: 1px solid rgba(255,140,0,0.35);
+  color: #ff8c00;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.streak-badge span {
+  color: var(--success);
+}
+
+.boost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(255,79,163,0.12);
+  border: 1px solid rgba(255,79,163,0.4);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  animation: comboPulse 1s ease-in-out infinite alternate;
+}
+
+.passive-income-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* ---------- Gem Shop ---------- */
+
+.gemshop-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gemshop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gemshop-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.gemshop-balance {
+  font-size: 14px;
+  font-weight: 800;
+  color: #00ffaa;
+  background: rgba(0,255,170,0.08);
+  border: 1px solid rgba(0,255,170,0.25);
+  border-radius: 99px;
+  padding: 6px 14px;
+}
+
+.gemshop-boost-active {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,79,163,0.1);
+  border: 1px solid rgba(255,79,163,0.35);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  animation: comboPulse 1.2s ease-in-out infinite alternate;
+}
+
+.gemshop-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.gemshop-tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.gemshop-tab--active {
+  background: var(--card-strong);
+  border-color: rgba(0,255,170,0.35);
+  color: #00ffaa;
+}
+
+.gemshop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gemshop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.gemshop-item--owned {
+  opacity: 0.6;
+  border-color: rgba(52,211,153,0.3);
+}
+
+.gemshop-item-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.gemshop-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.gemshop-item-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.gemshop-item-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.gemshop-item-owned {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.gemshop-buy-btn {
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0,255,170,0.35);
+  background: rgba(0,255,170,0.08);
+  color: #00ffaa;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.gemshop-buy-btn:hover:not(:disabled) { background: rgba(0,255,170,0.15); }
+.gemshop-buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ---------- Skins grid ---------- */
+
+.skins-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.skin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--card);
+  opacity: 0.4;
+  text-align: center;
+}
+
+.skin-card--unlocked { opacity: 1; }
+
+.skin-card--selected {
+  border-color: rgba(0,255,170,0.5);
+  background: rgba(0,255,170,0.06);
+  box-shadow: 0 0 16px rgba(0,255,170,0.12);
+}
+
+.skin-emoji { font-size: 28px; }
+
+.skin-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.skin-unlock-hint {
+  font-size: 9px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.skin-equip-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+}
+
+.skin-active {
+  font-size: 11px;
+  font-weight: 800;
+  color: #00ffaa;
+}
+
+/* ---------- Weekly League ---------- */
+
+.weekly-prizes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(245,195,68,0.05);
+  border: 1px solid rgba(245,195,68,0.2);
+  border-radius: var(--radius-sm);
+  align-items: center;
+}
+
+.weekly-prize-chip {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  background: rgba(245,195,68,0.08);
+  border: 1px solid rgba(245,195,68,0.2);
+  border-radius: 99px;
+  padding: 4px 10px;
+}
+
+.weekly-reset-hint {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 600;
+  width: 100%;
+  text-align: center;
+}
+
+.weekly-gem-prize {
+  font-size: 10px;
+  color: #00ffaa;
+  margin-left: 4px;
+  font-weight: 700;
+}

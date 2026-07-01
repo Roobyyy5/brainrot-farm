@@ -17,6 +17,7 @@ const tapperRoute = require('./routes/tapper');
 const cardsRoute = require('./routes/cards');
 const wheelRoute = require('./routes/wheel');
 const missionsRoute = require('./routes/missions');
+const gemshopRoute = require('./routes/gemshop');
 
 const app = express();
 app.use(cors());
@@ -63,6 +64,7 @@ app.use('/tapper', telegramAuthMiddleware, tapperLimiter, tapperRoute);
 app.use('/cards', telegramAuthMiddleware, actionLimiter, cardsRoute);
 app.use('/wheel', telegramAuthMiddleware, actionLimiter, wheelRoute);
 app.use('/missions', telegramAuthMiddleware, actionLimiter, missionsRoute);
+app.use('/gemshop', telegramAuthMiddleware, actionLimiter, gemshopRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would

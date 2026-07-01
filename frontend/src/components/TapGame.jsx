@@ -34,6 +34,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [shaking, setShaking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [prestiging, setPrestiging] = useState(false);
+  const [boostSecsLeft, setBoostSecsLeft] = useState(0);
 
   const pendingTaps = useRef(0);
   const lastTapAt = useRef(0);
@@ -56,6 +57,17 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       if (data.offlineBP > 0) setOfflineBP(data.offlineBP);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Boost countdown
+  useEffect(() => {
+    if (!profile?.activeBoostExpiresAt) return;
+    const iv = setInterval(() => {
+      const secs = Math.max(0, Math.floor((profile.activeBoostExpiresAt - Date.now()) / 1000));
+      setBoostSecsLeft(secs);
+      if (secs === 0) clearInterval(iv);
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [profile?.activeBoostExpiresAt]);
 
   // Energy regen
   useEffect(() => {
@@ -160,6 +172,13 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const showCombo = combo >= 1.3;
   const rank = getRank(profile?.totalTaps || 0);
   const canPrestige = (profile?.totalTaps || 0) >= 1_000_000;
+  const SKIN_EMOJIS = {
+    default: '🧠', prestige1: '⭐🧠', prestige2: '💫🧠', prestige3: '🌟🧠',
+    skin_fire: '🔥🧠', skin_diamond: '💎🧠', skin_crown: '👑🧠',
+  };
+  const brainEmoji = SKIN_EMOJIS[profile?.selectedSkin || 'default'] || '🧠';
+  const streak = profile?.tapStreak || 0;
+  const streakBonus = profile?.streakBonusPct || 0;
 
   return (
     <div className={`tap-game${shaking ? ' tap-game--shaking' : ''}`}>
@@ -167,13 +186,25 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
         <OfflineModal bp={offlineBP} onClose={() => setOfflineBP(0)} />
       )}
 
-      {/* Rank badge */}
-      <div className="rank-badge" style={{ borderColor: rank.color, color: rank.color }}>
-        {rank.emoji} {rank.name}
-        {profile?.cardIncomePerHour > 0 && (
-          <span className="rank-passive"> · +{profile.cardIncomePerHour}/hr</span>
+      {/* Top row: rank + streak + boost */}
+      <div className="tap-top-row">
+        <div className="rank-badge" style={{ borderColor: rank.color, color: rank.color }}>
+          {rank.emoji} {rank.name}
+        </div>
+        {streak > 0 && (
+          <div className="streak-badge">
+            🔥 {streak}d {streakBonus > 0 && <span>+{streakBonus}%</span>}
+          </div>
+        )}
+        {boostSecsLeft > 0 && (
+          <div className="boost-badge">
+            🔥 2× {Math.floor(boostSecsLeft / 60)}:{String(boostSecsLeft % 60).padStart(2, '0')}
+          </div>
         )}
       </div>
+      {profile?.cardIncomePerHour > 0 && (
+        <div className="passive-income-hint">+{profile.cardIncomePerHour} BP/hr passive</div>
+      )}
 
       {showCombo && (
         <div className="combo-meter">
@@ -189,7 +220,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
         onClick={handleTap}
       >
         <div className={`tap-brain${tapping ? ' tap-brain--active' : ''}${noEnergy ? ' tap-brain--dark' : ''}`}>
-          {profile?.prestige > 0 ? '🧠' : '🧠'}
+          {brainEmoji}
         </div>
         <div className="tap-brain-ring" />
 

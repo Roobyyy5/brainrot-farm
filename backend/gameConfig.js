@@ -68,6 +68,11 @@ module.exports = {
 
   BOSS_NAMES: ['Mega Brain', 'Crypto Kraken', 'FOMO Phantom', 'Whale Boss', 'Moon Titan', 'Degen Dragon'],
 
+  // ─── Tap streak ──────────────────────────────────────────────────────────────
+
+  TAP_STREAK_BONUS_PCT: 5,  // % per consecutive day
+  TAP_STREAK_MAX_DAYS: 10,  // cap at 50% bonus
+
   // ─── Tapper ranks ────────────────────────────────────────────────────────────
 
   TAPPER_RANKS: [
@@ -132,6 +137,35 @@ module.exports = {
     }
     return { ...prizes[0], index: 0 };
   },
+
+  // ─── Daily missions ──────────────────────────────────────────────────────────
+
+  // ─── Brain skins ─────────────────────────────────────────────────────────────
+
+  BRAIN_SKINS: {
+    default:      { emoji: '🧠',   name: 'Classic',       unlock: 'default' },
+    prestige1:    { emoji: '⭐🧠', name: 'Star Brain',    unlock: 'prestige', minPrestige: 1, auto: true },
+    prestige2:    { emoji: '💫🧠', name: 'Galaxy Brain',  unlock: 'prestige', minPrestige: 2, auto: true },
+    prestige3:    { emoji: '🌟🧠', name: 'Cosmic Brain',  unlock: 'prestige', minPrestige: 3, auto: true },
+    skin_fire:    { emoji: '🔥🧠', name: 'Fire Brain',    unlock: 'gem_shop' },
+    skin_diamond: { emoji: '💎🧠', name: 'Diamond Brain', unlock: 'gem_shop' },
+    skin_crown:   { emoji: '👑🧠', name: 'Crown Brain',   unlock: 'gem_shop' },
+  },
+
+  // ─── Gem shop ────────────────────────────────────────────────────────────────
+
+  GEMSHOP_ITEMS: [
+    { key: 'energy_refill', name: 'Energy Refill',   icon: '⚡', description: 'Instantly fill energy to max',         cost: 10,  type: 'instant' },
+    { key: '2x_tap',        name: '2× Tap Boost',    icon: '🔥', description: '2× tap power for 5 minutes',          cost: 15,  type: 'boost', durationMs: 5 * 60 * 1000 },
+    { key: 'auto_income',   name: '8h Passive Claim',icon: '🤖', description: 'Instantly collect 8h passive income', cost: 20,  type: 'instant' },
+    { key: 'skin_fire',     name: 'Fire Brain 🔥',   icon: '🔥', description: '🔥🧠 blazing brain skin',             cost: 50,  type: 'skin' },
+    { key: 'skin_diamond',  name: 'Diamond Brain 💎',icon: '💎', description: '💎🧠 crystalline prestige skin',       cost: 75,  type: 'skin' },
+    { key: 'skin_crown',    name: 'Crown Brain 👑',  icon: '👑', description: '👑🧠 royal skin for true legends',     cost: 100, type: 'skin' },
+  ],
+
+  // ─── Weekly league ───────────────────────────────────────────────────────────
+
+  WEEKLY_LEAGUE_GEMS: [100, 75, 50, 30, 25, 25, 20, 20, 15, 15],
 
   // ─── Daily missions ──────────────────────────────────────────────────────────
 

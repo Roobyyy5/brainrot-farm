@@ -16,6 +16,7 @@ import TapLeaderboard from './components/TapLeaderboard';
 import PassiveCards from './components/PassiveCards';
 import WheelSpin from './components/WheelSpin';
 import TapperMissions from './components/TapperMissions';
+import GemShop from './components/GemShop';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -50,6 +51,7 @@ export default function App() {
   const dismissAchievementToast = () => setAchievementQueue((q) => q.slice(1));
   const handleCoinsEarned = (amount) => setUser((u) => u ? { ...u, coins: u.coins + amount } : u);
   const handleCoinsSpent = (amount) => setUser((u) => u ? { ...u, coins: Math.max(0, u.coins - amount) } : u);
+  const handleGemsChanged = (delta) => setUser((u) => u ? { ...u, gems: Math.max(0, (u.gems || 0) + delta) } : u);
 
   if (loading) return <div className="loading-screen">Loading brainrot...</div>;
   if (error)   return <div className="error-screen">Error: {error}</div>;
@@ -94,6 +96,7 @@ export default function App() {
 
       {tab === 'boost' && (
         <>
+          <GemShop onGemsChanged={handleGemsChanged} onCoinsChanged={handleCoinsEarned} />
           <WheelSpin onEarned={handleCoinsEarned} />
           <TapperMissions onEarned={handleCoinsEarned} />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />

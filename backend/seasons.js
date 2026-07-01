@@ -1,5 +1,5 @@
 const { pool, withTransaction } = require('./db');
-const { SEASON_DURATION_MS } = require('./gameConfig');
+const { SEASON_DURATION_MS, WEEKLY_LEAGUE_GEMS } = require('./gameConfig');
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -27,6 +27,15 @@ async function checkSeasonReset() {
       Date.now(),
       JSON.stringify(top.rows),
     ]);
+
+    // Reward top players with gems
+    for (let i = 0; i < top.rows.length; i++) {
+      const gems = WEEKLY_LEAGUE_GEMS[i] || 0;
+      if (gems > 0 && top.rows[i].weekly_coins > 0) {
+        await client.query('UPDATE users SET gems = gems + $1 WHERE telegram_id = $2', [gems, top.rows[i].telegram_id]);
+      }
+    }
+
     await client.query('UPDATE users SET weekly_coins = 0');
     await client.query(
       "UPDATE app_state SET value = $1 WHERE key = 'season_reset_at'",

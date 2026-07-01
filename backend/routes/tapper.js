@@ -11,6 +11,9 @@ const {
   TAPPER_ACHIEVEMENTS,
   BOSS_NAMES,
   rankForTaps,
+  TAP_STREAK_BONUS_PCT,
+  TAP_STREAK_MAX_DAYS,
+  BRAIN_SKINS,
 } = require('../gameConfig');
 const { computeCardOfflineIncome } = require('./cards');
 
@@ -187,6 +190,10 @@ router.get('/', asyncHandler(async (req, res) => {
       cardIncomePerHour: Math.floor(cardPerHour * (1 + referralBoostPct / 100)),
       referralBoostPct,
       rank:             rankForTaps(profile.total_taps),
+      tapStreak:        profile.tap_streak || 0,
+      streakBonusPct:   Math.min((profile.tap_streak || 0) * TAP_STREAK_BONUS_PCT, TAP_STREAK_MAX_DAYS * TAP_STREAK_BONUS_PCT),
+      selectedSkin:     profile.selected_skin || 'default',
+      skinsUnlocked:    profile.skins_unlocked || [],
       boss: boss.rows[0] ? {
         id:       boss.rows[0].id,
         name:     boss.rows[0].name,
@@ -233,17 +240,41 @@ router.post('/tap', asyncHandler(async (req, res) => {
       return { bpEarned: 0, energy: currentEnergy, energyMax, isCrit: false, unlockedAchievements: [] };
     }
 
-    const isCrit   = Math.random() < TAPPER_CRIT_CHANCE;
-    const bpEarned = Math.floor(energyUsed * tapPower * (isCrit ? 10 : 1));
+    // Tap streak
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(now - 86_400_000).toISOString().slice(0, 10);
+    let newStreak = profile.tap_streak || 0;
+    if (profile.last_tap_date !== today) {
+      newStreak = profile.last_tap_date === yesterday ? newStreak + 1 : 1;
+    }
+    const streakBonusPct = Math.min(newStreak * TAP_STREAK_BONUS_PCT, TAP_STREAK_MAX_DAYS * TAP_STREAK_BONUS_PCT);
+
+    // Active 2× boost
+    const boostRow = await client.query(
+      "SELECT id FROM user_boosts WHERE telegram_id=$1 AND boost_type='2x_tap' AND expires_at>$2 LIMIT 1",
+      [telegramId, now]
+    );
+    const boostMultiplier = boostRow.rows[0] ? 2 : 1;
+
+    const effectiveTapPower = tapPower * (1 + streakBonusPct / 100) * boostMultiplier;
+    const isCrit    = Math.random() < TAPPER_CRIT_CHANCE;
+    const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? 10 : 1));
     const newEnergy = currentEnergy - energyUsed;
+
+    // Schedule energy-full notification
+    const energyNotifAt  = newEnergy < energyMax
+      ? now + Math.ceil((energyMax - newEnergy) / regenRate) * 1000
+      : 0;
 
     await client.query(
       `UPDATE tapper_profiles SET
          energy = $1, last_energy_at = $2, last_seen_at = $2,
          total_taps = total_taps + $3,
-         total_bp_earned = total_bp_earned + $4
-       WHERE telegram_id = $5`,
-      [newEnergy, now, energyUsed, bpEarned, telegramId]
+         total_bp_earned = total_bp_earned + $4,
+         tap_streak = $5, last_tap_date = $6,
+         energy_notif_at = $7, energy_notif_sent = FALSE
+       WHERE telegram_id = $8`,
+      [newEnergy, now, energyUsed, bpEarned, newStreak, today, energyNotifAt, telegramId]
     );
     await client.query(
       'UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2',
@@ -259,7 +290,10 @@ router.post('/tap', asyncHandler(async (req, res) => {
     );
     const unlockedAchievements = await checkTapperAchievements(client, telegramId, updatedProfile.rows[0]);
 
-    return { bpEarned, energy: newEnergy, energyMax, isCrit, unlockedAchievements };
+    return {
+      bpEarned, energy: newEnergy, energyMax, isCrit, unlockedAchievements,
+      streakBonusPct, boostActive: !!boostRow.rows[0],
+    };
   });
 
   res.json(result);

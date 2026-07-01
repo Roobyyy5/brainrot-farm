@@ -57,4 +57,10 @@ export const api = {
     list: () => request('/missions'),
     claim: (key) => request('/missions/claim', { method: 'POST', body: { key } }),
   },
+
+  gemshop: {
+    status: () => request('/gemshop'),
+    buy: (key) => request('/gemshop/buy', { method: 'POST', body: { key } }),
+    equipSkin: (skin) => request('/gemshop/skin', { method: 'POST', body: { skin } }),
+  },
 };
