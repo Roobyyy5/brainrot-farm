@@ -35,6 +35,14 @@ const bossrushRoute     = require('./routes/bossrush');
 const { router: inventoryRoute } = require('./routes/inventory');
 const statsRoute        = require('./routes/stats');
 const friendsRoute      = require('./routes/friends');
+const tapRushRoute      = require('./routes/taprush');
+const { router: worldBossRoute, settleExpiredBosses } = require('./routes/worldboss');
+const guildRaidRoute    = require('./routes/guildraid');
+const wardrobeRoute     = require('./routes/wardrobe');
+const challengesRoute   = require('./routes/challenges');
+const craftingRoute     = require('./routes/crafting');
+const { router: seasonRoute, settleSeason } = require('./routes/season');
+const referralBoardRoute = require('./routes/referralboard');
 
 const app = express();
 app.use(cors());
@@ -97,8 +105,16 @@ app.use('/tournament', telegramAuthMiddleware, actionLimiter, tournamentRoute);
 app.use('/prestigeshop', telegramAuthMiddleware, actionLimiter, prestigeshopRoute);
 app.use('/bossrush',   telegramAuthMiddleware, tapperLimiter, bossrushRoute);
 app.use('/inventory',  telegramAuthMiddleware, actionLimiter, inventoryRoute);
-app.use('/stats',      telegramAuthMiddleware, actionLimiter, statsRoute);
-app.use('/friends',    telegramAuthMiddleware, actionLimiter, friendsRoute);
+app.use('/stats',        telegramAuthMiddleware, actionLimiter, statsRoute);
+app.use('/friends',      telegramAuthMiddleware, actionLimiter, friendsRoute);
+app.use('/taprush',      telegramAuthMiddleware, tapperLimiter, tapRushRoute);
+app.use('/worldboss',    telegramAuthMiddleware, tapperLimiter, worldBossRoute);
+app.use('/guildraid',    telegramAuthMiddleware, tapperLimiter, guildRaidRoute);
+app.use('/wardrobe',     telegramAuthMiddleware, actionLimiter, wardrobeRoute);
+app.use('/challenges',   telegramAuthMiddleware, actionLimiter, challengesRoute);
+app.use('/crafting',     telegramAuthMiddleware, actionLimiter, craftingRoute);
+app.use('/season',       telegramAuthMiddleware, actionLimiter, seasonRoute);
+app.use('/referralboard',telegramAuthMiddleware, actionLimiter, referralBoardRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
@@ -114,6 +130,8 @@ async function main() {
   const { startSeasonScheduler } = require('./seasons');
   startSeasonScheduler();
   setInterval(() => settleTournament().catch(err => console.error('Tournament settle error:', err.message)), 5 * 60 * 1000);
+  setInterval(() => settleExpiredBosses().catch(err => console.error('World boss settle error:', err.message)), 10 * 60 * 1000);
+  setInterval(() => settleSeason().catch(err => console.error('Season settle error:', err.message)), 60 * 60 * 1000);
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {

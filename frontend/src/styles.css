@@ -2822,3 +2822,295 @@ body {
   cursor: pointer;
 }
 .gchat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== ROUND 7 COMPONENTS ===== */
+
+/* TapRush */
+.taprush-section {
+  background: linear-gradient(135deg, rgba(255,79,163,0.15), rgba(139,92,246,0.15));
+  border: 1px solid rgba(255,79,163,0.4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.taprush-header { font-size: 1rem; font-weight: 800; color: var(--primary); }
+.taprush-sub { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+.taprush-active { text-align: center; }
+.taprush-timer {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--primary);
+  font-family: 'Sora', sans-serif;
+  line-height: 1;
+}
+.taprush-active-label { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin: 4px 0 8px; }
+.taprush-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; height: 8px; }
+.taprush-bar { height: 100%; background: var(--primary-gradient); border-radius: 6px; transition: width 0.5s; }
+.taprush-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.taprush-btn:active { transform: scale(0.97); }
+.taprush-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.taprush-stats { font-size: 0.8rem; color: var(--text-dim); margin: 8px 0; }
+.taprush-lb { margin-top: 10px; }
+.taprush-lb-title { font-size: 0.75rem; font-weight: 700; color: var(--text-faint); text-transform: uppercase; margin-bottom: 6px; }
+.taprush-lb-row { display: flex; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--border); font-size: 0.82rem; }
+.taprush-lb-rank { width: 24px; color: var(--gold); font-weight: 700; }
+.taprush-lb-name { flex: 1; }
+.taprush-lb-score { color: var(--primary); font-weight: 700; }
+
+/* WorldBoss */
+.worldboss-section {
+  background: var(--card);
+  border: 1px solid rgba(239,68,68,0.35);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.worldboss-header { font-size: 1rem; font-weight: 800; color: #ef4444; margin-bottom: 6px; }
+.worldboss-dead { color: var(--text-faint); font-size: 0.85rem; text-align: center; padding: 12px 0; }
+.worldboss-name { font-size: 1.2rem; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.worldboss-hp-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; height: 14px; margin-bottom: 4px; }
+.worldboss-hp-bar { height: 100%; background: linear-gradient(90deg,#ef4444,#f97316); border-radius: 6px; transition: width 0.5s; }
+.worldboss-hp-text { font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-bottom: 8px; }
+.worldboss-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+.worldboss-tap-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg,#ef4444,#f97316);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.worldboss-tap-btn:disabled { opacity: 0.5; }
+.worldboss-lb { margin-top: 10px; }
+.worldboss-lb-title { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+.worldboss-lb-row { display: flex; gap: 6px; align-items: center; padding: 4px 0; border-top: 1px solid var(--border); font-size: 0.8rem; }
+.worldboss-lb-rank { width: 22px; color: var(--gold); font-weight: 700; }
+.worldboss-lb-name { flex: 1; }
+.worldboss-lb-dmg { color: #ef4444; font-weight: 700; }
+.worldboss-lb-gems { color: var(--accent); font-size: 0.72rem; }
+
+/* GuildRaid */
+.guildraid-section {
+  background: var(--card);
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.guildraid-header { font-size: 1rem; font-weight: 800; color: var(--secondary); margin-bottom: 6px; }
+.guildraid-empty { color: var(--text-faint); font-size: 0.85rem; text-align: center; padding: 12px 0; }
+.guildraid-idle { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 10px; }
+.guildraid-waves-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.guildraid-wave-chip {
+  background: var(--card-strong);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.guildraid-start-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.guildraid-start-btn:disabled { opacity: 0.5; }
+.guildraid-active { display: flex; flex-direction: column; gap: 8px; }
+.guildraid-wave-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim); }
+.guildraid-hp-wrap { background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; height: 12px; }
+.guildraid-hp-bar { height: 100%; background: linear-gradient(90deg,var(--secondary),var(--primary)); border-radius: 6px; transition: width 0.4s; }
+.guildraid-hp-text { font-size: 0.72rem; color: var(--text-dim); text-align: center; }
+.guildraid-waves-row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.guildraid-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--card-strong); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; color: var(--text-faint); }
+.guildraid-dot.done { background: var(--success); color: #000; border-color: transparent; }
+.guildraid-dot.current { background: var(--secondary); color: #fff; border-color: transparent; }
+.guildraid-tap-btn {
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.guildraid-tap-btn:disabled { opacity: 0.5; }
+.guildraid-participants { display: flex; flex-direction: column; gap: 4px; }
+.guildraid-participant { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-dim); padding: 4px 6px; background: var(--card-strong); border-radius: 8px; }
+
+/* Wardrobe */
+.wardrobe-section {
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.wardrobe-header { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+.wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wardrobe-card {
+  background: var(--card-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  position: relative;
+}
+.wardrobe-card--active { border-color: var(--primary); background: rgba(255,79,163,0.1); }
+.wardrobe-card--locked { opacity: 0.5; cursor: not-allowed; }
+.wardrobe-emoji { font-size: 1.6rem; }
+.wardrobe-name { font-size: 0.72rem; font-weight: 700; text-align: center; }
+.wardrobe-unlock { font-size: 0.62rem; color: var(--text-faint); text-transform: capitalize; }
+.wardrobe-active-badge { font-size: 0.6rem; background: var(--primary); color: #fff; border-radius: 6px; padding: 1px 6px; font-weight: 700; }
+.wardrobe-locked-badge { font-size: 0.8rem; position: absolute; top: 4px; right: 4px; }
+.wardrobe-equip-btn { font-size: 0.68rem; padding: 4px 8px; border: none; border-radius: 6px; background: var(--primary-gradient); color: #fff; cursor: pointer; }
+
+/* ChallengeBoard */
+.challenges-section {
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.challenges-header { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.challenges-group-title { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin: 10px 0 6px; }
+.challenge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--card-strong);
+  border-radius: 10px;
+  margin-bottom: 4px;
+}
+.challenge-row--done { opacity: 0.55; }
+.challenge-icon { font-size: 1.2rem; flex-shrink: 0; }
+.challenge-info { flex: 1; }
+.challenge-label { font-size: 0.82rem; font-weight: 600; }
+.challenge-reward { font-size: 0.7rem; color: var(--gold); margin-top: 1px; }
+.challenge-claimed { width: 24px; height: 24px; background: var(--success); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+.challenge-claim-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.challenge-claim-btn:disabled { opacity: 0.4; }
+
+/* Crafting */
+.crafting-section {
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.crafting-header { font-size: 1rem; font-weight: 800; color: var(--text); }
+.crafting-sub { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 10px; }
+.crafting-flash { background: rgba(52,211,153,0.18); border: 1px solid var(--success); border-radius: 8px; padding: 8px; font-size: 0.85rem; color: var(--success); font-weight: 700; text-align: center; margin-bottom: 8px; }
+.crafting-list { display: flex; flex-direction: column; gap: 8px; }
+.crafting-recipe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+.crafting-recipe--locked { opacity: 0.6; }
+.crafting-recipe-inputs { display: flex; gap: 8px; }
+.crafting-inp { display: flex; flex-direction: column; align-items: center; font-size: 1rem; gap: 2px; }
+.crafting-have { font-size: 0.65rem; color: var(--success); font-weight: 700; }
+.crafting-lack { font-size: 0.65rem; color: #ef4444; font-weight: 700; }
+.crafting-arrow { font-size: 1.2rem; color: var(--text-faint); }
+.crafting-output { display: flex; align-items: center; gap: 4px; flex: 1; }
+.crafting-out-icon { font-size: 1.2rem; }
+.crafting-out-name { font-size: 0.8rem; font-weight: 600; }
+.crafting-out-qty { font-size: 0.72rem; color: var(--text-dim); }
+.crafting-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.crafting-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* SeasonLeaderboard */
+.season-section {
+  background: var(--card);
+  border: 1px solid rgba(245,195,68,0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.season-header { font-size: 1rem; font-weight: 800; color: var(--gold); }
+.season-meta { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px; }
+.season-my-rank {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(139,92,246,0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.season-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.season-table th { color: var(--text-faint); font-size: 0.68rem; text-transform: uppercase; padding: 4px 6px; text-align: left; }
+.season-table td { padding: 6px 6px; border-top: 1px solid var(--border); }
+.season-rank { width: 30px; font-weight: 800; }
+.season-trophies { margin-top: 12px; }
+.season-trophies-title { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+.season-trophy-row { display: flex; gap: 8px; align-items: center; font-size: 0.8rem; color: var(--text-dim); padding: 4px 0; border-top: 1px solid var(--border); }
+
+/* ReferralLeaderboard */
+.refboard-section {
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: 8px 0;
+}
+.refboard-header { font-size: 1rem; font-weight: 800; color: var(--text); }
+.refboard-meta { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px; }
+.refboard-mine { display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-dim); background: rgba(52,211,153,0.1); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.refboard-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.refboard-table th { color: var(--text-faint); font-size: 0.68rem; text-transform: uppercase; padding: 4px 6px; text-align: left; }
+.refboard-table td { padding: 6px 6px; border-top: 1px solid var(--border); }

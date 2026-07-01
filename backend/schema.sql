@@ -385,3 +385,80 @@ CREATE INDEX IF NOT EXISTS idx_boss_rush_user         ON boss_rush_sessions(tele
 CREATE INDEX IF NOT EXISTS idx_guild_messages_guild   ON guild_messages(guild_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_friends_user           ON friends(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_prestige_upgrades_user ON prestige_upgrades(telegram_id);
+
+-- ── Round 7: Tap Rush ─────────────────────────────────────────────────────────
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS rush_active_until BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS rush_cooldown_at  BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS rush_week_score   BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS rush_week_key     TEXT   NOT NULL DEFAULT '';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS tapper_season     INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS season_bp         BIGINT  NOT NULL DEFAULT 0;
+
+-- ── Round 7: World Boss ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_boss (
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name       TEXT    NOT NULL,
+  hp         BIGINT  NOT NULL,
+  max_hp     BIGINT  NOT NULL,
+  starts_at  BIGINT  NOT NULL,
+  ends_at    BIGINT  NOT NULL,
+  settled    BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at BIGINT  NOT NULL
+);
+CREATE TABLE IF NOT EXISTS world_boss_hits (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  boss_id     INTEGER NOT NULL REFERENCES world_boss(id) ON DELETE CASCADE,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  damage      BIGINT  NOT NULL DEFAULT 0,
+  rewarded    BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (boss_id, telegram_id)
+);
+
+-- ── Round 7: Guild Raid ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guild_raids (
+  id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id     INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  current_wave INTEGER NOT NULL DEFAULT 1,
+  boss_hp      BIGINT  NOT NULL DEFAULT 0,
+  boss_max_hp  BIGINT  NOT NULL DEFAULT 0,
+  boss_name    TEXT    NOT NULL DEFAULT '',
+  total_damage BIGINT  NOT NULL DEFAULT 0,
+  status       TEXT    NOT NULL DEFAULT 'active',
+  started_at   BIGINT  NOT NULL,
+  ended_at     BIGINT
+);
+CREATE TABLE IF NOT EXISTS guild_raid_hits (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  raid_id     INTEGER NOT NULL REFERENCES guild_raids(id) ON DELETE CASCADE,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  damage      BIGINT  NOT NULL DEFAULT 0,
+  UNIQUE (raid_id, telegram_id)
+);
+
+-- ── Round 7: Challenge Board ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS challenge_claims (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id   TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  challenge_key TEXT    NOT NULL,
+  period_key    TEXT    NOT NULL,
+  claimed_at    BIGINT  NOT NULL,
+  UNIQUE (telegram_id, challenge_key, period_key)
+);
+
+-- ── Round 7: Season Trophies ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS season_trophies (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  season_num  INTEGER NOT NULL,
+  rank        INTEGER NOT NULL,
+  bp_earned   BIGINT  NOT NULL DEFAULT 0,
+  trophy_icon TEXT    NOT NULL DEFAULT '🏆',
+  awarded_at  BIGINT  NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_world_boss_active ON world_boss(settled, ends_at);
+CREATE INDEX IF NOT EXISTS idx_world_boss_hits   ON world_boss_hits(boss_id, damage DESC);
+CREATE INDEX IF NOT EXISTS idx_guild_raids_guild ON guild_raids(guild_id, status);
+CREATE INDEX IF NOT EXISTS idx_guild_raid_hits   ON guild_raid_hits(raid_id, damage DESC);
+CREATE INDEX IF NOT EXISTS idx_challenge_claims  ON challenge_claims(telegram_id, period_key);
+CREATE INDEX IF NOT EXISTS idx_season_trophies   ON season_trophies(telegram_id);

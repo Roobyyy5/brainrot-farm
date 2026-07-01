@@ -36,6 +36,14 @@ import Inventory from './components/Inventory';
 import StatsDashboard from './components/StatsDashboard';
 import Friends from './components/Friends';
 import GuildChat from './components/GuildChat';
+import TapRush from './components/TapRush';
+import WorldBoss from './components/WorldBoss';
+import GuildRaid from './components/GuildRaid';
+import Wardrobe from './components/Wardrobe';
+import ChallengeBoard from './components/ChallengeBoard';
+import Crafting from './components/Crafting';
+import SeasonLeaderboard from './components/SeasonLeaderboard';
+import ReferralLeaderboard from './components/ReferralLeaderboard';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -109,8 +117,10 @@ export default function App() {
 
       {tab === 'tap' && (
         <>
+          <TapRush />
           <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
           <BossRush />
+          <WorldBoss />
         </>
       )}
 
@@ -120,7 +130,10 @@ export default function App() {
 
       {tab === 'boost' && (
         <>
+          <Wardrobe />
+          <ChallengeBoard />
           <Inventory />
+          <Crafting />
           <Pets />
           <WorldMap />
           <LoginStreak onEarned={handleCoinsEarned} onGemsChanged={handleGemsChanged} />
@@ -138,6 +151,7 @@ export default function App() {
       {tab === 'club' && (
         <>
           <GuildWars />
+          <GuildRaid />
           <Guilds onGemsChanged={handleGemsChanged} currentUsername={user?.username} />
           <GuildChat currentUsername={user?.username} />
           <TapDuel currentUserId={user?.telegram_id} />
@@ -147,8 +161,10 @@ export default function App() {
 
       {tab === 'board' && (
         <>
+          <SeasonLeaderboard />
           <Tournament />
           <StatsDashboard />
+          <ReferralLeaderboard />
           <ProfilePage currentUserId={user?.telegram_id} />
           <ComboLeaderboard />
           <TapLeaderboard currentUserId={user?.telegram_id} />

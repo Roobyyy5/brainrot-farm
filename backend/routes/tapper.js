@@ -21,6 +21,7 @@ const {
   WORLD_ZONES,
   PRESTIGE_SHOP,
   getCurrentWeeklyEvent,
+  TAP_RUSH_MULTIPLIER,
 } = require('../gameConfig');
 
 // Build skill-level map for a user (key → level)
@@ -335,6 +336,8 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const bpMultWeekly = weeklyEvent2.effect === 'bpMult' ? weeklyEvent2.value : 1;
     const gemMultWeekly = weeklyEvent2.effect === 'gemDropMult' ? weeklyEvent2.value : 1;
     const bpXpMultWeekly = weeklyEvent2.effect === 'bpXpMult' ? weeklyEvent2.value : 1;
+    const rushActive = Number(profile.rush_active_until || 0) > now;
+    const rushMult   = rushActive ? TAP_RUSH_MULTIPLIER : 1;
     // Check active crit_shield boost
     const critShield = await client.query(
       "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='crit_shield' AND expires_at>$2 LIMIT 1",
@@ -366,7 +369,7 @@ router.post('/tap', asyncHandler(async (req, res) => {
 
     const baseTapPower = Math.floor((tapPower + zoneData2.tapPowerBonus + pBonuses2.extraTapPower) * (1 + (petB2.tapPowerPct || 0)));
     const incomeMult = 1 + (pBonuses2.incomePct || 0) / 100;
-    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier * incomeMult * bpMultWeekly;
+    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier * incomeMult * bpMultWeekly * rushMult;
     const critChance = critShield.rows[0] ? 1.0 : TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0);
     const isCrit    = Math.random() < critChance;
     const critMult  = bonuses.critMultiplier;
@@ -425,6 +428,20 @@ router.post('/tap', asyncHandler(async (req, res) => {
     // Add to active tournament score (fire-and-forget)
     const { addTournamentScore } = require('./tournament');
     addTournamentScore(telegramId.toString(), bpEarned).catch(() => {});
+
+    // Season BP tracking
+    if (bpEarned > 0) {
+      await client.query('UPDATE tapper_profiles SET season_bp = season_bp + $1 WHERE telegram_id = $2', [bpEarned, telegramId]);
+      if (rushActive) {
+        const rushWk = 'W' + Math.floor(now / (7 * 24 * 60 * 60 * 1000));
+        await client.query(`
+          UPDATE tapper_profiles SET
+            rush_week_score = CASE WHEN rush_week_key = $2 THEN rush_week_score + $1 ELSE $1 END,
+            rush_week_key = $2
+          WHERE telegram_id = $3
+        `, [bpEarned, rushWk, telegramId]);
+      }
+    }
 
     const updatedProfile = await client.query(
       'SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]

@@ -433,4 +433,46 @@ module.exports = {
   TOURNAMENT_DURATION_MS: 48 * 60 * 60 * 1000,
   TOURNAMENT_PRIZE_SKINS: ['skin_fire', 'skin_diamond', 'skin_crown'],
   TOURNAMENT_TOP_GEMS:    [200, 100, 50, 25, 10, 10, 5, 5, 5, 5],
+
+  // ─── Round 7: Tap Rush ────────────────────────────────────────────────────────
+
+  TAP_RUSH_DURATION_MS:  30 * 1000,
+  TAP_RUSH_COOLDOWN_MS:  4 * 60 * 60 * 1000,
+  TAP_RUSH_MULTIPLIER:   8,
+
+  // ─── Round 7: World Boss ──────────────────────────────────────────────────────
+
+  WORLD_BOSS_HP:          10_000_000,
+  WORLD_BOSS_DURATION_MS: 7 * 24 * 60 * 60 * 1000,
+  WORLD_BOSS_NAMES:       ['Sigma Lord', 'Brainrot Titan', 'Ohio Overlord', 'Skibidi God'],
+  WORLD_BOSS_TOP_GEMS:    [200, 150, 100, 75, 50, 30, 20, 10, 10, 10],
+
+  // ─── Round 7: Guild Raid ──────────────────────────────────────────────────────
+
+  GUILD_RAID_BASE_HP: 500_000,
+  GUILD_RAID_WAVES: [
+    { wave: 1, name: 'Raid Alpha', hpMult: 1,  bpReward: 10_000,  gemReward: 5  },
+    { wave: 2, name: 'Raid Beta',  hpMult: 2,  bpReward: 25_000,  gemReward: 10 },
+    { wave: 3, name: 'Raid Gamma', hpMult: 5,  bpReward: 60_000,  gemReward: 20 },
+    { wave: 4, name: 'Raid Delta', hpMult: 10, bpReward: 120_000, gemReward: 35 },
+    { wave: 5, name: 'Raid Omega', hpMult: 20, bpReward: 250_000, gemReward: 60 },
+  ],
+
+  // ─── Round 7: Crafting ────────────────────────────────────────────────────────
+
+  CRAFTING_RECIPES: [
+    { key: 'craft_uncommon', name: 'Craft Uncommon', inputs: [{ key: 'energy_potion', qty: 3 }], output: { key: 'xp_scroll',   qty: 1 } },
+    { key: 'craft_rare',     name: 'Craft Rare',     inputs: [{ key: 'xp_scroll',     qty: 3 }], output: { key: 'gem_bomb',    qty: 1 } },
+    { key: 'craft_shield',   name: 'Craft Shield',   inputs: [{ key: 'gem_bomb',      qty: 2 }], output: { key: 'crit_shield', qty: 1 } },
+  ],
+
+  // ─── Round 7: Season ──────────────────────────────────────────────────────────
+
+  SEASON_DURATION_TAPPER_MS: 28 * 24 * 60 * 60 * 1000,
+  SEASON_TOP_GEMS:   [500, 300, 200, 100, 75, 50, 50, 30, 30, 30],
+  SEASON_TROPHY_ICONS: { 1: '🥇', 2: '🥈', 3: '🥉' },
+
+  // ─── Round 7: Referral Leaderboard ───────────────────────────────────────────
+
+  REFERRAL_TOP_GEMS: [100, 75, 50, 25, 10, 10, 5, 5, 5, 5],
 };

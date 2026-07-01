@@ -161,4 +161,43 @@ export const api = {
     accept: (friendId) => request('/friends/accept', { method: 'POST', body: { friendId } }),
     remove: (friendId) => request('/friends/remove', { method: 'POST', body: { friendId } }),
   },
+
+  taprush: {
+    status: () => request('/taprush'),
+    start:  () => request('/taprush/start', { method: 'POST' }),
+  },
+
+  worldboss: {
+    status: () => request('/worldboss'),
+    tap:    (count) => request('/worldboss/tap', { method: 'POST', body: { count } }),
+  },
+
+  guildraid: {
+    status: () => request('/guildraid'),
+    start:  () => request('/guildraid/start', { method: 'POST' }),
+    tap:    (count) => request('/guildraid/tap', { method: 'POST', body: { count } }),
+  },
+
+  wardrobe: {
+    status: () => request('/wardrobe'),
+    equip:  (skinKey) => request('/wardrobe/equip', { method: 'POST', body: { skinKey } }),
+  },
+
+  challenges: {
+    list:  () => request('/challenges'),
+    claim: (challengeKey) => request('/challenges/claim', { method: 'POST', body: { challengeKey } }),
+  },
+
+  crafting: {
+    list:  () => request('/crafting'),
+    craft: (recipeKey) => request('/crafting/craft', { method: 'POST', body: { recipeKey } }),
+  },
+
+  season: {
+    status: () => request('/season'),
+  },
+
+  referralboard: {
+    status: () => request('/referralboard'),
+  },
 };
