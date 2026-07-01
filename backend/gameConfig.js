@@ -283,12 +283,15 @@ module.exports = {
   // ─── Loot Box ────────────────────────────────────────────────────────────────
 
   LOOT_BOX_PRIZES: [
-    { weight: 35, type: 'gems',         amount: 10,                                    label: '💎 10 Gems' },
-    { weight: 25, type: 'gems',         amount: 25,                                    label: '💎 25 Gems' },
-    { weight: 15, type: 'gems',         amount: 50,                                    label: '💎 50 Gems' },
-    { weight: 12, type: 'boost',        boost: '2x_tap', durationMs: 10 * 60 * 1000,  label: '🔥 2× Tap 10m' },
+    { weight: 30, type: 'gems',         amount: 10,                                    label: '💎 10 Gems' },
+    { weight: 22, type: 'gems',         amount: 25,                                    label: '💎 25 Gems' },
+    { weight: 13, type: 'gems',         amount: 50,                                    label: '💎 50 Gems' },
+    { weight: 11, type: 'boost',        boost: '2x_tap', durationMs: 10 * 60 * 1000,  label: '🔥 2× Tap 10m' },
     { weight: 8,  type: 'skill_points', amount: 100,                                   label: '🧪 100 Skill Pts' },
-    { weight: 4,  type: 'skin',         skin: 'skin_fire',                             label: '🔥🧠 Fire Brain' },
+    { weight: 7,  type: 'pet',          pet: 'brain_cat',                              label: '🐱 Brain Cat Pet' },
+    { weight: 4,  type: 'pet',          pet: 'energy_fox',                             label: '🦊 Energy Fox Pet' },
+    { weight: 3,  type: 'skin',         skin: 'skin_fire',                             label: '🔥🧠 Fire Brain' },
+    { weight: 1,  type: 'pet',          pet: 'gem_dragon',                             label: '🐉 Gem Dragon Pet' },
     { weight: 1,  type: 'skin',         skin: 'skin_diamond',                          label: '💎🧠 Diamond Brain' },
   ],
 
@@ -323,6 +326,39 @@ module.exports = {
     });
     return shuffled.slice(0, 3);
   },
+
+  // ─── Pets ────────────────────────────────────────────────────────────────────
+
+  PETS: [
+    { key: 'brain_cat',        name: 'Brain Cat',        icon: '🐱', rarity: 'common',    desc: '+5% tap power',        bonus: { tapPowerPct: 0.05 } },
+    { key: 'energy_fox',       name: 'Energy Fox',       icon: '🦊', rarity: 'uncommon',  desc: '+200 max energy',      bonus: { extraEnergy: 200 } },
+    { key: 'gem_dragon',       name: 'Gem Dragon',       icon: '🐉', rarity: 'rare',      desc: '+2% gem drop chance',  bonus: { gemDropPct: 0.02 } },
+    { key: 'crit_wolf',        name: 'Crit Wolf',        icon: '🐺', rarity: 'rare',      desc: '+5% crit chance',      bonus: { critChancePct: 0.05 } },
+    { key: 'lucky_rabbit',     name: 'Lucky Rabbit',     icon: '🐰', rarity: 'uncommon',  desc: 'Wheel prizes ×1.2',    bonus: { wheelMult: 1.2 } },
+    { key: 'prestige_phoenix', name: 'Prestige Phoenix', icon: '🔥', rarity: 'legendary', desc: '+20% offline income',  bonus: { offlinePct: 20 } },
+  ],
+
+  PET_RARITY_COLOR: { common: '#9ca3af', uncommon: '#34d399', rare: '#60a5fa', legendary: '#f59e0b' },
+
+  getPetBonuses(petKey) {
+    if (!petKey) return {};
+    const pet = module.exports.PETS.find(p => p.key === petKey);
+    return pet ? pet.bonus : {};
+  },
+
+  // ─── World Zones ─────────────────────────────────────────────────────────────
+
+  WORLD_ZONES: [
+    { zone: 1, name: 'Neuron Valley',     icon: '🌿', unlockTaps: 0,          tapPowerBonus: 0, desc: 'Starting zone' },
+    { zone: 2, name: 'Synapse City',      icon: '🏙️',  unlockTaps: 50_000,    tapPowerBonus: 1, desc: 'Unlock at 50K taps' },
+    { zone: 3, name: 'Cortex Canyon',     icon: '🏔️',  unlockTaps: 250_000,   tapPowerBonus: 2, desc: 'Unlock at 250K taps' },
+    { zone: 4, name: 'Axon Abyss',        icon: '🌋', unlockTaps: 1_000_000,  tapPowerBonus: 3, desc: 'Unlock at 1M taps' },
+    { zone: 5, name: 'Brain Singularity', icon: '✨', unlockTaps: 5_000_000,   tapPowerBonus: 5, desc: 'Unlock at 5M taps' },
+  ],
+
+  // ─── Guild Wars ───────────────────────────────────────────────────────────────
+
+  GUILD_WAR_TOP_REWARDS: [100, 60, 40, 20, 10],
 
   // ─── Daily missions ──────────────────────────────────────────────────────────
 

@@ -87,7 +87,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     const count = pendingTaps.current;
     if (!count) return;
     pendingTaps.current = 0;
-    api.tapper.tap(count).then((res) => {
+    api.tapper.tap(count, combo).then((res) => {
       setEnergy(res.energy);
       if (res.bpEarned > 0) onCoinsRef.current?.(res.bpEarned);
       if (res.unlockedAchievements?.length) onAchRef.current?.(res.unlockedAchievements);

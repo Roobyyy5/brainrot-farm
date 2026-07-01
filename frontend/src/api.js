@@ -34,7 +34,7 @@ export const api = {
 
   tapper: {
     me: () => request('/tapper'),
-    tap: (count) => request('/tapper/tap', { method: 'POST', body: { count } }),
+    tap: (count, combo) => request('/tapper/tap', { method: 'POST', body: { count, combo } }),
     upgrades: () => request('/tapper/upgrades'),
     upgrade: (type) => request('/tapper/upgrade', { method: 'POST', body: { type } }),
     prestige: () => request('/tapper/prestige', { method: 'POST' }),
@@ -103,5 +103,27 @@ export const api = {
   dailyshop: {
     status: () => request('/dailyshop'),
     buy: (itemKey) => request('/dailyshop/buy', { method: 'POST', body: { itemKey } }),
+  },
+
+  pets: {
+    list: () => request('/pets'),
+    equip: (petKey) => request('/pets/equip', { method: 'POST', body: { petKey } }),
+  },
+
+  worlds: {
+    list: () => request('/worlds'),
+    advance: () => request('/worlds/advance', { method: 'POST' }),
+  },
+
+  profile: {
+    get: (telegramId) => request(`/profile/${telegramId}`),
+  },
+
+  comboboard: {
+    list: () => request('/comboboard'),
+  },
+
+  guildwars: {
+    status: () => request('/guildwars'),
   },
 };

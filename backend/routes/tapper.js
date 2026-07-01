@@ -17,6 +17,8 @@ const {
   SKILL_POINTS_PER_TAPS,
   BATTLE_PASS_XP_PER_ENERGY,
   TALENTS,
+  getPetBonuses,
+  WORLD_ZONES,
 } = require('../gameConfig');
 
 // Build skill-level map for a user (key → level)
@@ -165,7 +167,9 @@ router.get('/', asyncHandler(async (req, res) => {
 
     const skills = await getUserSkills(client, telegramId);
     const bonuses = skillBonuses(skills, profile.talents_chosen || []);
-    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax;
+    const petB = getPetBonuses(profile.active_pet || '');
+    const zoneData = WORLD_ZONES.find(z => z.zone === (profile.current_zone || 1)) || WORLD_ZONES[0];
+    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax + (petB.extraEnergy || 0);
     const regenRate  = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen;
     const energy     = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
 
@@ -182,7 +186,7 @@ router.get('/', asyncHandler(async (req, res) => {
     );
     const referralBoostPct = refRows[0].count * 2;
     const cardMultiplier = (1 + referralBoostPct / 100) * (1 + bonuses.cardBoostPct / 100) * (bonuses.passiveLord ? 1.5 : 1);
-    const offlineMultiplier = 1 + bonuses.offlineAmpPct / 100;
+    const offlineMultiplier = 1 + bonuses.offlineAmpPct / 100 + (petB.offlinePct || 0) / 100;
     const boostedCardBP = Math.floor(cardBP * cardMultiplier);
     const boostedAutoBP = Math.floor(autoBrainBP * offlineMultiplier * (bonuses.autoMaster ? 2 : 1));
 
@@ -227,7 +231,7 @@ router.get('/', asyncHandler(async (req, res) => {
       energy,
       energyMax,
       regenRate,
-      tapPower:        TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower,
+      tapPower:        Math.floor((TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower + zoneData.tapPowerBonus) * (1 + (petB.tapPowerPct || 0))),
       multiTap:        TAPPER_UPGRADES.MULTI_TAP.getEffect(profile.multi_tap_level),
       autoBrainPerMin: TAPPER_UPGRADES.AUTO_BRAIN.getEffect(profile.auto_brain_level),
       levels: {
@@ -251,6 +255,8 @@ router.get('/', asyncHandler(async (req, res) => {
       streakBonusPct:   Math.min((profile.tap_streak || 0) * TAP_STREAK_BONUS_PCT, TAP_STREAK_MAX_DAYS * TAP_STREAK_BONUS_PCT),
       selectedSkin:     profile.selected_skin || 'default',
       skinsUnlocked:    profile.skins_unlocked || [],
+      activePet:        profile.active_pet || '',
+      currentZone:      zoneData,
       boss: boss.rows[0] ? {
         id:       boss.rows[0].id,
         name:     boss.rows[0].name,
@@ -293,16 +299,18 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const maxClicks = Math.max(1, Math.floor(elapsedSec * TAPPER_MAX_TAPS_PER_SEC));
     const effectiveClicks = Math.min(count, maxClicks);
 
+    // Efficiency skill: reduce energy cost
+    const efficiencyMult = 1 - (bonuses.efficiencyPct / 100);
+    const effectiveMultiTap = Math.max(1, Math.floor(multiTap * efficiencyMult));
+
+    const petB2 = getPetBonuses(profile.active_pet || '');
+    const zoneData2 = WORLD_ZONES.find(z => z.zone === (profile.current_zone || 1)) || WORLD_ZONES[0];
     const currentEnergy = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
     const energyUsed = Math.min(effectiveClicks * effectiveMultiTap, currentEnergy);
 
     if (energyUsed === 0) {
       return { bpEarned: 0, energy: currentEnergy, energyMax, isCrit: false, unlockedAchievements: [] };
     }
-
-    // Efficiency skill: reduce energy cost
-    const efficiencyMult = 1 - (bonuses.efficiencyPct / 100);
-    const effectiveMultiTap = Math.max(1, Math.floor(multiTap * efficiencyMult));
 
     // Tap streak
     const today = new Date().toISOString().slice(0, 10);
@@ -321,15 +329,26 @@ router.post('/tap', asyncHandler(async (req, res) => {
     );
     const boostMultiplier = boostRow.rows[0] ? 2 : 1;
 
-    const effectiveTapPower = tapPower * (1 + streakBonusPct / 100) * boostMultiplier;
-    const critChance = TAPPER_CRIT_CHANCE + bonuses.extraCritChance;
+    const baseTapPower = Math.floor((tapPower + zoneData2.tapPowerBonus) * (1 + (petB2.tapPowerPct || 0)));
+    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier;
+    const critChance = TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0);
     const isCrit    = Math.random() < critChance;
     const critMult  = bonuses.critMultiplier;
     const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? critMult : 1));
     const newEnergy = currentEnergy - energyUsed;
 
-    // Gem drop luck
-    const gemDrop = Math.random() < bonuses.gemDropChance ? 1 : 0;
+    // Gem drop luck (including pet bonus)
+    const gemDrop = Math.random() < (bonuses.gemDropChance + (petB2.gemDropPct || 0)) ? 1 : 0;
+
+    // Track max combo for leaderboard (combo sent from client)
+    const clientCombo = parseFloat(req.body?.combo) || 1.0;
+    const weekKey = new Date().toISOString().slice(0, 7);
+    if (clientCombo > parseFloat(profile.max_combo || 1)) {
+      await client.query(
+        'UPDATE tapper_profiles SET max_combo=$1, max_combo_week=$2 WHERE telegram_id=$3',
+        [clientCombo, weekKey, telegramId]
+      ).catch(() => {});
+    }
 
     // Skill points earned
     const skillPtsEarned = Math.floor(energyUsed / SKILL_POINTS_PER_TAPS)

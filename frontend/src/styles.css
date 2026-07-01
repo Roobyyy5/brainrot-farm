@@ -2341,3 +2341,94 @@ body {
 .duel-brain           { font-size: 64px; }
 .duel-tap-hint        { font-size: 14px; font-weight: 800; color: var(--primary); letter-spacing: 3px; }
 .duel-stake           { font-size: 13px; color: var(--text-faint); font-weight: 600; }
+
+/* ── Round 5: Pets ─────────────────────────────────────────────── */
+
+/* ── Round 5: Pets ─────────────────────────────────────────────────────────── */
+.pets-section { padding: 16px; background: #111; border-radius: 16px; margin: 12px 0; }
+.pets-header { font-size: 18px; font-weight: 700; color: #f5c344; margin-bottom: 4px; }
+.pets-sub { font-size: 12px; color: #888; margin-bottom: 12px; }
+.pets-group-title { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.pets-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.pet-card { background: #1a1a2e; border: 2px solid #333; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.pet-card:hover { transform: translateY(-2px); }
+.pet-card--active { box-shadow: 0 0 16px rgba(245,195,68,0.4); }
+.pet-card--locked { opacity: 0.5; cursor: default; }
+.pet-icon { font-size: 32px; margin-bottom: 4px; }
+.pet-name { font-size: 13px; font-weight: 700; color: #fff; }
+.pet-rarity { font-size: 10px; text-transform: capitalize; margin: 2px 0; }
+.pet-desc { font-size: 11px; color: #aaa; }
+.pet-active-badge { margin-top: 6px; font-size: 11px; color: #34d399; font-weight: 700; }
+.pet-locked-hint { margin-top: 6px; font-size: 10px; color: #666; }
+
+/* ── Round 5: World Map ─────────────────────────────────────────────────────── */
+.worlds-section { padding: 16px; background: #111; border-radius: 16px; margin: 12px 0; }
+.worlds-header { font-size: 18px; font-weight: 700; color: #60a5fa; margin-bottom: 4px; }
+.worlds-sub { font-size: 12px; color: #888; margin-bottom: 12px; }
+.worlds-list { display: flex; flex-direction: column; gap: 8px; }
+.zone-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #1a1a2e; border: 1px solid #333; }
+.zone-card--current { border-color: #60a5fa; background: rgba(96,165,250,0.08); }
+.zone-card--done { border-color: #34d399; opacity: 0.75; }
+.zone-card--locked { opacity: 0.4; }
+.zone-icon { font-size: 28px; flex-shrink: 0; }
+.zone-info { flex: 1; }
+.zone-name { font-size: 14px; font-weight: 700; color: #fff; }
+.zone-desc { font-size: 11px; color: #888; }
+.zone-bonus { font-size: 11px; color: #f5c344; margin-top: 2px; }
+.zone-badge { font-size: 11px; padding: 3px 7px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
+.zone-badge--here { background: #60a5fa; color: #000; }
+.zone-badge--done { background: #34d399; color: #000; }
+.zone-badge--locked { background: #333; color: #888; }
+.worlds-advance-btn { width: 100%; margin-top: 12px; padding: 12px; background: linear-gradient(135deg,#60a5fa,#8b5cf6); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+/* ── Round 5: Profile Page ───────────────────────────────────────────────────── */
+.profile-section { padding: 16px; background: #111; border-radius: 16px; margin: 12px 0; }
+.profile-header { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.profile-search-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.profile-me-btn { padding: 8px 12px; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.profile-search-input { flex: 1; padding: 8px 12px; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 13px; }
+.profile-search-btn { padding: 8px 12px; background: #333; border: none; border-radius: 8px; color: #fff; cursor: pointer; }
+.profile-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px; }
+.profile-card { background: #1a1a2e; border-radius: 12px; padding: 16px; }
+.profile-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.profile-rank-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.profile-rank { font-size: 14px; font-weight: 700; }
+.profile-guild { font-size: 12px; color: #888; }
+.profile-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
+.profile-stat { text-align: center; background: #111; border-radius: 8px; padding: 8px 4px; }
+.profile-stat-val { font-size: 15px; font-weight: 700; color: #f5c344; }
+.profile-stat-lbl { font-size: 10px; color: #888; margin-top: 2px; }
+.profile-zone { font-size: 13px; color: #60a5fa; margin-bottom: 6px; }
+.profile-pet-row { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #aaa; margin-bottom: 8px; }
+.profile-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.profile-badge { font-size: 22px; background: #111; border-radius: 8px; padding: 4px; }
+
+/* ── Round 5: Combo Leaderboard ──────────────────────────────────────────────── */
+.comboboard-section { padding: 16px; background: #111; border-radius: 16px; margin: 12px 0; }
+.comboboard-header { font-size: 18px; font-weight: 700; color: #ff4fa3; margin-bottom: 4px; }
+.comboboard-sub { font-size: 12px; color: #888; margin-bottom: 8px; }
+.comboboard-mybest { font-size: 13px; color: #f5c344; margin-bottom: 8px; }
+.comboboard-empty { font-size: 13px; color: #555; text-align: center; padding: 16px; }
+.comboboard-list { display: flex; flex-direction: column; gap: 6px; }
+.comboboard-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: #1a1a2e; border-radius: 8px; }
+.comboboard-row--me { background: rgba(255,79,163,0.12); border: 1px solid #ff4fa3; }
+.comboboard-rank { font-size: 12px; color: #888; min-width: 24px; }
+.comboboard-name { flex: 1; font-size: 13px; color: #fff; }
+.comboboard-combo { font-size: 14px; font-weight: 700; color: #ff4fa3; }
+
+/* ── Round 5: Guild Wars ─────────────────────────────────────────────────────── */
+.guildwars-section { padding: 16px; background: #111; border-radius: 16px; margin: 12px 0; }
+.guildwars-header { font-size: 18px; font-weight: 700; color: #f87171; margin-bottom: 4px; }
+.guildwars-meta { font-size: 12px; color: #888; margin-bottom: 8px; }
+.guildwars-myscore { font-size: 13px; color: #f5c344; background: #1a1a2e; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+.guildwars-rewards-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.guildwars-reward-chip { font-size: 11px; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; padding: 4px 8px; color: #f5c344; }
+.guildwars-empty { font-size: 13px; color: #555; text-align: center; padding: 16px; }
+.guildwars-list { display: flex; flex-direction: column; gap: 6px; }
+.guildwars-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #1a1a2e; border-radius: 8px; }
+.guildwars-row--me { background: rgba(248,113,113,0.1); border: 1px solid #f87171; }
+.guildwars-pos { font-size: 12px; color: #888; min-width: 24px; }
+.guildwars-tag { font-size: 11px; color: #888; }
+.guildwars-name { flex: 1; font-size: 13px; color: #fff; font-weight: 600; }
+.guildwars-score { font-size: 12px; color: #f87171; }
+.guildwars-prize { font-size: 12px; color: #f5c344; font-weight: 700; }

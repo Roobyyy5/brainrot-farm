@@ -24,6 +24,11 @@ const loginstreakRoute = require('./routes/loginstreak');
 const guildsRoute = require('./routes/guilds');
 const duelsRoute = require('./routes/duels');
 const { router: dailyshopRoute } = require('./routes/dailyshop');
+const petsRoute       = require('./routes/pets');
+const worldsRoute     = require('./routes/worlds');
+const profileRoute    = require('./routes/profile');
+const comboboardRoute = require('./routes/comboboard');
+const { router: guildwarsRoute } = require('./routes/guildwars');
 
 const app = express();
 app.use(cors());
@@ -77,6 +82,11 @@ app.use('/loginstreak',telegramAuthMiddleware, actionLimiter, loginstreakRoute);
 app.use('/guilds',     telegramAuthMiddleware, actionLimiter, guildsRoute);
 app.use('/duels',      telegramAuthMiddleware, actionLimiter, duelsRoute);
 app.use('/dailyshop',  telegramAuthMiddleware, actionLimiter, dailyshopRoute);
+app.use('/pets',       telegramAuthMiddleware, actionLimiter, petsRoute);
+app.use('/worlds',     telegramAuthMiddleware, actionLimiter, worldsRoute);
+app.use('/profile',    telegramAuthMiddleware, actionLimiter, profileRoute);
+app.use('/comboboard', telegramAuthMiddleware, actionLimiter, comboboardRoute);
+app.use('/guildwars',  telegramAuthMiddleware, actionLimiter, guildwarsRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would

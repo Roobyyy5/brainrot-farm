@@ -23,6 +23,11 @@ import LoginStreak from './components/LoginStreak';
 import DailyShop from './components/DailyShop';
 import Guilds from './components/Guilds';
 import TapDuel from './components/TapDuel';
+import Pets from './components/Pets';
+import WorldMap from './components/WorldMap';
+import ProfilePage from './components/ProfilePage';
+import ComboLeaderboard from './components/ComboLeaderboard';
+import GuildWars from './components/GuildWars';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -103,6 +108,8 @@ export default function App() {
 
       {tab === 'boost' && (
         <>
+          <Pets />
+          <WorldMap />
           <LoginStreak onEarned={handleCoinsEarned} onGemsChanged={handleGemsChanged} />
           <DailyShop onGemsChanged={handleGemsChanged} />
           <GemShop onGemsChanged={handleGemsChanged} onCoinsChanged={handleCoinsEarned} />
@@ -116,6 +123,7 @@ export default function App() {
 
       {tab === 'club' && (
         <>
+          <GuildWars />
           <Guilds onGemsChanged={handleGemsChanged} />
           <TapDuel currentUserId={user?.telegram_id} />
         </>
@@ -123,6 +131,8 @@ export default function App() {
 
       {tab === 'board' && (
         <>
+          <ProfilePage currentUserId={user?.telegram_id} />
+          <ComboLeaderboard />
           <TapLeaderboard currentUserId={user?.telegram_id} />
           <Leaderboard currentUserId={user?.telegram_id} />
         </>

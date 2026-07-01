@@ -2,6 +2,7 @@ const express = require('express');
 const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 const { GUILD_MAX_MEMBERS, GUILD_BOSS_SCHEDULE, TAPPER_UPGRADES } = require('../gameConfig');
+const { addWarScore } = require('./guildwars');
 
 const router = express.Router();
 
@@ -147,6 +148,9 @@ router.post('/boss/tap', asyncHandler(async (req, res) => {
         [guildId, next.name, next.maxHp, next.maxHp, next.rewardGems, Date.now() + 24 * 60 * 60 * 1000, Date.now()]
       );
     }
+    // Contribute damage to guild war score
+    await addWarScore(guildId, damage).catch(() => {});
+
     return { damage, killed, gemReward, newHp };
   });
   if (result.error) return res.status(400).json({ error: result.error });

@@ -19,6 +19,12 @@ async function applyLootPrize(client, telegramId, prize, now) {
        WHERE telegram_id=$2 AND NOT ($1=ANY(skins_unlocked))`,
       [prize.skin, telegramId]
     );
+  } else if (prize.type === 'pet') {
+    await client.query(
+      `INSERT INTO user_pets (telegram_id, pet_key, acquired_at)
+       VALUES ($1, $2, $3) ON CONFLICT (telegram_id, pet_key) DO NOTHING`,
+      [telegramId, prize.pet, now]
+    );
   }
 }
 

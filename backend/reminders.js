@@ -53,7 +53,6 @@ async function checkReminders(bot) {
   );
   for (const boss of newBosses.rows) {
     await pool.query('UPDATE boss_fights SET notif_sent = TRUE WHERE id = $1', [boss.id]);
-    // Notify users active in the last 7 days
     const { rows: tappers } = await pool.query(
       'SELECT telegram_id FROM tapper_profiles WHERE last_seen_at >= $1',
       [now - 7 * 24 * 60 * 60 * 1000]
@@ -61,6 +60,35 @@ async function checkReminders(bot) {
     for (const t of tappers) {
       await sendMsg(bot, t.telegram_id,
         `👾 <b>Boss Alert!</b> <i>${boss.name}</i> has spawned!\nAttack now and earn rewards!`
+      );
+    }
+  }
+
+  // Duel pending notifications (sent once, ~1 min after creation)
+  const pendingDuels = await pool.query(
+    `SELECT d.opponent_id, u.username AS challenger_name, d.stake_gems
+     FROM tap_duels d
+     JOIN users u ON u.telegram_id = d.challenger_id
+     WHERE d.status = 'pending' AND d.created_at BETWEEN $1 AND $2`,
+    [now - 5 * 60 * 1000, now - 55 * 1000]
+  );
+  for (const duel of pendingDuels.rows) {
+    await sendMsg(bot, duel.opponent_id,
+      `⚔️ <b>${duel.challenger_name}</b> challenged you to a Tap Duel!\n💎 Stake: ${duel.stake_gems} gems — open the app to accept!`
+    );
+  }
+
+  // Daily shop refresh notification (at midnight UTC ±1 min window)
+  const utcHour = new Date(now).getUTCHours();
+  const utcMin  = new Date(now).getUTCMinutes();
+  if (utcHour === 0 && utcMin < 2) {
+    const { rows: active } = await pool.query(
+      'SELECT telegram_id FROM tapper_profiles WHERE last_seen_at >= $1',
+      [now - 3 * 24 * 60 * 60 * 1000]
+    );
+    for (const t of active) {
+      await sendMsg(bot, t.telegram_id,
+        '🛒 <b>Daily Shop refreshed!</b> New items just dropped — grab them before midnight UTC!'
       );
     }
   }

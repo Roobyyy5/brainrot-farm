@@ -283,3 +283,28 @@ CREATE INDEX IF NOT EXISTS idx_guild_members_guild      ON guild_members(guild_i
 CREATE INDEX IF NOT EXISTS idx_guild_boss_fights_guild  ON guild_boss_fights(guild_id, completed);
 CREATE INDEX IF NOT EXISTS idx_tap_duels_players        ON tap_duels(challenger_id, opponent_id, status);
 CREATE INDEX IF NOT EXISTS idx_daily_shop_purchases     ON daily_shop_purchases(telegram_id, date_key);
+
+-- ── Round 5: Pets ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_pets (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  pet_key     TEXT    NOT NULL,
+  acquired_at BIGINT  NOT NULL,
+  UNIQUE (telegram_id, pet_key)
+);
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS active_pet     TEXT         NOT NULL DEFAULT '';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS max_combo      NUMERIC(6,2) NOT NULL DEFAULT 1.0;
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS max_combo_week TEXT         NOT NULL DEFAULT '';
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS current_zone   INTEGER      NOT NULL DEFAULT 1;
+
+-- ── Round 5: Guild Wars (weekly guild tap-damage competition) ─────────────────
+CREATE TABLE IF NOT EXISTS guild_wars (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  season_week INTEGER NOT NULL,
+  guild_id    INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  war_score   BIGINT  NOT NULL DEFAULT 0,
+  UNIQUE (season_week, guild_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_pets_user  ON user_pets(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_guild_wars_week ON guild_wars(season_week, war_score DESC);
