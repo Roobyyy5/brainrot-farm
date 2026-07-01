@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
+const { logEvent } = require('../events');
 const {
   TAPPER_UPGRADES,
   TAPPER_MAX_TAPS_PER_SEC,
@@ -9,7 +10,9 @@ const {
   TAPPER_CRIT_CHANCE,
   TAPPER_ACHIEVEMENTS,
   BOSS_NAMES,
+  rankForTaps,
 } = require('../gameConfig');
+const { computeCardOfflineIncome } = require('./cards');
 
 const router = express.Router();
 
@@ -128,8 +131,21 @@ router.get('/', asyncHandler(async (req, res) => {
     const regenRate  = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level);
     const energy     = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
 
-    // Credit offline BP immediately so the user sees their balance update when they collect
-    const offlineBP = computeOfflineBP(profile.auto_brain_level, profile.last_seen_at);
+    // Credit all offline passive income atomically
+    const autoBrainBP = computeOfflineBP(profile.auto_brain_level, profile.last_seen_at);
+    const { income: cardBP, perHour: cardPerHour } = await computeCardOfflineIncome(client, telegramId, profile.last_seen_at);
+
+    // Referral boost applied to card income
+    const { rows: refRows } = await client.query(
+      `SELECT COUNT(*)::int AS count FROM referrals r
+       JOIN users u ON u.telegram_id = r.referred_id
+       WHERE r.referrer_id = $1 AND u.has_farmed_once = TRUE`,
+      [telegramId]
+    );
+    const referralBoostPct = refRows[0].count * 2;
+    const boostedCardBP = Math.floor(cardBP * (1 + referralBoostPct / 100));
+    const offlineBP = autoBrainBP + boostedCardBP;
+
     if (offlineBP > 0) {
       await client.query(
         'UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2',
@@ -164,10 +180,13 @@ router.get('/', asyncHandler(async (req, res) => {
         multiTap:  profile.multi_tap_level,
         autoBrain: profile.auto_brain_level,
       },
-      totalTaps:     profile.total_taps,
-      totalBpEarned: profile.total_bp_earned,
-      prestige:      profile.prestige,
-      offlineBP:     offlineBP,
+      totalTaps:        profile.total_taps,
+      totalBpEarned:    profile.total_bp_earned,
+      prestige:         profile.prestige,
+      offlineBP:        offlineBP,
+      cardIncomePerHour: Math.floor(cardPerHour * (1 + referralBoostPct / 100)),
+      referralBoostPct,
+      rank:             rankForTaps(profile.total_taps),
       boss: boss.rows[0] ? {
         id:       boss.rows[0].id,
         name:     boss.rows[0].name,
@@ -287,6 +306,7 @@ router.post('/upgrade', asyncHandler(async (req, res) => {
       `UPDATE tapper_profiles SET ${col} = ${col} + 1 WHERE telegram_id = $1`,
       [telegramId]
     );
+    logEvent(telegramId, 'tapper_upgrade');
 
     const updated = await client.query('SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]);
     return { success: true, upgrades: buildUpgradeList(updated.rows[0]) };

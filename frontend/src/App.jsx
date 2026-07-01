@@ -13,11 +13,15 @@ import AchievementToast from './components/AchievementToast';
 import TapGame from './components/TapGame';
 import UpgradeShop from './components/UpgradeShop';
 import TapLeaderboard from './components/TapLeaderboard';
+import PassiveCards from './components/PassiveCards';
+import WheelSpin from './components/WheelSpin';
+import TapperMissions from './components/TapperMissions';
 
 const TABS = [
-  { id: 'home', icon: '🏠', label: 'Home' },
-  { id: 'tap',  icon: '🧠', label: 'Tap' },
-  { id: 'shop', icon: '⚡', label: 'Shop' },
+  { id: 'home',  icon: '🏠', label: 'Home' },
+  { id: 'tap',   icon: '🧠', label: 'Tap' },
+  { id: 'cards', icon: '🃏', label: 'Cards' },
+  { id: 'boost', icon: '⚡', label: 'Boost' },
   { id: 'board', icon: '🏆', label: 'Board' },
 ];
 
@@ -32,8 +36,7 @@ export default function App() {
   useEffect(() => {
     initTelegram();
     const ref = getStartParam();
-    api
-      .register(ref)
+    api.register(ref)
       .then((data) => setUser(data.user))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -45,15 +48,11 @@ export default function App() {
   };
 
   const dismissAchievementToast = () => setAchievementQueue((q) => q.slice(1));
-
-  const handleCoinsEarned = (amount) =>
-    setUser((u) => u ? { ...u, coins: u.coins + amount } : u);
-
-  const handleCoinsSpent = (amount) =>
-    setUser((u) => u ? { ...u, coins: Math.max(0, u.coins - amount) } : u);
+  const handleCoinsEarned = (amount) => setUser((u) => u ? { ...u, coins: u.coins + amount } : u);
+  const handleCoinsSpent = (amount) => setUser((u) => u ? { ...u, coins: Math.max(0, u.coins - amount) } : u);
 
   if (loading) return <div className="loading-screen">Loading brainrot...</div>;
-  if (error) return <div className="error-screen">Error: {error}</div>;
+  if (error)   return <div className="error-screen">Error: {error}</div>;
 
   return (
     <div className="app">
@@ -86,19 +85,26 @@ export default function App() {
       )}
 
       {tab === 'tap' && (
-        <TapGame
-          user={user}
-          onCoinsEarned={handleCoinsEarned}
-          onAchievements={handleAchievements}
-        />
+        <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
       )}
 
-      {tab === 'shop' && (
-        <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
+      {tab === 'cards' && (
+        <PassiveCards userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
+      )}
+
+      {tab === 'boost' && (
+        <>
+          <WheelSpin onEarned={handleCoinsEarned} />
+          <TapperMissions onEarned={handleCoinsEarned} />
+          <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
+        </>
       )}
 
       {tab === 'board' && (
-        <TapLeaderboard currentUserId={user?.telegram_id} />
+        <>
+          <TapLeaderboard currentUserId={user?.telegram_id} />
+          <Leaderboard currentUserId={user?.telegram_id} />
+        </>
       )}
     </div>
   );

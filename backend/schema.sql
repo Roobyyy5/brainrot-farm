@@ -109,3 +109,54 @@ CREATE INDEX IF NOT EXISTS idx_tapper_total_taps ON tapper_profiles(total_taps D
 CREATE INDEX IF NOT EXISTS idx_tap_batches_user_time ON tap_batches(telegram_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_boss_fights_active ON boss_fights(ends_at, completed);
 CREATE INDEX IF NOT EXISTS idx_boss_participants_boss ON boss_participants(boss_id, damage DESC);
+
+-- Brain Gems currency
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gems INTEGER NOT NULL DEFAULT 0;
+
+-- Passive income cards catalog
+CREATE TABLE IF NOT EXISTS passive_cards (
+  key         TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  category    TEXT NOT NULL,
+  icon        TEXT NOT NULL,
+  description TEXT NOT NULL,
+  base_income INTEGER NOT NULL,
+  income_step INTEGER NOT NULL,
+  costs       INTEGER[] NOT NULL,
+  max_level   INTEGER NOT NULL DEFAULT 10
+);
+
+-- User's purchased passive cards
+CREATE TABLE IF NOT EXISTS user_cards (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  card_key    TEXT    NOT NULL REFERENCES passive_cards(key),
+  level       INTEGER NOT NULL DEFAULT 1,
+  bought_at   BIGINT  NOT NULL,
+  UNIQUE (telegram_id, card_key)
+);
+
+-- Daily wheel spin history (one free spin per day)
+CREATE TABLE IF NOT EXISTS wheel_spins (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  spun_at     BIGINT  NOT NULL,
+  prize_type  TEXT    NOT NULL,
+  prize_value INTEGER NOT NULL,
+  prize_index INTEGER NOT NULL DEFAULT 0
+);
+
+-- Daily mission claims (one claim per mission per day)
+CREATE TABLE IF NOT EXISTS mission_claims (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  mission_key TEXT    NOT NULL,
+  reward      INTEGER NOT NULL,
+  date_key    TEXT    NOT NULL,
+  claimed_at  BIGINT  NOT NULL,
+  UNIQUE (telegram_id, mission_key, date_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_cards_user    ON user_cards(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_wheel_spins_user   ON wheel_spins(telegram_id, spun_at);
+CREATE INDEX IF NOT EXISTS idx_mission_claims_user ON mission_claims(telegram_id, date_key);

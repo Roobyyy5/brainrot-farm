@@ -42,4 +42,19 @@ export const api = {
     boss: () => request('/tapper/boss'),
     bossTap: (bossId, count) => request('/tapper/boss/tap', { method: 'POST', body: { bossId, count } }),
   },
+
+  cards: {
+    list: () => request('/cards'),
+    buy: (key) => request('/cards/buy', { method: 'POST', body: { key } }),
+  },
+
+  wheel: {
+    status: () => request('/wheel'),
+    spin: () => request('/wheel/spin', { method: 'POST' }),
+  },
+
+  missions: {
+    list: () => request('/missions'),
+    claim: (key) => request('/missions/claim', { method: 'POST', body: { key } }),
+  },
 };

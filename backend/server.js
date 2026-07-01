@@ -14,6 +14,9 @@ const referralRoute = require('./routes/referral');
 const adminRoute = require('./routes/admin');
 const achievementsRoute = require('./routes/achievements');
 const tapperRoute = require('./routes/tapper');
+const cardsRoute = require('./routes/cards');
+const wheelRoute = require('./routes/wheel');
+const missionsRoute = require('./routes/missions');
 
 const app = express();
 app.use(cors());
@@ -57,6 +60,9 @@ const tapperLimiter = rateLimit({
   keyGenerator: (req) => req.tgUser?.id || ipKeyGenerator(req.ip),
 });
 app.use('/tapper', telegramAuthMiddleware, tapperLimiter, tapperRoute);
+app.use('/cards', telegramAuthMiddleware, actionLimiter, cardsRoute);
+app.use('/wheel', telegramAuthMiddleware, actionLimiter, wheelRoute);
+app.use('/missions', telegramAuthMiddleware, actionLimiter, missionsRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
