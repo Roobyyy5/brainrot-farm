@@ -19,6 +19,7 @@ import { News } from "./pages/News";
 import { Governance } from "./pages/Governance";
 import { Bookmarks } from "./pages/Bookmarks";
 import { ResetPassword } from "./pages/ResetPassword";
+import { Tap } from "./pages/Tap";
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -56,6 +57,7 @@ export function App() {
       <Route path="/news" element={<ProtectedLayout><News /></ProtectedLayout>} />
       <Route path="/governance" element={<ProtectedLayout><Governance /></ProtectedLayout>} />
       <Route path="/bookmarks" element={<ProtectedLayout><Bookmarks /></ProtectedLayout>} />
+      <Route path="/tap" element={<ProtectedLayout><Tap /></ProtectedLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -17,6 +17,7 @@ export function Sidebar() {
 
   const NAV_ITEMS: NavItem[] = [
     { to: "/", label: t("nav.feed"), icon: "🏠", exact: true },
+    { to: "/tap", label: t("nav.tap"), icon: "🧠" },
     { to: "/search", label: t("nav.search"), icon: "🔍" },
     { to: "/notifications", label: t("nav.notifications"), icon: "🔔" },
     { to: "/messages", label: t("nav.messages"), icon: "✉️" },

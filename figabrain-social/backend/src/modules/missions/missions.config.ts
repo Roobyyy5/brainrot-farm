@@ -31,6 +31,8 @@ export const MISSION_CATALOG: MissionSeed[] = [
   { key: "weekly_comment_50", period: "WEEKLY", action: "COMMENT", title: "50 коментарів за тиждень", description: "Будь активним учасником дискусій", targetCount: 50, xpReward: 150, pointsReward: 60 },
   { key: "weekly_post_20", period: "WEEKLY", action: "POST", title: "20 постів за тиждень", description: "Публікуй контент щодня", targetCount: 20, xpReward: 200, pointsReward: 80 },
   { key: "weekly_referral_10", period: "WEEKLY", action: "REFERRAL", title: "Запроси 10 друзів", description: "Розбудовуй спільноту FIGABRAIN", targetCount: 10, xpReward: 400, pointsReward: 200 },
+  { key: "daily_tap_500", period: "DAILY", action: "TAP", title: "500 тапів за день", description: "Тапай мозок і заробляй Brain Points", targetCount: 500, xpReward: 20, pointsReward: 10 },
+  { key: "weekly_tap_5000", period: "WEEKLY", action: "TAP", title: "5000 тапів за тиждень", description: "Будь найактивнішим тапером тижня", targetCount: 5000, xpReward: 200, pointsReward: 100 },
 ];
 
 export function periodKeyFor(period: MissionPeriod, date: Date = new Date()): string {

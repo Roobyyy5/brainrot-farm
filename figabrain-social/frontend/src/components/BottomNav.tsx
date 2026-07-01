@@ -4,7 +4,7 @@ import { useNotificationBadge } from "../context/NotificationBadgeContext";
 
 const ITEMS = [
   { to: "/", icon: "🏠", key: "feed", exact: true },
-  { to: "/search", icon: "🔍", key: "search" },
+  { to: "/tap", icon: "🧠", key: "tap" },
   { to: "/notifications", icon: "🔔", key: "notifications" },
   { to: "/messages", icon: "✉️", key: "messages" },
   { to: "/economy", icon: "⚡", key: "economy" },

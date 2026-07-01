@@ -42,6 +42,7 @@ enum MissionAction {
   REFERRAL
   REPOST
   LOGIN
+  TAP
 }
 
 enum AchievementCategory {
@@ -180,6 +181,9 @@ model User {
   governanceProposals  GovernanceProposal[]
   governanceVotes      GovernanceVote[]
   pushSubscriptions    PushSubscription[]
+  tapperProfile        TapperProfile?
+  tapBatches           TapBatch[]
+  bossParticipations   BossParticipant[]
 
   @@index([brainPoints])
   @@index([xp])
@@ -782,4 +786,74 @@ model GovernanceVote {
 
   @@unique([proposalId, userId])
   @@index([proposalId])
+}
+
+model TapperProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  energy         Int      @default(1000)
+  lastEnergyAt   DateTime @default(now())
+
+  tapPowerLevel  Int      @default(0)
+  energyMaxLevel Int      @default(0)
+  regenRateLevel Int      @default(0)
+  multiTapLevel  Int      @default(0)
+  autoBrainLevel Int      @default(0)
+
+  totalTaps      Int      @default(0)
+  totalBpEarned  Decimal  @default(0) @db.Decimal(20, 4)
+  prestige       Int      @default(0)
+  skin           String   @default("brain")
+
+  lastSeenAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tapBatches     TapBatch[]
+}
+
+model TapBatch {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tapperProfileId String
+  tapperProfile   TapperProfile @relation(fields: [tapperProfileId], references: [id], onDelete: Cascade)
+  tapCount        Int
+  bpEarned        Decimal       @db.Decimal(20, 4)
+  createdAt       DateTime      @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model BossFight {
+  id        String   @id @default(uuid())
+  name      String
+  hp        Int
+  maxHp     Int
+  reward    Decimal  @db.Decimal(20, 4)
+  startsAt  DateTime
+  endsAt    DateTime
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  participants BossParticipant[]
+
+  @@index([startsAt, endsAt])
+}
+
+model BossParticipant {
+  id        String    @id @default(uuid())
+  bossId    String
+  boss      BossFight @relation(fields: [bossId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  damage    Int       @default(0)
+  rewarded  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([bossId, userId])
+  @@index([bossId, damage])
 }

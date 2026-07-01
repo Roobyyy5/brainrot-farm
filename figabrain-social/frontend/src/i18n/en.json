@@ -1,6 +1,7 @@
 {
   "nav": {
     "feed": "Feed",
+    "tap": "Tapper",
     "search": "Search",
     "economy": "Economy",
     "messages": "Messages",
@@ -10,6 +11,30 @@
     "settings": "Settings",
     "rewards": "Rewards",
     "wallet": "Wallet"
+  },
+  "tap": {
+    "loading": "Loading Tapper...",
+    "totalTaps": "Total Taps",
+    "totalEarned": "Total Earned",
+    "noEnergy": "No energy — regenerating...",
+    "tapHint": "Tap the brain to earn BP!",
+    "tapsPending": "taps queued...",
+    "upgradeTitle": "Upgrade Shop",
+    "insufficientBP": "Not enough Brain Points",
+    "upgradeFailed": "Upgrade failed",
+    "offlineTitle": "Your Brain was busy!",
+    "offlineDesc": "Your Auto Brain earned BP while you were away.",
+    "offlineCollect": "Collect & Play",
+    "noBoss": "No boss active. Check back later!",
+    "dailyBoss": "Daily Boss",
+    "endsIn": "Ends in",
+    "attackFailed": "Attack failed",
+    "today": "Today",
+    "allTime": "All Time",
+    "noTappers": "No taps yet — be the first!",
+    "prestigeReady": "Prestige Available!",
+    "prestigeDesc": "Reset upgrades for a permanent +10% bonus to all future earnings.",
+    "prestige": "Prestige Now"
   },
   "settings": {
     "title": "Profile Settings",
