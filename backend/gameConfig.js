@@ -42,4 +42,29 @@ module.exports = {
     }
     return current;
   },
+
+  TAPPER_MAX_TAPS_PER_SEC: 20,
+  TAPPER_MAX_OFFLINE_HOURS: 8,
+  TAPPER_PRESTIGE_THRESHOLD: 1_000_000,
+  TAPPER_CRIT_CHANCE: 0.03,
+
+  TAPPER_UPGRADES: {
+    TAP_POWER:  { maxLevel: 5, costs: [0, 100, 300, 700, 1500, 3500],         label: 'Tap Power',       icon: '⚡', description: 'Points per tap',        unit: 'pts/tap', getEffect: (l) => l + 1 },
+    ENERGY_MAX: { maxLevel: 5, costs: [0, 200, 500, 1200, 2500, 5000],        label: 'Energy Capacity', icon: '🔋', description: 'Max energy storage',    unit: 'energy',  getEffect: (l) => 1000 + l * 1000 },
+    REGEN_RATE: { maxLevel: 5, costs: [0, 150, 400, 900, 2000, 4500],         label: 'Energy Regen',    icon: '♻️', description: 'Energy per second',      unit: '/sec',    getEffect: (l) => 2 + l * 2 },
+    MULTI_TAP:  { maxLevel: 3, costs: [0, 500, 2000, 6000, 0],               label: 'Multi-Tap',       icon: '✌️', description: 'Energy used per click',  unit: '×/click', getEffect: (l) => l + 1 },
+    AUTO_BRAIN: { maxLevel: 5, costs: [0, 1000, 3000, 8000, 20000, 50000],   label: 'Auto Brain',      icon: '🤖', description: 'Passive pts per minute', unit: 'pts/min', getEffect: (l) => l * 2 },
+  },
+
+  TAPPER_ACHIEVEMENTS: [
+    { key: 'tap_first',   name: 'First Tap',      emoji: '👆', reward: 10,   check: (p) => p.total_taps >= 1 },
+    { key: 'tap_100',     name: '100 Taps',        emoji: '💯', reward: 25,   check: (p) => p.total_taps >= 100 },
+    { key: 'tap_1k',      name: '1K Tapper',       emoji: '🔥', reward: 75,   check: (p) => p.total_taps >= 1000 },
+    { key: 'tap_10k',     name: '10K Legend',      emoji: '⚡', reward: 200,  check: (p) => p.total_taps >= 10000 },
+    { key: 'tap_100k',    name: '100K God',        emoji: '🧠', reward: 500,  check: (p) => p.total_taps >= 100000 },
+    { key: 'tap_maxed',   name: 'Fully Upgraded',  emoji: '💎', reward: 300,  check: (p) => p.tap_power_level >= 5 && p.energy_max_level >= 5 && p.regen_rate_level >= 5 },
+    { key: 'tap_prestige','name': 'Prestige',      emoji: '✨', reward: 1000, check: (p) => p.prestige >= 1 },
+  ],
+
+  BOSS_NAMES: ['Mega Brain', 'Crypto Kraken', 'FOMO Phantom', 'Whale Boss', 'Moon Titan', 'Degen Dragon'],
 };

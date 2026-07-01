@@ -768,3 +768,642 @@ body {
   font-weight: 700;
   color: var(--gold);
 }
+
+/* ---------- Tab bar ---------- */
+
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  backdrop-filter: blur(18px);
+}
+
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  font-family: 'Manrope', sans-serif;
+}
+
+.tab-btn--active {
+  background: var(--primary-gradient);
+  color: #fff;
+}
+
+.tab-btn-icon {
+  font-size: 18px;
+}
+
+.tab-btn-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ---------- Tap game ---------- */
+
+.tap-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-faint);
+  font-size: 14px;
+}
+
+.tap-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Combo meter */
+.combo-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, rgba(255,79,163,0.18), rgba(139,92,246,0.18));
+  border: 1px solid rgba(255,79,163,0.35);
+  animation: comboPulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes comboPulse {
+  from { box-shadow: 0 0 0 0 rgba(255,79,163,0.3); }
+  to { box-shadow: 0 0 12px 4px rgba(255,79,163,0.15); }
+}
+
+.combo-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.combo-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Tap area */
+.tap-area {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.tap-area--empty {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tap-brain {
+  font-size: 110px;
+  line-height: 1;
+  filter: drop-shadow(0 0 28px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 60px rgba(255, 79, 163, 0.3));
+  transition: transform 0.08s ease, filter 0.08s ease;
+  position: relative;
+  z-index: 2;
+  animation: brainFloat 3s ease-in-out infinite;
+}
+
+@keyframes brainFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.tap-brain--active {
+  transform: scale(0.91) !important;
+  filter: drop-shadow(0 0 40px rgba(255, 79, 163, 0.9)) drop-shadow(0 0 80px rgba(139, 92, 246, 0.5)) !important;
+  animation: none;
+}
+
+.tap-brain--dark {
+  filter: grayscale(0.6) drop-shadow(0 0 10px rgba(139, 92, 246, 0.2)) !important;
+}
+
+.tap-brain-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  animation: ringPulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(0.85); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 0.6; }
+}
+
+/* Floating rewards */
+.tap-float {
+  position: absolute;
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--gold);
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  animation: tapFloatUp 0.9s ease-out forwards;
+  white-space: nowrap;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes tapFloatUp {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  15%  { opacity: 1; transform: translate(-50%, -80%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -160%) scale(0.9); }
+}
+
+/* Energy bar */
+.energy-bar-wrap {
+  width: 100%;
+  max-width: 320px;
+}
+
+.energy-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.energy-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.energy-regen {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.energy-bar-track {
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.energy-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  transition: width 0.4s ease;
+}
+
+/* Stats row */
+.tap-stats {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.tap-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 8px;
+}
+
+.tap-stat-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tap-stat-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Prestige button */
+.prestige-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(245,195,68,0.4);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(245,195,68,0.12), rgba(255,79,163,0.08));
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 13px;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.prestige-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.prestige-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Boss card ---------- */
+
+.boss-card {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255,79,163,0.1), rgba(139,92,246,0.08));
+  border: 1px solid rgba(255, 79, 163, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.boss-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.boss-emoji {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.boss-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.boss-name {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.boss-timer {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.boss-reward {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.boss-hp-wrap {
+  margin-bottom: 14px;
+}
+
+.boss-hp-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.boss-hp-track {
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+.boss-hp-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--primary), #ff8c00);
+  transition: width 0.3s ease;
+}
+
+.boss-fight-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.boss-tap-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  overflow: hidden;
+}
+
+.boss-tap-btn--active {
+  transform: scale(0.95);
+}
+
+.boss-tap-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.boss-tap-icon {
+  font-size: 16px;
+}
+
+.boss-float {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--gold);
+  pointer-events: none;
+  animation: tapFloatUp 0.9s ease-out forwards;
+}
+
+.boss-my-dmg {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Offline modal ---------- */
+
+.offline-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 12, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.offline-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 28px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+}
+
+.offline-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: brainFloat 2s ease-in-out infinite;
+}
+
+.offline-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.offline-desc {
+  font-size: 13px;
+  color: var(--text-faint);
+  margin: 0 0 16px;
+}
+
+.offline-reward {
+  font-family: 'Sora', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--gold);
+  margin-bottom: 20px;
+  text-shadow: 0 0 24px rgba(245,195,68,0.4);
+}
+
+.offline-credited {
+  font-size: 11px;
+  color: var(--success);
+  font-weight: 600;
+  margin: -10px 0 16px;
+}
+
+.offline-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+}
+
+/* ---------- Upgrade shop ---------- */
+
+.upgrade-shop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.upgrade-shop-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+  color: var(--text);
+}
+
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upgrade-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.upgrade-card:not(.upgrade-card--maxed):hover {
+  border-color: var(--border-strong);
+}
+
+.upgrade-card--maxed {
+  opacity: 0.7;
+}
+
+.upgrade-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.upgrade-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.upgrade-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.upgrade-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.upgrade-effect {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.upgrade-effect-next {
+  color: var(--success);
+}
+
+.upgrade-level-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.upgrade-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.upgrade-dot--filled {
+  background: var(--secondary);
+  border-color: var(--secondary);
+}
+
+.upgrade-action {
+  flex-shrink: 0;
+}
+
+.upgrade-buy-btn {
+  padding: 10px 14px;
+  border: 1px solid rgba(255,79,163,0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(255,79,163,0.08);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.upgrade-buy-btn:hover:not(:disabled) {
+  background: rgba(255,79,163,0.15);
+}
+
+.upgrade-buy-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.upgrade-maxed-badge {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(52,211,153,0.1);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Tap leaderboard ---------- */
+
+.tap-lb-section {
+  width: 100%;
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.tap-lb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tap-lb-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.tap-lb-empty {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 20px 0;
+}

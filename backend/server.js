@@ -13,6 +13,7 @@ const leaderboardRoute = require('./routes/leaderboard');
 const referralRoute = require('./routes/referral');
 const adminRoute = require('./routes/admin');
 const achievementsRoute = require('./routes/achievements');
+const tapperRoute = require('./routes/tapper');
 
 const app = express();
 app.use(cors());
@@ -46,6 +47,16 @@ app.use('/daily', telegramAuthMiddleware, actionLimiter, dailyRoute);
 app.use('/boost', telegramAuthMiddleware, actionLimiter, boostRoute);
 app.use('/referral', telegramAuthMiddleware, actionLimiter, referralRoute);
 app.use('/achievements', telegramAuthMiddleware, actionLimiter, achievementsRoute);
+
+// Tapper needs a higher rate limit — batches fire ~once per second from the client
+const tapperLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.tgUser?.id || ipKeyGenerator(req.ip),
+});
+app.use('/tapper', telegramAuthMiddleware, tapperLimiter, tapperRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would

@@ -10,11 +10,22 @@ import Referral from './components/Referral';
 import Leaderboard from './components/Leaderboard';
 import Achievements from './components/Achievements';
 import AchievementToast from './components/AchievementToast';
+import TapGame from './components/TapGame';
+import UpgradeShop from './components/UpgradeShop';
+import TapLeaderboard from './components/TapLeaderboard';
+
+const TABS = [
+  { id: 'home', icon: '🏠', label: 'Home' },
+  { id: 'tap',  icon: '🧠', label: 'Tap' },
+  { id: 'shop', icon: '⚡', label: 'Shop' },
+  { id: 'board', icon: '🏆', label: 'Board' },
+];
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('home');
   const [achievementQueue, setAchievementQueue] = useState([]);
   const [achievementsRefreshKey, setAchievementsRefreshKey] = useState(0);
 
@@ -33,9 +44,13 @@ export default function App() {
     setAchievementsRefreshKey((k) => k + 1);
   };
 
-  const dismissAchievementToast = () => {
-    setAchievementQueue((q) => q.slice(1));
-  };
+  const dismissAchievementToast = () => setAchievementQueue((q) => q.slice(1));
+
+  const handleCoinsEarned = (amount) =>
+    setUser((u) => u ? { ...u, coins: u.coins + amount } : u);
+
+  const handleCoinsSpent = (amount) =>
+    setUser((u) => u ? { ...u, coins: Math.max(0, u.coins - amount) } : u);
 
   if (loading) return <div className="loading-screen">Loading brainrot...</div>;
   if (error) return <div className="error-screen">Error: {error}</div>;
@@ -46,11 +61,45 @@ export default function App() {
       <Onboarding />
       <AchievementToast achievement={achievementQueue[0] || null} onDone={dismissAchievementToast} />
       <Balance user={user} />
-      <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
-      <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
-      <Referral user={user} />
-      <Achievements refreshKey={achievementsRefreshKey} />
-      <Leaderboard currentUserId={user?.telegram_id} />
+
+      <div className="tab-bar">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`tab-btn${tab === t.id ? ' tab-btn--active' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            <span className="tab-btn-icon">{t.icon}</span>
+            <span className="tab-btn-label">{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {tab === 'home' && (
+        <>
+          <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
+          <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
+          <Referral user={user} />
+          <Achievements refreshKey={achievementsRefreshKey} />
+          <Leaderboard currentUserId={user?.telegram_id} />
+        </>
+      )}
+
+      {tab === 'tap' && (
+        <TapGame
+          user={user}
+          onCoinsEarned={handleCoinsEarned}
+          onAchievements={handleAchievements}
+        />
+      )}
+
+      {tab === 'shop' && (
+        <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
+      )}
+
+      {tab === 'board' && (
+        <TapLeaderboard currentUserId={user?.telegram_id} />
+      )}
     </div>
   );
 }

@@ -31,4 +31,15 @@ export const api = {
   leaderboard: (period) => request(`/leaderboard${period === 'weekly' ? '?period=weekly' : ''}`),
   referral: () => request('/referral'),
   achievements: () => request('/achievements'),
+
+  tapper: {
+    me: () => request('/tapper'),
+    tap: (count) => request('/tapper/tap', { method: 'POST', body: { count } }),
+    upgrades: () => request('/tapper/upgrades'),
+    upgrade: (type) => request('/tapper/upgrade', { method: 'POST', body: { type } }),
+    prestige: () => request('/tapper/prestige', { method: 'POST' }),
+    leaderboard: () => request('/tapper/leaderboard'),
+    boss: () => request('/tapper/boss'),
+    bossTap: (bossId, count) => request('/tapper/boss/tap', { method: 'POST', body: { bossId, count } }),
+  },
 };
