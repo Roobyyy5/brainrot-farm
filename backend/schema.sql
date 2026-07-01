@@ -308,3 +308,80 @@ CREATE TABLE IF NOT EXISTS guild_wars (
 
 CREATE INDEX IF NOT EXISTS idx_user_pets_user  ON user_pets(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_guild_wars_week ON guild_wars(season_week, war_score DESC);
+
+-- ── Round 6: Tournament ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tournaments (
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name       TEXT    NOT NULL,
+  starts_at  BIGINT  NOT NULL,
+  ends_at    BIGINT  NOT NULL,
+  prize_skin TEXT    NOT NULL DEFAULT '',
+  settled    BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at BIGINT  NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tournament_scores (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+  telegram_id   TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  score         BIGINT  NOT NULL DEFAULT 0,
+  UNIQUE (tournament_id, telegram_id)
+);
+
+-- ── Round 6: Prestige Shop ─────────────────────────────────────────────────────
+ALTER TABLE tapper_profiles ADD COLUMN IF NOT EXISTS prestige_tokens INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS prestige_upgrades (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  upgrade_key TEXT    NOT NULL,
+  level       INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (telegram_id, upgrade_key)
+);
+
+-- ── Round 6: Boss Rush ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS boss_rush_sessions (
+  id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id  TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  current_wave INTEGER NOT NULL DEFAULT 1,
+  boss_hp      BIGINT  NOT NULL DEFAULT 0,
+  boss_max_hp  BIGINT  NOT NULL DEFAULT 0,
+  boss_name    TEXT    NOT NULL DEFAULT '',
+  score        BIGINT  NOT NULL DEFAULT 0,
+  status       TEXT    NOT NULL DEFAULT 'active',
+  started_at   BIGINT  NOT NULL,
+  ended_at     BIGINT
+);
+
+-- ── Round 6: Inventory ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_inventory (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  item_key    TEXT    NOT NULL,
+  quantity    INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (telegram_id, item_key)
+);
+
+-- ── Round 6: Guild Chat ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guild_messages (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id    INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  username    TEXT,
+  message     TEXT    NOT NULL,
+  created_at  BIGINT  NOT NULL
+);
+
+-- ── Round 6: Friends ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS friends (
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  friend_id  TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  status     TEXT    NOT NULL DEFAULT 'pending',
+  created_at BIGINT  NOT NULL,
+  UNIQUE (user_id, friend_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tournament_scores      ON tournament_scores(tournament_id, score DESC);
+CREATE INDEX IF NOT EXISTS idx_boss_rush_user         ON boss_rush_sessions(telegram_id, status);
+CREATE INDEX IF NOT EXISTS idx_guild_messages_guild   ON guild_messages(guild_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_friends_user           ON friends(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_prestige_upgrades_user ON prestige_upgrades(telegram_id);

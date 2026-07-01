@@ -157,4 +157,47 @@ router.post('/boss/tap', asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
+// ── Guild Chat ────────────────────────────────────────────────────────────────
+
+router.get('/chat', asyncHandler(async (req, res) => {
+  const telegramId = req.tgUser.id.toString();
+  const { rows: m } = await pool.query('SELECT guild_id FROM guild_members WHERE telegram_id=$1', [telegramId]);
+  if (!m[0]) return res.status(400).json({ error: 'Not in a guild' });
+
+  const { rows } = await pool.query(
+    'SELECT id, telegram_id, username, message, created_at FROM guild_messages WHERE guild_id=$1 ORDER BY created_at DESC LIMIT 50',
+    [m[0].guild_id]
+  );
+  res.json({ messages: rows.reverse() });
+}));
+
+router.post('/chat', asyncHandler(async (req, res) => {
+  const telegramId = req.tgUser.id.toString();
+  const msg = String(req.body.message || '').trim().slice(0, 200);
+  if (!msg) return res.status(400).json({ error: 'Empty message' });
+
+  const [memberRes, userRes] = await Promise.all([
+    pool.query('SELECT guild_id FROM guild_members WHERE telegram_id=$1', [telegramId]),
+    pool.query('SELECT username FROM users WHERE telegram_id=$1', [telegramId]),
+  ]);
+  if (!memberRes.rows[0]) return res.status(400).json({ error: 'Not in a guild' });
+
+  const guildId = memberRes.rows[0].guild_id;
+  const username = userRes.rows[0]?.username || `User_${telegramId.slice(-4)}`;
+
+  const { rows } = await pool.query(
+    'INSERT INTO guild_messages (guild_id, telegram_id, username, message, created_at) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [guildId, telegramId, username, msg, Date.now()]
+  );
+
+  // Keep only last 200 messages per guild
+  await pool.query(
+    `DELETE FROM guild_messages WHERE guild_id=$1 AND id NOT IN (
+       SELECT id FROM guild_messages WHERE guild_id=$1 ORDER BY created_at DESC LIMIT 200
+     )`, [guildId]
+  ).catch(() => {});
+
+  res.json({ message: rows[0] });
+}));
+
 module.exports = router;

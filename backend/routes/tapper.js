@@ -19,6 +19,8 @@ const {
   TALENTS,
   getPetBonuses,
   WORLD_ZONES,
+  PRESTIGE_SHOP,
+  getCurrentWeeklyEvent,
 } = require('../gameConfig');
 
 // Build skill-level map for a user (key → level)
@@ -55,6 +57,22 @@ const { computeCardOfflineIncome } = require('./cards');
 const router = express.Router();
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+
+async function getPrestigeUpgrades(client, telegramId) {
+  const { rows } = await client.query('SELECT upgrade_key, level FROM prestige_upgrades WHERE telegram_id=$1', [telegramId]);
+  const map = {};
+  for (const r of rows) map[r.upgrade_key] = r.level;
+  return map;
+}
+
+function prestigeBonuses(upgrades) {
+  return {
+    extraTapPower: upgrades.eternal_tap || 0,
+    extraEnergyBase: (upgrades.vast_energy || 0) * 500,
+    extraGemDrop: (upgrades.gem_vault || 0) * 0.01,
+    incomePct: (upgrades.prestige_aura || 0) * 10,
+  };
+}
 
 function computeEnergy(stored, energyMax, regenRate, lastEnergyAt) {
   const elapsed = (Date.now() - lastEnergyAt) / 1000;
@@ -168,9 +186,13 @@ router.get('/', asyncHandler(async (req, res) => {
     const skills = await getUserSkills(client, telegramId);
     const bonuses = skillBonuses(skills, profile.talents_chosen || []);
     const petB = getPetBonuses(profile.active_pet || '');
+    const pUpgrades = await getPrestigeUpgrades(client, telegramId);
+    const pBonuses = prestigeBonuses(pUpgrades);
+    const weeklyEvent = getCurrentWeeklyEvent();
     const zoneData = WORLD_ZONES.find(z => z.zone === (profile.current_zone || 1)) || WORLD_ZONES[0];
-    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax + (petB.extraEnergy || 0);
-    const regenRate  = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen;
+    const regenMult = weeklyEvent.effect === 'regenMult' ? weeklyEvent.value : 1;
+    const energyMax  = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax + (petB.extraEnergy || 0) + pBonuses.extraEnergyBase;
+    const regenRate  = Math.floor((TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen) * regenMult);
     const energy     = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
 
     // Credit all offline passive income atomically
@@ -231,7 +253,7 @@ router.get('/', asyncHandler(async (req, res) => {
       energy,
       energyMax,
       regenRate,
-      tapPower:        Math.floor((TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower + zoneData.tapPowerBonus) * (1 + (petB.tapPowerPct || 0))),
+      tapPower:        Math.floor((TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower + zoneData.tapPowerBonus + pBonuses.extraTapPower) * (1 + (petB.tapPowerPct || 0))),
       multiTap:        TAPPER_UPGRADES.MULTI_TAP.getEffect(profile.multi_tap_level),
       autoBrainPerMin: TAPPER_UPGRADES.AUTO_BRAIN.getEffect(profile.auto_brain_level),
       levels: {
@@ -257,6 +279,8 @@ router.get('/', asyncHandler(async (req, res) => {
       skinsUnlocked:    profile.skins_unlocked || [],
       activePet:        profile.active_pet || '',
       currentZone:      zoneData,
+      prestigeTokens:   profile.prestige_tokens || 0,
+      weeklyEvent,
       boss: boss.rows[0] ? {
         id:       boss.rows[0].id,
         name:     boss.rows[0].name,
@@ -305,6 +329,17 @@ router.post('/tap', asyncHandler(async (req, res) => {
 
     const petB2 = getPetBonuses(profile.active_pet || '');
     const zoneData2 = WORLD_ZONES.find(z => z.zone === (profile.current_zone || 1)) || WORLD_ZONES[0];
+    const pUpgrades2 = await getPrestigeUpgrades(client, telegramId);
+    const pBonuses2 = prestigeBonuses(pUpgrades2);
+    const weeklyEvent2 = getCurrentWeeklyEvent();
+    const bpMultWeekly = weeklyEvent2.effect === 'bpMult' ? weeklyEvent2.value : 1;
+    const gemMultWeekly = weeklyEvent2.effect === 'gemDropMult' ? weeklyEvent2.value : 1;
+    const bpXpMultWeekly = weeklyEvent2.effect === 'bpXpMult' ? weeklyEvent2.value : 1;
+    // Check active crit_shield boost
+    const critShield = await client.query(
+      "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='crit_shield' AND expires_at>$2 LIMIT 1",
+      [telegramId, Date.now()]
+    );
     const currentEnergy = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
     const energyUsed = Math.min(effectiveClicks * effectiveMultiTap, currentEnergy);
 
@@ -329,16 +364,18 @@ router.post('/tap', asyncHandler(async (req, res) => {
     );
     const boostMultiplier = boostRow.rows[0] ? 2 : 1;
 
-    const baseTapPower = Math.floor((tapPower + zoneData2.tapPowerBonus) * (1 + (petB2.tapPowerPct || 0)));
-    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier;
-    const critChance = TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0);
+    const baseTapPower = Math.floor((tapPower + zoneData2.tapPowerBonus + pBonuses2.extraTapPower) * (1 + (petB2.tapPowerPct || 0)));
+    const incomeMult = 1 + (pBonuses2.incomePct || 0) / 100;
+    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier * incomeMult * bpMultWeekly;
+    const critChance = critShield.rows[0] ? 1.0 : TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0);
     const isCrit    = Math.random() < critChance;
     const critMult  = bonuses.critMultiplier;
     const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? critMult : 1));
     const newEnergy = currentEnergy - energyUsed;
 
-    // Gem drop luck (including pet bonus)
-    const gemDrop = Math.random() < (bonuses.gemDropChance + (petB2.gemDropPct || 0)) ? 1 : 0;
+    // Gem drop luck (including pet + prestige + weekly event bonuses)
+    const gemDropChanceFinal = (bonuses.gemDropChance + (petB2.gemDropPct || 0) + (pBonuses2.extraGemDrop || 0)) * gemMultWeekly;
+    const gemDrop = Math.random() < gemDropChanceFinal ? 1 : 0;
 
     // Track max combo for leaderboard (combo sent from client)
     const clientCombo = parseFloat(req.body?.combo) || 1.0;
@@ -354,8 +391,8 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const skillPtsEarned = Math.floor(energyUsed / SKILL_POINTS_PER_TAPS)
       + Math.floor(energyUsed * (bonuses.skillRegenPerTap / 25));
 
-    // Battle Pass XP
-    const bpXpEarned = Math.floor(energyUsed * BATTLE_PASS_XP_PER_ENERGY);
+    // Battle Pass XP (with weekly event multiplier)
+    const bpXpEarned = Math.floor(energyUsed * BATTLE_PASS_XP_PER_ENERGY * bpXpMultWeekly);
 
     // Schedule energy-full notification
     const energyNotifAt  = newEnergy < energyMax
@@ -385,6 +422,9 @@ router.post('/tap', asyncHandler(async (req, res) => {
       'INSERT INTO tap_batches (telegram_id, tap_count, bp_earned, created_at) VALUES ($1, $2, $3, $4)',
       [telegramId, energyUsed, bpEarned, now]
     );
+    // Add to active tournament score (fire-and-forget)
+    const { addTournamentScore } = require('./tournament');
+    addTournamentScore(telegramId.toString(), bpEarned).catch(() => {});
 
     const updatedProfile = await client.query(
       'SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]
@@ -469,7 +509,8 @@ router.post('/prestige', asyncHandler(async (req, res) => {
          tap_power_level = 0, energy_max_level = 0, regen_rate_level = 0,
          multi_tap_level = 0, auto_brain_level = 0,
          prestige = prestige + 1,
-         talent_points = talent_points + 1
+         talent_points = talent_points + 1,
+         prestige_tokens = prestige_tokens + 1
        WHERE telegram_id = $2`,
       [Date.now(), telegramId]
     );

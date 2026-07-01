@@ -29,6 +29,12 @@ const worldsRoute     = require('./routes/worlds');
 const profileRoute    = require('./routes/profile');
 const comboboardRoute = require('./routes/comboboard');
 const { router: guildwarsRoute } = require('./routes/guildwars');
+const { router: tournamentRoute, settleTournament } = require('./routes/tournament');
+const prestigeshopRoute = require('./routes/prestigeshop');
+const bossrushRoute     = require('./routes/bossrush');
+const { router: inventoryRoute } = require('./routes/inventory');
+const statsRoute        = require('./routes/stats');
+const friendsRoute      = require('./routes/friends');
 
 const app = express();
 app.use(cors());
@@ -87,6 +93,12 @@ app.use('/worlds',     telegramAuthMiddleware, actionLimiter, worldsRoute);
 app.use('/profile',    telegramAuthMiddleware, actionLimiter, profileRoute);
 app.use('/comboboard', telegramAuthMiddleware, actionLimiter, comboboardRoute);
 app.use('/guildwars',  telegramAuthMiddleware, actionLimiter, guildwarsRoute);
+app.use('/tournament', telegramAuthMiddleware, actionLimiter, tournamentRoute);
+app.use('/prestigeshop', telegramAuthMiddleware, actionLimiter, prestigeshopRoute);
+app.use('/bossrush',   telegramAuthMiddleware, tapperLimiter, bossrushRoute);
+app.use('/inventory',  telegramAuthMiddleware, actionLimiter, inventoryRoute);
+app.use('/stats',      telegramAuthMiddleware, actionLimiter, statsRoute);
+app.use('/friends',    telegramAuthMiddleware, actionLimiter, friendsRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
@@ -101,6 +113,7 @@ async function main() {
 
   const { startSeasonScheduler } = require('./seasons');
   startSeasonScheduler();
+  setInterval(() => settleTournament().catch(err => console.error('Tournament settle error:', err.message)), 5 * 60 * 1000);
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {

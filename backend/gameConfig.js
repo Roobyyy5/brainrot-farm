@@ -293,6 +293,10 @@ module.exports = {
     { weight: 3,  type: 'skin',         skin: 'skin_fire',                             label: '🔥🧠 Fire Brain' },
     { weight: 1,  type: 'pet',          pet: 'gem_dragon',                             label: '🐉 Gem Dragon Pet' },
     { weight: 1,  type: 'skin',         skin: 'skin_diamond',                          label: '💎🧠 Diamond Brain' },
+    { weight: 6,  type: 'item',         item: 'energy_potion',                         label: '⚡ Energy Potion' },
+    { weight: 4,  type: 'item',         item: 'xp_scroll',                             label: '📜 XP Scroll' },
+    { weight: 2,  type: 'item',         item: 'gem_bomb',                              label: '💣 Gem Bomb' },
+    { weight: 1,  type: 'item',         item: 'crit_shield',                           label: '🛡️ Crit Shield' },
   ],
 
   pickLootBoxPrize() {
@@ -370,4 +374,63 @@ module.exports = {
     { key: 'boss_hit',   name: 'Boss Slayer',  emoji: '⚔️', target: 1,    reward: 100, type: 'boss' },
     { key: 'buy_upgrade',name: 'Investor',     emoji: '📈', target: 1,    reward: 75,  type: 'upgrade' },
   ],
+
+  // ─── Prestige Shop ────────────────────────────────────────────────────────────
+
+  PRESTIGE_SHOP: [
+    { key: 'eternal_tap',   name: 'Eternal Tap',    icon: '⚡', maxLevel: 5, costPerLevel: 1, desc: '+1 tap power per level (permanent)' },
+    { key: 'vast_energy',   name: 'Vast Energy',    icon: '🔋', maxLevel: 5, costPerLevel: 2, desc: '+500 max energy per level (permanent)' },
+    { key: 'gem_vault',     name: 'Gem Vault',      icon: '💎', maxLevel: 3, costPerLevel: 2, desc: '+1% gem drop per level (permanent)' },
+    { key: 'prestige_aura', name: 'Prestige Aura',  icon: '✨', maxLevel: 3, costPerLevel: 3, desc: '+10% all income per level (permanent)' },
+    { key: 'boss_crusher',  name: 'Boss Crusher',   icon: '👾', maxLevel: 3, costPerLevel: 2, desc: '+20% boss damage per level (permanent)' },
+  ],
+
+  // ─── Boss Rush ────────────────────────────────────────────────────────────────
+
+  BOSS_RUSH_BASE_HP: 5000,
+  BOSS_RUSH_WAVES: [
+    { wave: 1,  name: 'Nano Brain',       hpMult: 1,    bpReward: 50,    gemReward: 0 },
+    { wave: 2,  name: 'Micro Neuron',     hpMult: 2,    bpReward: 120,   gemReward: 0 },
+    { wave: 3,  name: 'Mini Cortex',      hpMult: 4,    bpReward: 280,   gemReward: 0 },
+    { wave: 4,  name: 'Data Ghost',       hpMult: 8,    bpReward: 600,   gemReward: 0 },
+    { wave: 5,  name: 'Memory Titan',     hpMult: 16,   bpReward: 1200,  gemReward: 2 },
+    { wave: 6,  name: 'Synapse Storm',    hpMult: 32,   bpReward: 2500,  gemReward: 3 },
+    { wave: 7,  name: 'Logic Leviathan',  hpMult: 64,   bpReward: 5000,  gemReward: 5 },
+    { wave: 8,  name: 'Axon Avenger',     hpMult: 128,  bpReward: 10000, gemReward: 8 },
+    { wave: 9,  name: 'Cortex Colossus',  hpMult: 256,  bpReward: 20000, gemReward: 12 },
+    { wave: 10, name: '⚠️ OMEGA BRAIN',   hpMult: 512,  bpReward: 50000, gemReward: 30 },
+  ],
+
+  // ─── Inventory Items ──────────────────────────────────────────────────────────
+
+  INVENTORY_ITEMS: [
+    { key: 'energy_potion', name: 'Energy Potion', icon: '⚡', desc: 'Instantly refill energy to max',       rarity: 'common' },
+    { key: 'xp_scroll',     name: 'XP Scroll',     icon: '📜', desc: '+500 Battle Pass XP',                 rarity: 'uncommon' },
+    { key: 'crit_shield',   name: 'Crit Shield',   icon: '🛡️', desc: '100% crit rate for 60 seconds',       rarity: 'rare' },
+    { key: 'gem_bomb',      name: 'Gem Bomb',       icon: '💣', desc: '+5 gems instantly',                    rarity: 'uncommon' },
+  ],
+
+  INVENTORY_ITEM_RARITY_COLOR: { common: '#9ca3af', uncommon: '#34d399', rare: '#60a5fa' },
+
+  // ─── Weekly Events ────────────────────────────────────────────────────────────
+
+  WEEKLY_EVENTS: [
+    { key: 'double_xp',    name: 'Double XP Week',  icon: '📚', desc: 'Battle Pass XP ×2',       effect: 'bpXpMult',     value: 2 },
+    { key: 'gem_rain',     name: 'Gem Rain',         icon: '💎', desc: 'Gem drop chance ×3',       effect: 'gemDropMult',  value: 3 },
+    { key: 'boss_week',    name: 'Boss Week',        icon: '👾', desc: 'Boss rewards ×2',           effect: 'bossRewardMult', value: 2 },
+    { key: 'energy_surge', name: 'Energy Surge',     icon: '⚡', desc: 'Energy regen ×2',           effect: 'regenMult',    value: 2 },
+    { key: 'coin_storm',   name: 'Coin Storm',       icon: '💰', desc: 'All BP earnings ×1.5',     effect: 'bpMult',       value: 1.5 },
+  ],
+
+  getCurrentWeeklyEvent() {
+    const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+    const events = module.exports.WEEKLY_EVENTS;
+    return events[week % events.length];
+  },
+
+  // ─── Tournament ────────────────────────────────────────────────────────────────
+
+  TOURNAMENT_DURATION_MS: 48 * 60 * 60 * 1000,
+  TOURNAMENT_PRIZE_SKINS: ['skin_fire', 'skin_diamond', 'skin_crown'],
+  TOURNAMENT_TOP_GEMS:    [200, 100, 50, 25, 10, 10, 5, 5, 5, 5],
 };

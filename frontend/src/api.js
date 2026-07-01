@@ -89,6 +89,8 @@ export const api = {
     join: (guildId) => request('/guilds/join', { method: 'POST', body: { guildId } }),
     leave: () => request('/guilds/leave', { method: 'POST' }),
     bossTap: (count) => request('/guilds/boss/tap', { method: 'POST', body: { count } }),
+    chat: () => request('/guilds/chat'),
+    sendMessage: (message) => request('/guilds/chat', { method: 'POST', body: { message } }),
   },
 
   duels: {
@@ -125,5 +127,38 @@ export const api = {
 
   guildwars: {
     status: () => request('/guildwars'),
+  },
+
+  tournament: {
+    status: () => request('/tournament'),
+  },
+
+  prestigeshop: {
+    status: () => request('/prestigeshop'),
+    buy: (upgradeKey) => request('/prestigeshop/buy', { method: 'POST', body: { upgradeKey } }),
+  },
+
+  bossrush: {
+    status: () => request('/bossrush'),
+    start: () => request('/bossrush/start', { method: 'POST' }),
+    tap: (count) => request('/bossrush/tap', { method: 'POST', body: { count } }),
+    abandon: () => request('/bossrush/abandon', { method: 'POST' }),
+  },
+
+  inventory: {
+    list: () => request('/inventory'),
+    use: (itemKey) => request('/inventory/use', { method: 'POST', body: { itemKey } }),
+  },
+
+  stats: {
+    get: () => request('/stats'),
+  },
+
+  friends: {
+    list: () => request('/friends'),
+    profile: (telegramId) => request(`/friends/${telegramId}`),
+    add: (friendId) => request('/friends/add', { method: 'POST', body: { friendId } }),
+    accept: (friendId) => request('/friends/accept', { method: 'POST', body: { friendId } }),
+    remove: (friendId) => request('/friends/remove', { method: 'POST', body: { friendId } }),
   },
 };

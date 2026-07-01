@@ -2,6 +2,7 @@ const express = require('express');
 const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 const { getDailyShopItems, pickLootBoxPrize, TAPPER_UPGRADES } = require('../gameConfig');
+const { grantInventoryItem } = require('./inventory');
 
 const router = express.Router();
 
@@ -25,6 +26,8 @@ async function applyLootPrize(client, telegramId, prize, now) {
        VALUES ($1, $2, $3) ON CONFLICT (telegram_id, pet_key) DO NOTHING`,
       [telegramId, prize.pet, now]
     );
+  } else if (prize.type === 'item') {
+    await grantInventoryItem(client, telegramId, prize.item);
   }
 }
 

@@ -28,6 +28,14 @@ import WorldMap from './components/WorldMap';
 import ProfilePage from './components/ProfilePage';
 import ComboLeaderboard from './components/ComboLeaderboard';
 import GuildWars from './components/GuildWars';
+import WeeklyEvent from './components/WeeklyEvent';
+import Tournament from './components/Tournament';
+import PrestigeShop from './components/PrestigeShop';
+import BossRush from './components/BossRush';
+import Inventory from './components/Inventory';
+import StatsDashboard from './components/StatsDashboard';
+import Friends from './components/Friends';
+import GuildChat from './components/GuildChat';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -90,6 +98,7 @@ export default function App() {
 
       {tab === 'home' && (
         <>
+          <WeeklyEvent event={user?._weeklyEvent} />
           <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
           <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
           <Referral user={user} />
@@ -99,7 +108,10 @@ export default function App() {
       )}
 
       {tab === 'tap' && (
-        <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
+        <>
+          <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
+          <BossRush />
+        </>
       )}
 
       {tab === 'cards' && (
@@ -108,6 +120,7 @@ export default function App() {
 
       {tab === 'boost' && (
         <>
+          <Inventory />
           <Pets />
           <WorldMap />
           <LoginStreak onEarned={handleCoinsEarned} onGemsChanged={handleGemsChanged} />
@@ -117,6 +130,7 @@ export default function App() {
           <TapperMissions onEarned={handleCoinsEarned} />
           <SkillTree />
           <BattlePass onGemsChanged={handleGemsChanged} />
+          <PrestigeShop />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
         </>
       )}
@@ -124,13 +138,17 @@ export default function App() {
       {tab === 'club' && (
         <>
           <GuildWars />
-          <Guilds onGemsChanged={handleGemsChanged} />
+          <Guilds onGemsChanged={handleGemsChanged} currentUsername={user?.username} />
+          <GuildChat currentUsername={user?.username} />
           <TapDuel currentUserId={user?.telegram_id} />
+          <Friends />
         </>
       )}
 
       {tab === 'board' && (
         <>
+          <Tournament />
+          <StatsDashboard />
           <ProfilePage currentUserId={user?.telegram_id} />
           <ComboLeaderboard />
           <TapLeaderboard currentUserId={user?.telegram_id} />
