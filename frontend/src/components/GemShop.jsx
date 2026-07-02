@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const SKIN_EMOJIS = {
   default:      '🧠',
@@ -12,6 +13,7 @@ const SKIN_EMOJIS = {
 };
 
 export default function GemShop({ onGemsChanged, onCoinsChanged }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(null);
@@ -21,7 +23,7 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
   const load = () => api.gemshop.status().then(setData).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
-  const handleBuy = async (key, cost, type) => {
+  const handleBuy = async (key, cost) => {
     if (buying) return;
     setBuying(key);
     try {
@@ -30,7 +32,7 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
       if (res.bonusCoins) onCoinsChanged?.(res.bonusCoins);
       load();
     } catch (err) {
-      alert(err.message || 'Cannot buy');
+      alert(err.message || t('upgrade_err'));
     } finally {
       setBuying(null);
     }
@@ -43,13 +45,13 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
       await api.gemshop.equipSkin(skinKey);
       load();
     } catch (err) {
-      alert(err.message || 'Cannot equip');
+      alert(err.message || t('upgrade_err'));
     } finally {
       setEquipping(null);
     }
   };
 
-  if (loading) return <div className="tap-loading">Loading Gem Shop...</div>;
+  if (loading) return <div className="tap-loading">{t('gems_loading')}</div>;
   if (!data) return null;
 
   const boostSecondsLeft = data.activeBoostExpiresAt
@@ -59,22 +61,22 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
   return (
     <div className="gemshop-section">
       <div className="gemshop-header">
-        <span className="gemshop-title">💎 Gem Shop</span>
-        <span className="gemshop-balance">💎 {data.gems} gems</span>
+        <span className="gemshop-title">{t('gems_title')}</span>
+        <span className="gemshop-balance">{t('gems_balance', { n: data.gems })}</span>
       </div>
 
       {boostSecondsLeft > 0 && (
         <div className="gemshop-boost-active">
-          🔥 2× Tap Boost active — {Math.floor(boostSecondsLeft / 60)}m {boostSecondsLeft % 60}s left
+          {t('gems_boost_active', { m: Math.floor(boostSecondsLeft / 60), s: boostSecondsLeft % 60 })}
         </div>
       )}
 
       <div className="gemshop-tabs">
         <button className={`gemshop-tab${tab === 'shop' ? ' gemshop-tab--active' : ''}`} onClick={() => setTab('shop')}>
-          🛒 Shop
+          {t('gems_tab_shop')}
         </button>
         <button className={`gemshop-tab${tab === 'skins' ? ' gemshop-tab--active' : ''}`} onClick={() => setTab('skins')}>
-          🎨 Skins
+          {t('gems_tab_skins')}
         </button>
       </div>
 
@@ -88,11 +90,11 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
                 <div className="gemshop-item-desc">{item.description}</div>
               </div>
               {item.owned ? (
-                <span className="gemshop-item-owned">✓ Owned</span>
+                <span className="gemshop-item-owned">{t('gems_owned')}</span>
               ) : (
                 <button
                   className="gemshop-buy-btn"
-                  onClick={() => handleBuy(item.key, item.cost, item.type)}
+                  onClick={() => handleBuy(item.key, item.cost)}
                   disabled={!!buying || !item.canAfford}
                 >
                   {buying === item.key ? '...' : `💎 ${item.cost}`}
@@ -113,8 +115,8 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
               <div className="skin-emoji">{SKIN_EMOJIS[skin.key] || '🧠'}</div>
               <div className="skin-name">{skin.name}</div>
               <div className="skin-unlock-hint">
-                {!skin.unlocked && skin.unlock === 'gem_shop' && '(buy in shop)'}
-                {!skin.unlocked && skin.unlock === 'prestige' && `(prestige ${skin.minPrestige})`}
+                {!skin.unlocked && skin.unlock === 'gem_shop' && t('gems_buy_shop')}
+                {!skin.unlocked && skin.unlock === 'prestige' && t('gems_prestige_n', { n: skin.minPrestige })}
               </div>
               {skin.unlocked && data.selectedSkin !== skin.key && (
                 <button
@@ -122,11 +124,11 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
                   onClick={() => handleEquip(skin.key)}
                   disabled={equipping === skin.key}
                 >
-                  {equipping === skin.key ? '...' : 'Equip'}
+                  {equipping === skin.key ? '...' : t('gems_equip')}
                 </button>
               )}
               {data.selectedSkin === skin.key && (
-                <span className="skin-active">Active ✓</span>
+                <span className="skin-active">{t('gems_active')}</span>
               )}
             </div>
           ))}

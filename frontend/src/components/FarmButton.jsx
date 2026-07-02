@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { haptic } from '../telegram';
+import { useT } from '../context/LangContext';
 import FloatingReward from './FloatingReward';
 
-const BOOST_COST = 25; // keep in sync with backend gameConfig.BOOST_COST
-const FARM_COOLDOWN_MS = 5 * 60 * 1000; // keep in sync with backend gameConfig.FARM_COOLDOWN_MS
+const BOOST_COST = 25;
+const FARM_COOLDOWN_MS = 5 * 60 * 1000;
 
 function formatMs(ms) {
   const totalSec = Math.ceil(ms / 1000);
@@ -14,6 +15,7 @@ function formatMs(ms) {
 }
 
 export default function FarmButton({ user, onFarmed, onAchievements }) {
+  const t = useT();
   const [cooldownMs, setCooldownMs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [boosting, setBoosting] = useState(false);
@@ -21,14 +23,10 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
   const [floatId, setFloatId] = useState(0);
   const [floatReward, setFloatReward] = useState(null);
 
-  // Initialize the cooldown from the user's actual last_farm_at as soon as
-  // it's known (e.g. right after the app loads an existing account) so the
-  // button doesn't look falsely ready until a wasted tap proves otherwise.
   useEffect(() => {
     if (!user?.last_farm_at) return;
     const remaining = FARM_COOLDOWN_MS - (Date.now() - user.last_farm_at);
     if (remaining > 0) setCooldownMs(remaining);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.telegram_id]);
 
   useEffect(() => {
@@ -45,7 +43,7 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
     setMessage('');
     try {
       const data = await api.farm();
-      setMessage(`+${data.reward} brainrot points!`);
+      setMessage(t('farm_earned', { n: data.reward }));
       setFloatReward(data.reward);
       setFloatId((id) => id + 1);
       setCooldownMs(FARM_COOLDOWN_MS);
@@ -54,7 +52,7 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
     } catch (err) {
       if (err.status === 429) {
         setCooldownMs(err.data.retryAfterMs);
-        setMessage('Braincells still recharging...');
+        setMessage(t('farm_cooldown'));
       } else {
         setMessage(err.message);
       }
@@ -70,7 +68,7 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
     try {
       const data = await api.boost();
       setCooldownMs(0);
-      setMessage('Boosted! Farm is ready again.');
+      setMessage(t('farm_boosted'));
       onFarmed(data.user);
     } catch (err) {
       setMessage(err.data?.error || err.message);
@@ -86,13 +84,13 @@ export default function FarmButton({ user, onFarmed, onAchievements }) {
     <div className="farm-section">
       <div className="farm-button-wrap">
         <button className="farm-button" onClick={handleFarm} disabled={disabled}>
-          {cooldownMs > 0 ? `Recharging ${formatMs(cooldownMs)}` : 'Farm Braincells'}
+          {cooldownMs > 0 ? t('farm_recharging', { time: formatMs(cooldownMs) }) : t('farm_btn')}
         </button>
         <FloatingReward key={floatId} reward={floatReward} />
       </div>
       {cooldownMs > 0 && (
         <button className="boost-button" onClick={handleBoost} disabled={!canBoost || boosting}>
-          Boost · {BOOST_COST} pts
+          {t('farm_boost_btn', { n: BOOST_COST })}
         </button>
       )}
       {message && <div className="farm-message">{message}</div>}

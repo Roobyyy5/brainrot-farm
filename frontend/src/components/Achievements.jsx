@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function Achievements({ refreshKey }) {
+  const t = useT();
   const [list, setList] = useState([]);
 
   useEffect(() => {
@@ -12,7 +14,7 @@ export default function Achievements({ refreshKey }) {
 
   return (
     <div className="achievements-section">
-      <div className="achievements-title">Achievements</div>
+      <div className="achievements-title">{t('ach_title')}</div>
       <div className="achievements-grid">
         {list.map((a) => (
           <div key={a.key} className={a.unlocked ? 'achievement-badge unlocked' : 'achievement-badge'}>

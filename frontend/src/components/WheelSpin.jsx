@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const PRIZES = [
   { label: '50 BP',      color: '#f5c344', emoji: '🪙' },
@@ -13,11 +14,11 @@ const PRIZES = [
 ];
 
 export default function WheelSpin({ onEarned }) {
+  const t = useT();
   const [canSpin, setCanSpin] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [reelPos, setReelPos] = useState(0);
   const reelRef = useRef(null);
 
   useEffect(() => {
@@ -36,11 +37,8 @@ export default function WheelSpin({ onEarned }) {
       const res = await api.wheel.spin();
       const idx = res.prize.index ?? 0;
       const ITEM_H = 72;
-      const totalItems = PRIZES.length * 5; // 5 repeats for reel
-      // Land on the prize in the 4th repetition
       const targetPos = PRIZES.length * 3 * ITEM_H + idx * ITEM_H;
 
-      // Start fast scroll, then decelerate to target
       if (reelRef.current) {
         reelRef.current.style.transition = 'none';
         reelRef.current.style.transform = `translateY(0)`;
@@ -71,11 +69,10 @@ export default function WheelSpin({ onEarned }) {
   return (
     <div className="wheel-section">
       <div className="wheel-header">
-        <span className="wheel-title">🎡 Daily Spin</span>
-        <span className="wheel-subtitle">{canSpin ? 'Free spin available!' : 'Come back tomorrow'}</span>
+        <span className="wheel-title">{t('wheel_title')}</span>
+        <span className="wheel-subtitle">{canSpin ? t('wheel_ready') : t('wheel_done')}</span>
       </div>
 
-      {/* Slot reel */}
       <div className="wheel-reel-wrap">
         <div className="wheel-reel-window">
           <div className="wheel-reel" ref={reelRef}>
@@ -99,7 +96,7 @@ export default function WheelSpin({ onEarned }) {
       {result && (
         <div className="wheel-result" style={{ borderColor: PRIZES[result.index]?.color }}>
           <span className="wheel-result-emoji">{PRIZES[result.index]?.emoji}</span>
-          <span className="wheel-result-label">You won: {result.label}!</span>
+          <span className="wheel-result-label">{t('wheel_won', { prize: result.label })}</span>
         </div>
       )}
 
@@ -108,7 +105,7 @@ export default function WheelSpin({ onEarned }) {
         onClick={handleSpin}
         disabled={!canSpin || spinning}
       >
-        {spinning ? '🎡 Spinning...' : canSpin ? '🎡 Spin Now' : '✓ Spun Today'}
+        {spinning ? t('wheel_spinning') : canSpin ? t('wheel_btn') : t('wheel_spun')}
       </button>
 
       <div className="wheel-prizes-preview">

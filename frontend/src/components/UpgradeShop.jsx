@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function UpgradeShop({ userCoins, onCoinsSpent }) {
+  const t = useT();
   const [upgrades, setUpgrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(null);
@@ -20,17 +22,17 @@ export default function UpgradeShop({ userCoins, onCoinsSpent }) {
       setUpgrades(res.upgrades);
       onCoinsSpent?.(cost);
     } catch (err) {
-      alert(err.message || 'Cannot upgrade');
+      alert(err.message || t('upgrade_err'));
     } finally {
       setBuying(null);
     }
   };
 
-  if (loading) return <div className="tap-loading">Loading upgrades...</div>;
+  if (loading) return <div className="tap-loading">{t('upgrade_loading')}</div>;
 
   return (
     <div className="upgrade-shop">
-      <h3 className="upgrade-shop-title">⚡ Upgrade Shop</h3>
+      <h3 className="upgrade-shop-title">{t('upgrade_title')}</h3>
       <div className="upgrade-list">
         {upgrades.map((upg) => (
           <div key={upg.type} className={`upgrade-card${upg.isMaxed ? ' upgrade-card--maxed' : ''}`}>
@@ -55,16 +57,14 @@ export default function UpgradeShop({ userCoins, onCoinsSpent }) {
             </div>
             <div className="upgrade-action">
               {upg.isMaxed ? (
-                <span className="upgrade-maxed-badge">MAX</span>
+                <span className="upgrade-maxed-badge">{t('upgrade_max')}</span>
               ) : (
                 <button
                   className="upgrade-buy-btn"
                   onClick={() => handleBuy(upg.type, upg.cost)}
                   disabled={!!buying || userCoins < upg.cost}
                 >
-                  {buying === upg.type ? '...' : (
-                    <>🪙 {upg.cost?.toLocaleString()}</>
-                  )}
+                  {buying === upg.type ? '...' : <>🪙 {upg.cost?.toLocaleString()}</>}
                 </button>
               )}
             </div>

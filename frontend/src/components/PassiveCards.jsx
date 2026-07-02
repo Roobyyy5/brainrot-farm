@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const CATEGORY_META = {
   tech:    { label: '🔬 Tech',    color: '#00e5ff' },
@@ -8,6 +9,7 @@ const CATEGORY_META = {
 };
 
 export default function PassiveCards({ userCoins, onCoinsSpent }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('tech');
   const [buying, setBuying] = useState(null);
@@ -24,13 +26,13 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
       onCoinsSpent?.(cost);
       load();
     } catch (err) {
-      alert(err.message || 'Cannot buy');
+      alert(err.message || t('upgrade_err'));
     } finally {
       setBuying(null);
     }
   };
 
-  if (loading) return <div className="tap-loading">Loading cards...</div>;
+  if (loading) return <div className="tap-loading">{t('cards_loading')}</div>;
   if (!data) return null;
 
   const categories = ['tech', 'finance', 'social'];
@@ -41,10 +43,10 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
       <div className="cards-header">
         <div className="cards-income-badge">
           <span className="cards-income-value">+{data.totalPerHour.toLocaleString()}</span>
-          <span className="cards-income-label">BP/hr passive</span>
+          <span className="cards-income-label">{t('cards_bp_hr')}</span>
         </div>
         {data.referralBoostPct > 0 && (
-          <span className="cards-ref-boost">+{data.referralBoostPct}% referral bonus</span>
+          <span className="cards-ref-boost">{t('cards_ref_bonus', { n: data.referralBoostPct })}</span>
         )}
       </div>
 
@@ -78,7 +80,7 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
                   {Array.from({ length: Math.min(card.level, 5) }).map((_, i) => (
                     <span key={i} className="card-dot card-dot--filled" />
                   ))}
-                  {card.level > 5 && <span className="card-lvl-text">Lv{card.level}</span>}
+                  {card.level > 5 && <span className="card-lvl-text">{t('cards_lv', { n: card.level })}</span>}
                 </div>
               )}
 
@@ -96,7 +98,7 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
               </div>
 
               {card.isMaxed ? (
-                <span className="card-maxed">MAX ✓</span>
+                <span className="card-maxed">{t('cards_max')}</span>
               ) : (
                 <button
                   className={`card-buy-btn${!canAfford ? ' card-buy-btn--broke' : ''}`}

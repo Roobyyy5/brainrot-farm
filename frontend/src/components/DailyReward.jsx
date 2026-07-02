@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { haptic } from '../telegram';
+import { useT } from '../context/LangContext';
 import FloatingReward from './FloatingReward';
 
-const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000; // keep in sync with backend gameConfig.DAILY_COOLDOWN_MS
+const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 function formatRemaining(ms) {
   const totalMin = Math.ceil(ms / 60000);
@@ -13,6 +14,7 @@ function formatRemaining(ms) {
 }
 
 export default function DailyReward({ user, onClaimed, onAchievements }) {
+  const t = useT();
   const [cooldownMs, setCooldownMs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,7 +25,6 @@ export default function DailyReward({ user, onClaimed, onAchievements }) {
     if (!user?.last_daily_at) return;
     const remaining = DAILY_COOLDOWN_MS - (Date.now() - user.last_daily_at);
     if (remaining > 0) setCooldownMs(remaining);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.telegram_id]);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function DailyReward({ user, onClaimed, onAchievements }) {
     setMessage('');
     try {
       const data = await api.daily();
-      setMessage(`Daily claimed: +${data.reward} (streak: ${data.streak})`);
+      setMessage(t('daily_msg', { n: data.reward, s: data.streak }));
       setFloatReward(data.reward);
       setFloatId((id) => id + 1);
       setCooldownMs(DAILY_COOLDOWN_MS);
@@ -49,7 +50,7 @@ export default function DailyReward({ user, onClaimed, onAchievements }) {
     } catch (err) {
       if (err.status === 429) {
         setCooldownMs(err.data.retryAfterMs);
-        setMessage('Already claimed today. Come back later, Sigma.');
+        setMessage(t('daily_cooldown'));
       } else {
         setMessage(err.message);
       }
@@ -62,7 +63,9 @@ export default function DailyReward({ user, onClaimed, onAchievements }) {
     <div className="daily-section">
       <div className="farm-button-wrap">
         <button className="daily-button" onClick={handleClaim} disabled={loading || cooldownMs > 0}>
-          {cooldownMs > 0 ? `Claimed — back in ${formatRemaining(cooldownMs)}` : 'Claim Daily Reward'}
+          {cooldownMs > 0
+            ? t('daily_claimed_btn', { time: formatRemaining(cooldownMs) })
+            : t('daily_btn')}
         </button>
         <FloatingReward key={floatId} reward={floatReward} />
       </div>

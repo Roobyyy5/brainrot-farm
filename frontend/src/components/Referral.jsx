@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { haptic, shareLink } from '../telegram';
+import { useT } from '../context/LangContext';
 
 const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || 'YourBotUsername';
 const MINI_APP_SHORT_NAME = import.meta.env.VITE_MINI_APP_SHORT_NAME || '';
 
 export default function Referral({ user }) {
+  const t = useT();
   const [info, setInfo] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -28,21 +30,21 @@ export default function Referral({ user }) {
   const handleShare = () => {
     haptic('light');
     const level = user?.level || 'NPC';
-    shareLink(link, `I'm a ${level} on Brainrot Farm with ${user?.coins?.toLocaleString() || 0} points 🧠 Join me and farm braincells!`);
+    shareLink(link, t('ref_share_text', { level, coins: (user?.coins || 0).toLocaleString() }));
   };
 
   return (
     <div className="referral-section">
-      <div className="referral-title">Invite Friends, Become Gigachad</div>
+      <div className="referral-title">{t('ref_title')}</div>
       <div className="referral-link" onClick={handleCopy}>
         {link}
       </div>
-      {copied && <div className="referral-copied">Copied!</div>}
+      {copied && <div className="referral-copied">{t('ref_copied')}</div>}
       <button className="referral-share-button" onClick={handleShare}>
-        Share with friends
+        {t('ref_share')}
       </button>
       <div className="referral-stats">
-        Total: {info.totalReferrals} · Active: {info.activeReferrals}
+        {t('ref_stats', { t: info.totalReferrals, a: info.activeReferrals })}
       </div>
     </div>
   );

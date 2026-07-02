@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const REWARD_ICON = { coins: '💰', gems: '💎', energy_refill: '⚡' };
 
 export default function LoginStreak({ onEarned, onGemsChanged }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [claiming, setClaiming] = useState(false);
 
@@ -18,7 +20,7 @@ export default function LoginStreak({ onEarned, onGemsChanged }) {
       if (res.reward.type === 'coins') onEarned?.(res.reward.amount);
       if (res.reward.type === 'gems') onGemsChanged?.(res.reward.amount);
       load();
-    } catch (err) { alert(err.message || 'Cannot claim'); }
+    } catch (err) { alert(err.message || t('upgrade_err')); }
     finally { setClaiming(false); }
   };
 
@@ -27,8 +29,8 @@ export default function LoginStreak({ onEarned, onGemsChanged }) {
   return (
     <div className="login-streak-section">
       <div className="login-streak-header">
-        <span className="login-streak-title">📅 Daily Login</span>
-        <span className="login-streak-count">🔥 {data.streak} day streak</span>
+        <span className="login-streak-title">{t('ls_title')}</span>
+        <span className="login-streak-count">{t('ls_streak', { n: data.streak })}</span>
       </div>
       <div className="login-streak-rewards">
         {data.allRewards.map((r, i) => {
@@ -39,9 +41,9 @@ export default function LoginStreak({ onEarned, onGemsChanged }) {
             <div key={i} className={`ls-day${isCurrent ? ' ls-day--current' : ''}${isPast ? ' ls-day--done' : ''}`}>
               <div className="ls-day-icon">{REWARD_ICON[r.type] || '🎁'}</div>
               <div className="ls-day-label">
-                {r.amount ? r.amount : r.type === 'energy_refill' ? 'Full' : '?'}
+                {r.amount ? r.amount : r.type === 'energy_refill' ? t('ls_full') : '?'}
               </div>
-              <div className="ls-day-num">Day {i + 1}</div>
+              <div className="ls-day-num">{t('ls_day', { n: i + 1 })}</div>
             </div>
           );
         })}
@@ -51,7 +53,9 @@ export default function LoginStreak({ onEarned, onGemsChanged }) {
         onClick={handleClaim}
         disabled={!data.canClaim || claiming}
       >
-        {claiming ? '...' : data.canClaim ? `Claim Day ${(data.streak % data.allRewards.length) + 1} Reward` : '✓ Claimed Today'}
+        {claiming ? '...' : data.canClaim
+          ? t('ls_claim', { n: (data.streak % data.allRewards.length) + 1 })
+          : t('ls_claimed')}
       </button>
     </div>
   );

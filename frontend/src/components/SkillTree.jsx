@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function SkillTree() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [activeTree, setActiveTree] = useState(null);
   const [upgrading, setUpgrading] = useState(null);
@@ -18,29 +20,29 @@ export default function SkillTree() {
     try {
       await api.skills.upgrade(skillKey);
       load();
-    } catch (err) { alert(err.message || 'Cannot upgrade'); }
+    } catch (err) { alert(err.message || t('upgrade_err')); }
     finally { setUpgrading(null); }
   };
 
-  if (!data) return <div className="tap-loading">Loading skills...</div>;
+  if (!data) return <div className="tap-loading">{t('skill_loading')}</div>;
 
-  const tree = data.trees.find((t) => t.key === activeTree) || data.trees[0];
+  const tree = data.trees.find((tr) => tr.key === activeTree) || data.trees[0];
 
   return (
     <div className="skill-tree-section">
       <div className="skill-tree-header">
-        <span className="skill-tree-title">🧩 Skill Tree</span>
-        <span className="skill-pts-badge">🧪 {data.skillPoints} pts</span>
+        <span className="skill-tree-title">{t('skill_title')}</span>
+        <span className="skill-pts-badge">{t('skill_pts', { n: data.skillPoints })}</span>
       </div>
 
       <div className="skill-tree-tabs">
-        {data.trees.map((t) => (
+        {data.trees.map((tr) => (
           <button
-            key={t.key}
-            className={`skill-tree-tab${activeTree === t.key ? ' skill-tree-tab--active' : ''}`}
-            onClick={() => setActiveTree(t.key)}
+            key={tr.key}
+            className={`skill-tree-tab${activeTree === tr.key ? ' skill-tree-tab--active' : ''}`}
+            onClick={() => setActiveTree(tr.key)}
           >
-            {t.icon} {t.label}
+            {tr.icon} {tr.label}
           </button>
         ))}
       </div>
@@ -60,7 +62,7 @@ export default function SkillTree() {
                 </div>
               </div>
               {skill.isMaxed ? (
-                <span className="skill-maxed">MAX</span>
+                <span className="skill-maxed">{t('skill_max')}</span>
               ) : (
                 <button
                   className="skill-upgrade-btn"

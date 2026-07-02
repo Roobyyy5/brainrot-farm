@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const WEEKLY_PRIZES = [100, 75, 50, 30, 25, 25, 20, 20, 15, 15];
 
 export default function TapLeaderboard({ currentUserId }) {
+  const t = useT();
   const [tapData, setTapData] = useState(null);
   const [weeklyData, setWeeklyData] = useState(null);
   const [tab, setTab] = useState('allTime');
@@ -19,10 +21,7 @@ export default function TapLeaderboard({ currentUserId }) {
     }).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="tap-loading">Loading leaderboard...</div>;
-
-  const isWeekly = tab === 'weekly';
-  const isTapTab = tab === 'allTime' || tab === 'today';
+  if (loading) return <div className="tap-loading">{t('tap_lb_loading')}</div>;
 
   let rows = [];
   if (tab === 'allTime') rows = tapData?.allTime || [];
@@ -32,16 +31,16 @@ export default function TapLeaderboard({ currentUserId }) {
   return (
     <div className="tap-lb-section">
       <div className="tap-lb-header">
-        <span className="tap-lb-title">🏆 Leaderboard</span>
+        <span className="tap-lb-title">{t('tap_lb_title')}</span>
         <div className="leaderboard-tabs">
           <button className={`leaderboard-tab${tab === 'allTime' ? ' active' : ''}`} onClick={() => setTab('allTime')}>
-            All-Time
+            {t('tap_lb_alltime')}
           </button>
           <button className={`leaderboard-tab${tab === 'today' ? ' active' : ''}`} onClick={() => setTab('today')}>
-            Today
+            {t('tap_lb_today')}
           </button>
           <button className={`leaderboard-tab${tab === 'weekly' ? ' active' : ''}`} onClick={() => setTab('weekly')}>
-            League
+            {t('tap_lb_weekly')}
           </button>
         </div>
       </div>
@@ -54,12 +53,12 @@ export default function TapLeaderboard({ currentUserId }) {
             </div>
           ))}
           <div className="weekly-prize-chip" style={{ opacity: 0.7 }}>4–10: 💎15–30</div>
-          <div className="weekly-reset-hint">Resets weekly · Earn gems!</div>
+          <div className="weekly-reset-hint">{t('tap_lb_weekly_prize')}</div>
         </div>
       )}
 
       {rows.length === 0 ? (
-        <div className="tap-lb-empty">No data yet. Start {tab === 'weekly' ? 'earning BP!' : 'tapping!'}</div>
+        <div className="tap-lb-empty">—</div>
       ) : (
         <ul className="leaderboard-list">
           {rows.map((r, idx) => {
@@ -68,7 +67,7 @@ export default function TapLeaderboard({ currentUserId }) {
             const score = tab === 'allTime' ? r.total_taps
               : tab === 'today' ? r.taps_today
               : r.weekly_coins;
-            const unit = tab === 'weekly' ? ' BP' : ' taps';
+            const unit = tab === 'weekly' ? ' BP' : ` ${t('tap_lb_taps')}`;
             return (
               <li key={r.telegram_id} className={`leaderboard-row${isMe ? ' me' : ''}`}>
                 <span className="leaderboard-rank">
