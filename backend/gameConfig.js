@@ -1127,4 +1127,197 @@ module.exports = {
 
   TIER_ORDER: ['bronze', 'silver', 'gold', 'platinum', 'diamond'],
   TIER_COLOR: { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', platinum: '#00e5ff', diamond: '#ff4fa3' },
+
+  // ── Layer 25: Rhythm Tap ──────────────────────────────────────────────────
+  RHYTHM_TAP: {
+    circleDurationMs: 1200,
+    perfectWindowMs:  120,
+    goodWindowMs:     280,
+    spawnIntervalMs:  800,
+    sessionDurationMs: 30000,
+    maxCircles: 6,
+    multipliers: { perfect: 3, good: 1.5, miss: 0 },
+    streakBonusThreshold: 5,
+    streakBonusMult: 1.5,
+    accuracyRewards: [
+      { minAccuracy: 95, gems: 10, label: 'S+' },
+      { minAccuracy: 85, gems:  6, label: 'S'  },
+      { minAccuracy: 70, gems:  3, label: 'A'  },
+      { minAccuracy: 50, gems:  1, label: 'B'  },
+    ],
+  },
+
+  // ── Layer 26: AI Shadow Rival ─────────────────────────────────────────────
+  SHADOW_RIVAL: {
+    baseScoreMultiplier: 0.85,
+    learningRate: 0.05,
+    maxDifficulty: 2.5,
+    shardRewardWin:  [3, 6, 10, 15, 25],
+    shardRewardLoss: [1, 2,  4,  7, 12],
+    challengeCooldownMs: 4 * 60 * 60 * 1000,
+    rivalLevels: [
+      { lvl: 1, name: 'Shadow Pup',   icon: '🐶', diffMult: 0.5  },
+      { lvl: 2, name: 'Ghost Clone',  icon: '👻', diffMult: 0.8  },
+      { lvl: 3, name: 'Dark Mirror',  icon: '🪞', diffMult: 1.1  },
+      { lvl: 4, name: 'Nemesis',      icon: '😈', diffMult: 1.5  },
+      { lvl: 5, name: 'Dark God',     icon: '💀', diffMult: 2.0  },
+    ],
+  },
+
+  // ── Layer 27: Guild Territories ───────────────────────────────────────────
+  TERRITORIES: [
+    { id: 1,  name: 'Crystal Caves',    icon: '💎', bonus: { tapMultiplier: 0.05 }, color: '#00e5ff' },
+    { id: 2,  name: 'Neon District',    icon: '🌆', bonus: { energyMax: 20 },       color: '#f59e0b' },
+    { id: 3,  name: 'Neural Nexus',     icon: '🧠', bonus: { passiveIncome: 0.1 },  color: '#8b5cf6' },
+    { id: 4,  name: 'Quantum Fields',   icon: '⚛️', bonus: { gemBonus: 0.1 },       color: '#10b981' },
+    { id: 5,  name: 'Void Rift',        icon: '🕳️', bonus: { xpBonus: 0.15 },       color: '#6366f1' },
+    { id: 6,  name: 'Storm Peaks',      icon: '⛰️', bonus: { tapMultiplier: 0.08 }, color: '#ef4444' },
+    { id: 7,  name: 'Mech Foundry',     icon: '⚙️', bonus: { energyRegen: 0.1 },    color: '#f97316' },
+    { id: 8,  name: 'Bio Gardens',      icon: '🌿', bonus: { passiveIncome: 0.12 }, color: '#34d399' },
+    { id: 9,  name: 'Phantom Coast',    icon: '🌊', bonus: { gemBonus: 0.12 },      color: '#38bdf8' },
+    { id: 10, name: 'Solar Citadel',    icon: '🏯', bonus: { tapMultiplier: 0.12 }, color: '#fbbf24' },
+  ],
+  TERRITORY_CAPTURE_TAPS: 50000,
+  TERRITORY_RESET_DAY: 1, // Monday
+
+  // ── Layer 28: Tap Alchemy ─────────────────────────────────────────────────
+  ALCHEMY_INGREDIENTS: {
+    tap_shard:     { name: 'Tap Shard',      icon: '🔷', earnedPer: 1000  },
+    energy_crystal:{ name: 'Energy Crystal', icon: '💠', earnedPer: 500   },
+    combo_dust:    { name: 'Combo Dust',     icon: '✨', earnedPer: 10    },
+    prestige_essence:{ name: 'Prestige Essence', icon: '🌀', earnedPer: 1 },
+  },
+  ALCHEMY_RECIPES: [
+    {
+      key: 'speed_potion',
+      name: 'Speed Potion',
+      icon: '⚡',
+      desc: '×5 tap power for 60s',
+      cost: { tap_shard: 10, combo_dust: 3 },
+      effect: { type: 'tap_mult', value: 5, durationMs: 60000 },
+      rarity: 'common',
+    },
+    {
+      key: 'energy_elixir',
+      name: 'Energy Elixir',
+      icon: '💙',
+      desc: '+200 energy instantly + full regen for 30s',
+      cost: { energy_crystal: 8, tap_shard: 5 },
+      effect: { type: 'energy_fill', value: 200, regenBoost: true, durationMs: 30000 },
+      rarity: 'common',
+    },
+    {
+      key: 'combo_brew',
+      name: 'Combo Brew',
+      icon: '🌀',
+      desc: 'Combo multiplier ×3 for 45s',
+      cost: { combo_dust: 15, energy_crystal: 5 },
+      effect: { type: 'combo_mult', value: 3, durationMs: 45000 },
+      rarity: 'rare',
+    },
+    {
+      key: 'gem_tincture',
+      name: 'Gem Tincture',
+      icon: '💎',
+      desc: 'Next 10 boss kills give 3× gems',
+      cost: { prestige_essence: 3, tap_shard: 20 },
+      effect: { type: 'gem_mult', value: 3, charges: 10 },
+      rarity: 'rare',
+    },
+    {
+      key: 'gods_draught',
+      name: "God's Draught",
+      icon: '🔮',
+      desc: '×10 everything for 30s',
+      cost: { tap_shard: 50, energy_crystal: 30, combo_dust: 20, prestige_essence: 5 },
+      effect: { type: 'god_mode', value: 10, durationMs: 30000 },
+      rarity: 'legendary',
+    },
+    {
+      key: 'shadow_tonic',
+      name: 'Shadow Tonic',
+      icon: '🌑',
+      desc: 'Auto-tap 500 times over 60s',
+      cost: { combo_dust: 25, prestige_essence: 2 },
+      effect: { type: 'auto_tap', value: 500, durationMs: 60000 },
+      rarity: 'rare',
+    },
+  ],
+
+  // ── Layer 29: Story Campaign ──────────────────────────────────────────────
+  CAMPAIGN_CHAPTERS: [
+    { id: 1,  name: 'The Awakening',     icon: '🌅', bossHp: 50000,    mechanic: 'standard',    reward: { tapBonus: 0.05, gems: 5  } },
+    { id: 2,  name: 'Neon Labyrinth',    icon: '🌆', bossHp: 150000,   mechanic: 'no_stop',     reward: { energyMax: 10,  gems: 8  } },
+    { id: 3,  name: 'Crystal Mines',     icon: '💎', bossHp: 400000,   mechanic: 'burst',       reward: { tapBonus: 0.08, gems: 12 } },
+    { id: 4,  name: 'Void Rift',         icon: '🕳️', bossHp: 1000000,  mechanic: 'regen_boss',  reward: { gemBonus: 0.05, gems: 20 } },
+    { id: 5,  name: 'Neural Storm',      icon: '⚡', bossHp: 2500000,  mechanic: 'combo_only',  reward: { comboBonus: 0.1, gems: 30 } },
+    { id: 6,  name: 'Shadow Realm',      icon: '🌑', bossHp: 5000000,  mechanic: 'dark_phase',  reward: { tapBonus: 0.12, gems: 50 } },
+    { id: 7,  name: 'Quantum Paradox',   icon: '⚛️', bossHp: 10000000, mechanic: 'reverse',     reward: { allBonus: 0.05, gems: 75 } },
+    { id: 8,  name: 'Mech Citadel',      icon: '🤖', bossHp: 25000000, mechanic: 'shields',     reward: { tapBonus: 0.15, gems: 100 } },
+    { id: 9,  name: 'The Ascension',     icon: '🌟', bossHp: 50000000, mechanic: 'enrage',      reward: { allBonus: 0.1, gems: 150 } },
+    { id: 10, name: 'God Brain',         icon: '🧠', bossHp: 100000000,mechanic: 'final_boss',  reward: { title: 'God Brain', allBonus: 0.2, gems: 500 } },
+  ],
+  CAMPAIGN_MECHANICS: {
+    standard:   { desc: 'Tap the boss down normally' },
+    no_stop:    { desc: 'Boss regenerates 1% HP/s if you stop tapping' },
+    burst:      { desc: 'Only burst taps (≥10 at once) deal full damage' },
+    regen_boss: { desc: 'Boss heals 5% HP every 10s' },
+    combo_only: { desc: 'Only combo ×3+ taps deal damage' },
+    dark_phase: { desc: 'Every 20s boss enters immune phase for 5s' },
+    reverse:    { desc: 'More energy used = more damage (not taps)' },
+    shields:    { desc: 'Boss has 3 shield layers, each needs 1000 taps to break' },
+    enrage:     { desc: 'Boss gets faster and stronger every 30s' },
+    final_boss: { desc: 'All mechanics combined — ultimate test' },
+  },
+
+  // ── Layer 30: Global Community Boss ──────────────────────────────────────
+  GLOBAL_BOSS_SCHEDULE_DAY: 0, // Sunday
+  GLOBAL_BOSS_DURATION_MS: 24 * 60 * 60 * 1000,
+  GLOBAL_BOSS_DEFINITIONS: [
+    {
+      key: 'mega_brain',
+      name: 'MEGA BRAIN',
+      icon: '🧠',
+      color: '#8b5cf6',
+      hpPerPlayer: 500000,
+      minPlayers: 10,
+      milestones: [
+        { pct: 25, reward: { gems: 5,  label: '25% Milestone — Community Effort!' } },
+        { pct: 50, reward: { gems: 10, label: '50% Halfway — Keep Going!' } },
+        { pct: 75, reward: { gems: 15, label: '75% Almost There!' } },
+        { pct: 100,reward: { gems: 30, label: '100% WORLD CLEARED!' } },
+      ],
+      killReward: { gems: 50, artifact: true },
+    },
+    {
+      key: 'void_titan',
+      name: 'VOID TITAN',
+      icon: '🕳️',
+      color: '#1e1b4b',
+      hpPerPlayer: 1000000,
+      minPlayers: 10,
+      milestones: [
+        { pct: 25, reward: { gems: 8,  label: 'Void cracking...' } },
+        { pct: 50, reward: { gems: 16, label: 'Void shaking!' } },
+        { pct: 75, reward: { gems: 24, label: 'Void shattering!' } },
+        { pct: 100,reward: { gems: 40, label: 'VOID DESTROYED!' } },
+      ],
+      killReward: { gems: 80, artifact: true },
+    },
+    {
+      key: 'quantum_god',
+      name: 'QUANTUM GOD',
+      icon: '⚛️',
+      color: '#0ea5e9',
+      hpPerPlayer: 2000000,
+      minPlayers: 10,
+      milestones: [
+        { pct: 25, reward: { gems: 15, label: 'Quantum unstable...' } },
+        { pct: 50, reward: { gems: 25, label: 'Reality bending!' } },
+        { pct: 75, reward: { gems: 40, label: 'Quantum collapse imminent!' } },
+        { pct: 100,reward: { gems: 60, label: 'QUANTUM GOD DEFEATED!' } },
+      ],
+      killReward: { gems: 120, artifact: true },
+    },
+  ],
 };

@@ -309,4 +309,39 @@ export const api = {
     list:  () => request('/gallery'),
     claim: (achKey) => request('/gallery/claim', { method: 'POST', body: { achKey } }),
   },
+
+  rhythmtap: {
+    status: () => request('/rhythmtap'),
+    submit: (score, perfect, good, miss) => request('/rhythmtap/submit', { method: 'POST', body: { score, perfect, good, miss } }),
+  },
+
+  shadowrival: {
+    status:    () => request('/shadowrival'),
+    challenge: (myScore) => request('/shadowrival/challenge', { method: 'POST', body: { myScore } }),
+    upgrades:  () => request('/shadowrival/upgrades'),
+    upgrade:   (upgradeKey) => request('/shadowrival/upgrade', { method: 'POST', body: { upgradeKey } }),
+  },
+
+  territories: {
+    list: () => request('/territories'),
+    tap:  (territoryId, count) => request('/territories/tap', { method: 'POST', body: { territoryId, count } }),
+  },
+
+  alchemy: {
+    status:  () => request('/alchemy'),
+    brew:    (recipeKey) => request('/alchemy/brew', { method: 'POST', body: { recipeKey } }),
+    collect: (taps, combos, prestige) => request('/alchemy/collect', { method: 'POST', body: { taps, combos, prestige } }),
+  },
+
+  campaign: {
+    status:  () => request('/campaign'),
+    start:   () => request('/campaign/start',   { method: 'POST' }),
+    tap:     (count) => request('/campaign/tap', { method: 'POST', body: { count } }),
+    abandon: () => request('/campaign/abandon', { method: 'POST' }),
+  },
+
+  globalboss: {
+    status: () => request('/globalboss'),
+    tap:    (count) => request('/globalboss/tap', { method: 'POST', body: { count } }),
+  },
 };

@@ -62,6 +62,12 @@ const coopRaidRoute        = require('./routes/coopraid');
 const { router: relicsRoute } = require('./routes/relics');
 const { router: divisionRoute, settleDivisions } = require('./routes/divisionleague');
 const galleryRoute         = require('./routes/gallery');
+const rhythmTapRoute       = require('./routes/rhythmtap');
+const shadowRivalRoute     = require('./routes/shadowrival');
+const territoriesRoute     = require('./routes/territories');
+const { router: alchemyRoute } = require('./routes/alchemy');
+const campaignRoute        = require('./routes/campaign');
+const { router: globalBossRoute, spawnGlobalBoss } = require('./routes/globalboss');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -153,6 +159,12 @@ app.use('/coopraid',        telegramAuthMiddleware, tapperLimiter, coopRaidRoute
 app.use('/relics',          telegramAuthMiddleware, actionLimiter, relicsRoute);
 app.use('/divisionleague',  telegramAuthMiddleware, actionLimiter, divisionRoute);
 app.use('/gallery',         telegramAuthMiddleware, actionLimiter, galleryRoute);
+app.use('/rhythmtap',       telegramAuthMiddleware, tapperLimiter, rhythmTapRoute);
+app.use('/shadowrival',     telegramAuthMiddleware, actionLimiter, shadowRivalRoute);
+app.use('/territories',     telegramAuthMiddleware, tapperLimiter, territoriesRoute);
+app.use('/alchemy',         telegramAuthMiddleware, actionLimiter, alchemyRoute);
+app.use('/campaign',        telegramAuthMiddleware, tapperLimiter, campaignRoute);
+app.use('/globalboss',      telegramAuthMiddleware, tapperLimiter, globalBossRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
@@ -176,6 +188,7 @@ async function main() {
   setInterval(() => settleSeason().catch(err => console.error('Season settle error:', err.message)), 60 * 60 * 1000);
   setInterval(() => spawnRandomEvent().catch(err => console.error('World event spawn error:', err.message)), 60 * 60 * 1000);
   setInterval(() => settleDivisions().catch(err => console.error('Division settle error:', err.message)), 24 * 60 * 60 * 1000);
+  setInterval(() => spawnGlobalBoss().catch(err => console.error('Global boss spawn error:', err.message)), 60 * 60 * 1000);
 
   // Init boss ecosystem on startup
   const { pool: dbPool } = require('./db');

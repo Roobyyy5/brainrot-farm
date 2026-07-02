@@ -755,3 +755,97 @@ CREATE TABLE IF NOT EXISTS gallery_achievements (
   UNIQUE (telegram_id, ach_key)
 );
 CREATE INDEX IF NOT EXISTS idx_gallery_achievements ON gallery_achievements(telegram_id);
+
+-- ── Layer 25: Rhythm Tap ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS rhythm_tap_scores (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  score       INTEGER NOT NULL DEFAULT 0,
+  accuracy    NUMERIC(5,2) NOT NULL DEFAULT 0,
+  perfect     INTEGER NOT NULL DEFAULT 0,
+  good        INTEGER NOT NULL DEFAULT 0,
+  miss        INTEGER NOT NULL DEFAULT 0,
+  played_at   BIGINT  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rhythm_tap ON rhythm_tap_scores(telegram_id, played_at DESC);
+CREATE INDEX IF NOT EXISTS idx_rhythm_lb  ON rhythm_tap_scores(score DESC);
+
+-- ── Layer 26: AI Shadow Rival ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS shadow_rivals (
+  telegram_id      TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
+  rival_level      INTEGER NOT NULL DEFAULT 1,
+  rival_score      BIGINT  NOT NULL DEFAULT 0,
+  wins             INTEGER NOT NULL DEFAULT 0,
+  losses           INTEGER NOT NULL DEFAULT 0,
+  shards           INTEGER NOT NULL DEFAULT 0,
+  last_challenge   BIGINT  NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS rival_shard_upgrades (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  upgrade_key TEXT    NOT NULL,
+  purchased_at BIGINT NOT NULL,
+  UNIQUE (telegram_id, upgrade_key)
+);
+
+-- ── Layer 27: Guild Territories ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS territory_control (
+  territory_id INTEGER NOT NULL,
+  week_key     TEXT    NOT NULL,
+  guild_id     INTEGER REFERENCES guilds(id) ON DELETE SET NULL,
+  tap_counts   JSONB   NOT NULL DEFAULT '{}',
+  captured_at  BIGINT,
+  PRIMARY KEY (territory_id, week_key)
+);
+CREATE INDEX IF NOT EXISTS idx_territory_week ON territory_control(week_key);
+
+-- ── Layer 28: Tap Alchemy ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS alchemy_ingredients (
+  telegram_id     TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  tap_shard       INTEGER NOT NULL DEFAULT 0,
+  energy_crystal  INTEGER NOT NULL DEFAULT 0,
+  combo_dust      INTEGER NOT NULL DEFAULT 0,
+  prestige_essence INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (telegram_id)
+);
+CREATE TABLE IF NOT EXISTS alchemy_brews (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  recipe_key  TEXT    NOT NULL,
+  brewed_at   BIGINT  NOT NULL,
+  expires_at  BIGINT,
+  used        BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS idx_alchemy_brews ON alchemy_brews(telegram_id, used, expires_at);
+
+-- ── Layer 29: Story Campaign ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS campaign_progress (
+  telegram_id    TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
+  chapter        INTEGER NOT NULL DEFAULT 1,
+  boss_hp        BIGINT  NOT NULL DEFAULT 0,
+  boss_max_hp    BIGINT  NOT NULL DEFAULT 0,
+  active         BOOLEAN NOT NULL DEFAULT FALSE,
+  started_at     BIGINT,
+  completed_chapters JSONB NOT NULL DEFAULT '[]'
+);
+
+-- ── Layer 30: Global Community Boss ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS global_boss_events (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  boss_key    TEXT    NOT NULL,
+  max_hp      BIGINT  NOT NULL,
+  current_hp  BIGINT  NOT NULL,
+  started_at  BIGINT  NOT NULL,
+  ends_at     BIGINT  NOT NULL,
+  status      TEXT    NOT NULL DEFAULT 'active',
+  milestones_hit JSONB NOT NULL DEFAULT '[]'
+);
+CREATE TABLE IF NOT EXISTS global_boss_hits (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  event_id    INTEGER NOT NULL REFERENCES global_boss_events(id) ON DELETE CASCADE,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  damage      BIGINT  NOT NULL DEFAULT 0,
+  rewarded    BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS idx_global_boss_hits ON global_boss_hits(event_id, damage DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_global_boss_hits_unique ON global_boss_hits(event_id, telegram_id);

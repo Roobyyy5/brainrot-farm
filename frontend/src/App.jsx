@@ -63,6 +63,12 @@ import RelicsPanel from './components/RelicsPanel';
 import DivisionLeague from './components/DivisionLeague';
 import SynergyBadges from './components/SynergyBadges';
 import AchievementGallery from './components/AchievementGallery';
+import RhythmTap from './components/RhythmTap';
+import ShadowRival from './components/ShadowRival';
+import TerritoryMap from './components/TerritoryMap';
+import TapAlchemy from './components/TapAlchemy';
+import StoryMode from './components/StoryMode';
+import GlobalBoss from './components/GlobalBoss';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -136,8 +142,11 @@ export default function App() {
 
       {tab === 'tap' && (
         <>
+          <GlobalBoss />
           <WorldEvents />
           <QuestBoard />
+          <RhythmTap />
+          <StoryMode />
           <SeasonNarrative />
           <TapRush />
           <ActiveAbilities />
@@ -173,6 +182,7 @@ export default function App() {
           <Artifacts />
           <MasteryPanel />
           <BuildPresets />
+          <TapAlchemy />
           <SynergyBadges />
           <RelicsPanel />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
@@ -182,8 +192,10 @@ export default function App() {
       {tab === 'club' && (
         <>
           <GuildSkillTree />
+          <TerritoryMap />
           <ClanBracket />
           <CoopRaid />
+          <ShadowRival />
           <GuildWars />
           <GuildRaid />
           <Guilds onGemsChanged={handleGemsChanged} currentUsername={user?.username} />
