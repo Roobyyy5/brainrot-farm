@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function GuildOlympics() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState('events'); // events | standings
+  const [view, setView] = useState('events');
 
   const load = () => api.olympics.status().then(setData).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -13,7 +15,7 @@ export default function GuildOlympics() {
     setLoading(true);
     try {
       const r = await api.olympics.submit(eventKey);
-      alert(`📊 Твій результат: ${r.score.toLocaleString()}`);
+      alert(t('olympics_score_alert', { n: r.score.toLocaleString() }));
       await load();
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
@@ -27,17 +29,17 @@ export default function GuildOlympics() {
 
   return (
     <div className="olympics-panel">
-      <div className="olympics-header">🏅 Guild Olympics</div>
+      <div className="olympics-header">{t('olympics_header')}</div>
       <div className="olympics-season">
-        {data.season.monthKey} • Залишилось: {daysLeft}д {hoursLeft}г
+        {t('olympics_season', { month: data.season.monthKey, d: daysLeft, h: hoursLeft })}
       </div>
 
       <div className="olympics-tabs">
         <button className={`olympics-tab ${view === 'events' ? 'active' : ''}`} onClick={() => setView('events')}>
-          ⚡ Події
+          {t('olympics_tab_events')}
         </button>
         <button className={`olympics-tab ${view === 'standings' ? 'active' : ''}`} onClick={() => setView('standings')}>
-          🏆 Рейтинг
+          {t('olympics_tab_standings')}
         </button>
       </div>
 
@@ -63,17 +65,17 @@ export default function GuildOlympics() {
                       onClick={() => submit(ev.key)}
                       disabled={loading}
                     >
-                      {myScore !== undefined ? '🔄 Оновити' : '📊 Submit'}
+                      {myScore !== undefined ? t('olympics_update_btn') : t('olympics_submit_btn')}
                     </button>
                   </div>
                 </div>
                 {tops.length > 0 && (
                   <div className="olympics-event-lb">
-                    {tops.slice(0, 3).map((t, i) => (
-                      <div key={i} className={`olympics-event-lb-row ${t.isMe ? 'me' : ''}`}>
+                    {tops.slice(0, 3).map((top, i) => (
+                      <div key={i} className={`olympics-event-lb-row ${top.isMe ? 'me' : ''}`}>
                         <span>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                        <span className="olympics-lb-name">{t.username}</span>
-                        <span className="olympics-lb-score">{t.score.toLocaleString()}</span>
+                        <span className="olympics-lb-name">{top.username}</span>
+                        <span className="olympics-lb-score">{top.score.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -86,7 +88,7 @@ export default function GuildOlympics() {
 
       {view === 'standings' && (
         <div className="olympics-standings">
-          <div className="olympics-rewards-title">🏆 Нагороди гільдій</div>
+          <div className="olympics-rewards-title">{t('olympics_rewards_title')}</div>
           {data.rewards.map(r => (
             <div key={r.place} className="olympics-reward-row">
               <span>{r.title}</span>
@@ -95,9 +97,9 @@ export default function GuildOlympics() {
           ))}
 
           <div className="olympics-guild-lb">
-            <div className="olympics-guild-lb-title">Рейтинг гільдій</div>
+            <div className="olympics-guild-lb-title">{t('olympics_guild_lb_title')}</div>
             {data.guildStandings.length === 0 && (
-              <div className="olympics-empty">Ще немає учасників. Submit свій результат першим!</div>
+              <div className="olympics-empty">{t('olympics_empty')}</div>
             )}
             {data.guildStandings.map(g => (
               <div key={g.rank} className={`olympics-guild-row ${g.isMe ? 'me' : ''}`}>

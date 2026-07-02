@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const BONUS_LABELS = {
-  tapMult: v => `+${Math.round(v*100)}% Tap`,
-  energyMax: v => `+${v} Energy`,
-  energyRegen: v => `+${Math.round(v*100)}% Regen`,
-  energyCostMult: v => `${Math.round(v*100)}% Вартість`,
-  comboMult: v => `+${Math.round(v*100)}% Combo`,
-  passiveMult: v => `+${Math.round(v*100)}% Passive`,
-  gemMult: v => `+${Math.round(v*100)}% Gems`,
-  critChance: v => `+${Math.round(v*100)}% Crit`,
-  allMult: v => `+${Math.round(v*100)}% Все`,
+  tapMult:       v => `+${Math.round(v*100)}% Tap`,
+  energyMax:     v => `+${v} Energy`,
+  energyRegen:   v => `+${Math.round(v*100)}% Regen`,
+  energyCostMult:v => `${Math.round(v*100)}% Cost`,
+  comboMult:     v => `+${Math.round(v*100)}% Combo`,
+  passiveMult:   v => `+${Math.round(v*100)}% Passive`,
+  gemMult:       v => `+${Math.round(v*100)}% Gems`,
+  critChance:    v => `+${Math.round(v*100)}% Crit`,
+  allMult:       v => `+${Math.round(v*100)}% All`,
 };
 
 export default function NeuralTree() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,10 +35,10 @@ export default function NeuralTree() {
   if (!data.treeUnlocked) {
     return (
       <div className="neural-panel">
-        <div className="neural-header">🧠 Neural Prestige Tree</div>
+        <div className="neural-header">{t('neural_header')}</div>
         <div className="neural-locked">
-          🔒 Відкривається після Ascension {data.requiredAscension}
-          <div className="neural-locked-sub">Глибоке дерево постійних бонусів — 20 вузлів, 7 гілок</div>
+          {t('neural_locked', { n: data.requiredAscension })}
+          <div className="neural-locked-sub">{t('neural_locked_sub')}</div>
         </div>
       </div>
     );
@@ -46,12 +48,11 @@ export default function NeuralTree() {
 
   return (
     <div className="neural-panel">
-      <div className="neural-header">🧠 Neural Prestige Tree</div>
-      <div className="neural-points">⚡ {data.points} Neural Points • {data.totalUnlocked}/{data.nodes.length} вузлів</div>
+      <div className="neural-header">{t('neural_header')}</div>
+      <div className="neural-points">{t('neural_points', { n: data.points, unlocked: data.totalUnlocked, total: data.nodes.length })}</div>
 
       <div className="neural-map">
         <svg className="neural-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          {/* Connections */}
           {data.nodes.map(node =>
             node.requires.map(reqId => {
               const req = data.nodes.find(n => n.id === reqId);
@@ -65,7 +66,6 @@ export default function NeuralTree() {
               );
             })
           )}
-          {/* Nodes */}
           {data.nodes.map(node => (
             <g key={node.id} onClick={() => setSelected(selected === node.id ? null : node.id)} style={{ cursor: 'pointer' }}>
               <circle
@@ -90,25 +90,25 @@ export default function NeuralTree() {
               <span key={k} className="neural-bonus-tag">{BONUS_LABELS[k]?.(v) || `${k}: ${v}`}</span>
             ))}
           </div>
-          {selNode.cost > 0 && <div className="neural-detail-cost">⚡ Вартість: {selNode.cost} Neural Points</div>}
+          {selNode.cost > 0 && <div className="neural-detail-cost">{t('neural_cost', { n: selNode.cost })}</div>}
           {selNode.requires.length > 0 && (
             <div className="neural-detail-req">
-              Потребує: {selNode.requires.map(r => data.nodes.find(n => n.id === r)?.name || r).join(', ')}
+              {t('neural_requires', { nodes: selNode.requires.map(r => data.nodes.find(n => n.id === r)?.name || r).join(', ') })}
             </div>
           )}
           {selNode.unlocked ? (
-            <div className="neural-detail-status unlocked">✅ Розблоковано</div>
+            <div className="neural-detail-status unlocked">{t('neural_unlocked')}</div>
           ) : selNode.available ? (
             <button className="neural-unlock-btn" onClick={() => unlock(selNode.id)} disabled={loading}>
-              ⚡ Розблокувати ({selNode.cost} pts)
+              {t('neural_unlock_btn', { n: selNode.cost })}
             </button>
           ) : (
-            <div className="neural-detail-status locked">🔒 Спочатку розблокуй попередні вузли</div>
+            <div className="neural-detail-status locked">{t('neural_prereq')}</div>
           )}
         </div>
       )}
 
-      <div className="neural-hint">Тапай на вузол щоб побачити деталі • Neural Points заробляються за prestige/ascension</div>
+      <div className="neural-hint">{t('neural_hint')}</div>
     </div>
   );
 }

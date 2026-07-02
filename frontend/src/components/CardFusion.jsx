@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const RARITY_COLOR = { common: '#9ca3af', rare: '#3b82f6', epic: '#8b5cf6', legendary: '#f59e0b' };
 
 export default function CardFusion() {
+  const t = useT();
   const [data, setData] = useState(null);
-  const [selected, setSelected] = useState(null); // { cardKey }
+  const [selected, setSelected] = useState(null);
   const [targetSlot, setTargetSlot] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fusing, setFusing] = useState(false);
@@ -27,7 +29,7 @@ export default function CardFusion() {
   };
 
   const destroy = async (slot) => {
-    if (!confirm('Знищити Fusion картку?')) return;
+    if (!confirm(t('fusion_destroy_confirm'))) return;
     setLoading(true);
     try { await api.cardfusion.destroy(slot); await load(); }
     catch (err) { alert(err.message); }
@@ -36,11 +38,17 @@ export default function CardFusion() {
 
   if (!data) return null;
 
+  const fuseBtnLabel = () => {
+    if (fusing) return t('fusion_btn_fusing');
+    if (selected && targetSlot) return t('fusion_btn_fuse', { card: selected.cardKey, slot: targetSlot });
+    return t('fusion_btn_select');
+  };
+
   return (
     <div className="fusion-panel">
-      <div className="fusion-header">✨ Card Fusion</div>
+      <div className="fusion-header">{t('fusion_header')}</div>
       <div className="fusion-sub">
-        Поєднай {data.config?.cardsRequiredToFuse || 3} копії однієї картки → Fusion (×{data.config?.fusionMultiplier || 3.5} бонус)
+        {t('fusion_sub', { n: data.config?.cardsRequiredToFuse || 3, m: data.config?.fusionMultiplier || 3.5 })}
       </div>
 
       <div className="fusion-slots">
@@ -59,7 +67,7 @@ export default function CardFusion() {
               </div>
             ) : (
               <div className="fusion-slot-empty">
-                {targetSlot === s.slot ? '🎯 Слот обрано' : `Слот ${s.slot}`}
+                {targetSlot === s.slot ? t('fusion_slot_selected') : t('fusion_slot', { n: s.slot })}
               </div>
             )}
           </div>
@@ -68,7 +76,7 @@ export default function CardFusion() {
 
       {data.fusableCards?.length > 0 ? (
         <>
-          <div className="fusion-available-title">Доступні для fusion:</div>
+          <div className="fusion-available-title">{t('fusion_available')}</div>
           <div className="fusion-cards-list">
             {data.fusableCards.map(c => (
               <div
@@ -77,7 +85,7 @@ export default function CardFusion() {
                 onClick={() => setSelected(selected?.cardKey === c.key ? null : { cardKey: c.key })}
               >
                 <span className="fusion-card-key">{c.key}</span>
-                <span className="fusion-card-count">{c.count}× копій</span>
+                <span className="fusion-card-count">{t('fusion_copies', { n: c.count })}</span>
               </div>
             ))}
           </div>
@@ -86,13 +94,12 @@ export default function CardFusion() {
             onClick={fuse}
             disabled={!selected || !targetSlot || loading || fusing}
           >
-            {fusing ? '✨ Fusion...' : selected && targetSlot ? `✨ Fuse ${selected.cardKey} → Слот ${targetSlot}` : 'Обери картку і слот'}
+            {fuseBtnLabel()}
           </button>
         </>
       ) : (
         <div className="fusion-empty-state">
-          Потрібно {data.config?.cardsRequiredToFuse || 3}+ копій однієї картки для fusion.<br />
-          Купуй картки у магазині карток.
+          {t('fusion_empty', { n: data.config?.cardsRequiredToFuse || 3 })}
         </div>
       )}
     </div>

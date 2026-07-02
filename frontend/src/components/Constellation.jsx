@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const BONUS_LABELS = {
   tapMult:     v => `+${Math.round(v*100)}% Tap`,
@@ -13,6 +14,7 @@ const BONUS_LABELS = {
 };
 
 export default function Constellation() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,10 +34,10 @@ export default function Constellation() {
   if (!data.constellationUnlocked) {
     return (
       <div className="constellation-panel">
-        <div className="constellation-header">🌌 Prestige Constellation</div>
+        <div className="constellation-header">{t('const_header')}</div>
         <div className="constellation-locked">
-          🔒 Відкривається після Ascension {data.requiredAscension}
-          <div className="constellation-locked-sub">24 зірки постійних бонусів через prestige & ascension</div>
+          {t('const_locked', { n: data.requiredAscension })}
+          <div className="constellation-locked-sub">{t('const_locked_sub')}</div>
         </div>
       </div>
     );
@@ -45,11 +47,11 @@ export default function Constellation() {
 
   return (
     <div className="constellation-panel">
-      <div className="constellation-header">🌌 Prestige Constellation</div>
+      <div className="constellation-header">{t('const_header')}</div>
       <div className="constellation-stardust">
-        ⭐ {data.available} Stardust доступно • {data.totalUnlocked}/{data.nodes.length} зірок
+        {t('const_stardust', { n: data.available, unlocked: data.totalUnlocked, total: data.nodes.length })}
       </div>
-      <div className="constellation-hint-small">Зароблено: {data.totalEarned} (prestige×10 + ascension×80)</div>
+      <div className="constellation-hint-small">{t('const_earned', { n: data.totalEarned })}</div>
 
       <div className="constellation-map">
         <svg className="constellation-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
@@ -93,31 +95,29 @@ export default function Constellation() {
               <span key={k} className="constellation-bonus-tag">{BONUS_LABELS[k]?.(v) || `${k}:${v}`}</span>
             ))}
           </div>
-          {selNode.cost > 0 && <div className="constellation-detail-cost">⭐ Вартість: {selNode.cost} Stardust</div>}
+          {selNode.cost > 0 && <div className="constellation-detail-cost">{t('const_cost', { n: selNode.cost })}</div>}
           {selNode.requires.length > 0 && (
             <div className="constellation-detail-req">
-              Потребує: {selNode.requires.map(r => data.nodes.find(n => n.id === r)?.name || r).join(', ')}
+              {t('const_requires', { nodes: selNode.requires.map(r => data.nodes.find(n => n.id === r)?.name || r).join(', ') })}
             </div>
           )}
           {selNode.unlocked ? (
-            <div className="constellation-detail-status done">✅ Розблоковано</div>
+            <div className="constellation-detail-status done">{t('const_unlocked')}</div>
           ) : selNode.available ? (
             <button className="constellation-unlock-btn" onClick={() => unlock(selNode.id)} disabled={loading}>
-              ⭐ Розблокувати ({selNode.cost})
+              {t('const_unlock_btn', { n: selNode.cost })}
             </button>
           ) : (
             <div className="constellation-detail-status locked">
               {data.available < selNode.cost
-                ? `Потрібно ще ${selNode.cost - data.available} Stardust`
-                : '🔒 Розблокуй попередні зірки'}
+                ? t('const_need_more', { n: selNode.cost - data.available })
+                : t('const_prereq')}
             </div>
           )}
         </div>
       )}
 
-      <div className="constellation-footer-hint">
-        Тапай на зірку • Stardust: +10 за prestige, +80 за ascension
-      </div>
+      <div className="constellation-footer-hint">{t('const_hint')}</div>
     </div>
   );
 }

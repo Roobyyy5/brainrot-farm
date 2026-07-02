@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function MentorSystem() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,46 +26,46 @@ export default function MentorSystem() {
 
   return (
     <div className="mentor-panel">
-      <div className="mentor-header">🎓 Ментор / Учень</div>
+      <div className="mentor-header">{t('mentor_header')}</div>
 
       {data.myMentor ? (
         <div className="mentor-my-mentor">
-          <div className="mentor-my-mentor-title">Мій ментор</div>
+          <div className="mentor-my-mentor-title">{t('mentor_my_mentor')}</div>
           <div className="mentor-my-mentor-row">
             <span className="mentor-my-mentor-name">👤 {data.myMentor.username}</span>
-            <span className="mentor-bonus">+{Math.round(data.myMentor.bonusPct * 100)}% бонус</span>
+            <span className="mentor-bonus">{t('mentor_bonus', { n: Math.round(data.myMentor.bonusPct * 100) })}</span>
           </div>
-          <button className="mentor-resign-btn" onClick={() => act(() => api.mentor.resign(), 'Ти пішов від ментора')} disabled={loading}>
-            Залишити ментора
+          <button className="mentor-resign-btn" onClick={() => act(() => api.mentor.resign(), t('mentor_resign_alert'))} disabled={loading}>
+            {t('mentor_resign_btn')}
           </button>
         </div>
       ) : (
         <div className="mentor-find">
-          <div className="mentor-find-title">Знайти ментора</div>
+          <div className="mentor-find-title">{t('mentor_find_title')}</div>
           <div className="mentor-find-row">
             <input
               className="mentor-input"
-              placeholder="Username ментора"
+              placeholder={t('mentor_ph_mentor')}
               value={username}
               onChange={e => setUsername(e.target.value)}
             />
             <button
               className="mentor-take-btn"
-              onClick={() => act(() => api.mentor.take(username), `${username} тепер твій ментор!`)}
+              onClick={() => act(() => api.mentor.take(username), t('mentor_take_alert', { name: username }))}
               disabled={loading || !username}
             >
-              Стати учнем
+              {t('mentor_take_btn')}
             </button>
           </div>
         </div>
       )}
 
       <div className="mentor-section-title">
-        Мої учні ({data.apprentices.length}/{data.maxApprentices})
+        {t('mentor_apprentices_title', { n: data.apprentices.length, max: data.maxApprentices })}
       </div>
 
       {data.apprentices.length === 0 ? (
-        <div className="mentor-empty">Учнів поки немає. Поділись своїм username щоб інші змогли до тебе звернутись.</div>
+        <div className="mentor-empty">{t('mentor_empty')}</div>
       ) : (
         <div className="mentor-apprentices">
           {data.apprentices.map(a => (
@@ -82,7 +84,7 @@ export default function MentorSystem() {
         <div className="mentor-progress">
           <div className="mentor-progress-top">
             <span className="mentor-progress-label">Teaching XP: {data.totalTeachingXp}</span>
-            {data.nextMilestone && <span className="mentor-next">→ {data.nextMilestone.name}</span>}
+            {data.nextMilestone && <span className="mentor-next">{t('mentor_next', { name: data.nextMilestone.name })}</span>}
           </div>
           <div className="mentor-progress-bar">
             <div className="mentor-progress-fill" style={{ width: `${xpPct}%` }} />
@@ -100,20 +102,20 @@ export default function MentorSystem() {
 
       {data.apprentices.length < data.maxApprentices && (
         <div className="mentor-find">
-          <div className="mentor-find-title">Додати учня</div>
+          <div className="mentor-find-title">{t('mentor_add_title')}</div>
           <div className="mentor-find-row">
             <input
               className="mentor-input"
-              placeholder="Username учня"
+              placeholder={t('mentor_ph_apprentice')}
               value={username}
               onChange={e => setUsername(e.target.value)}
             />
             <button
               className="mentor-take-btn"
-              onClick={() => act(() => api.mentor.take(username), `${username} став твоїм учнем!`)}
+              onClick={() => act(() => api.mentor.take(username), t('mentor_add_alert', { name: username }))}
               disabled={loading || !username}
             >
-              Взяти
+              {t('mentor_add_btn')}
             </button>
           </div>
         </div>

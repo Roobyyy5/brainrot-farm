@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
-
-const STATUS_LABEL = { qualifying: '📊 Кваліфікація', bracket: '🏆 Bracket', ended: '🏁 Завершено' };
+import { useT } from '../context/LangContext';
 
 export default function Championship() {
+  const t = useT();
   const [data, setData] = useState(null);
 
   const load = () => api.championship.status().then(setData).catch(() => {});
@@ -11,21 +11,27 @@ export default function Championship() {
 
   if (!data) return null;
 
+  const statusLabel = {
+    qualifying: t('champ_status_qualifying'),
+    bracket:    t('champ_status_bracket'),
+    ended:      t('champ_status_ended'),
+  };
+
   const me = data.me;
   const qualified = me?.qualified && data.topPlayers?.find(p => p.isMe)?.rank <= data.bracketSize;
 
   return (
     <div className="champ-panel">
-      <div className="champ-header">🏆 Monthly Championship</div>
-      <div className="champ-month">{data.monthKey} • {STATUS_LABEL[data.status] || data.status}</div>
+      <div className="champ-header">{t('champ_header')}</div>
+      <div className="champ-month">{data.monthKey} • {statusLabel[data.status] || data.status}</div>
 
       <div className="champ-my-card">
         <div className="champ-my-score">
-          <span className="champ-my-score-label">Мій season score</span>
+          <span className="champ-my-score-label">{t('champ_my_score_label')}</span>
           <span className="champ-my-score-val">{(me?.score || 0).toLocaleString()}</span>
         </div>
         <div className={`champ-my-status ${qualified ? 'qualified' : ''}`}>
-          {qualified ? '✅ Кваліфіковано' : `Top ${data.bracketSize} для участі`}
+          {qualified ? t('champ_qualified') : t('champ_top_n', { n: data.bracketSize })}
         </div>
       </div>
 
@@ -44,7 +50,7 @@ export default function Championship() {
       )}
 
       <div className="champ-prizes">
-        <div className="champ-prizes-title">🏆 Нагороди</div>
+        <div className="champ-prizes-title">{t('champ_prizes_title')}</div>
         {data.prizes?.map(p => (
           <div key={p.place} className="champ-prize-row">
             <span className="champ-prize-place">{p.place === 1 ? '🥇' : p.place === 2 ? '🥈' : '🥉'}</span>
@@ -62,7 +68,7 @@ export default function Championship() {
       </div>
 
       <div className="champ-lb">
-        <div className="champ-lb-title">📊 Кваліфікаційний рейтинг</div>
+        <div className="champ-lb-title">{t('champ_lb_title')}</div>
         {data.topPlayers?.slice(0, 20).map(r => (
           <div key={r.rank} className={`champ-lb-row ${r.isMe ? 'me' : ''} ${r.qualified ? 'qualified' : ''}`}>
             <span className="champ-lb-rank">{r.rank <= 3 ? ['🥇','🥈','🥉'][r.rank-1] : `#${r.rank}`}</span>

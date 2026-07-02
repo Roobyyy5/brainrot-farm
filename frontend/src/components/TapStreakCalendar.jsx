@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function TapStreakCalendar() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,11 +26,11 @@ export default function TapStreakCalendar() {
 
   return (
     <div className="tscal-panel">
-      <div className="tscal-header">🔥 Streak Calendar</div>
+      <div className="tscal-header">{t('tscal_header')}</div>
       <div className="tscal-streak-row">
         <span className="tscal-streak-num">{streak}</span>
-        <span className="tscal-streak-label">day streak</span>
-        <span className="tscal-best">🏆 Best: {data.longestStreak}</span>
+        <span className="tscal-streak-label">{t('tscal_day_streak')}</span>
+        <span className="tscal-best">{t('tscal_best', { n: data.longestStreak })}</span>
       </div>
 
       <div className="tscal-grid">
@@ -53,12 +55,12 @@ export default function TapStreakCalendar() {
       </div>
 
       <div className="tscal-legend">
-        <span className="tscal-leg claimed-dot">✅ Забрано</span>
-        <span className="tscal-leg reachable-dot">🟢 Доступно</span>
-        <span className="tscal-leg special-dot">⭐ Особлива</span>
+        <span className="tscal-leg claimed-dot">{t('tscal_leg_claimed')}</span>
+        <span className="tscal-leg reachable-dot">{t('tscal_leg_reachable')}</span>
+        <span className="tscal-leg special-dot">{t('tscal_leg_special')}</span>
       </div>
 
-      <div className="tscal-hint">Заходь щодня щоб підтримувати streak! Пропустив — streak скидається.</div>
+      <div className="tscal-hint">{t('tscal_hint')}</div>
     </div>
   );
 }

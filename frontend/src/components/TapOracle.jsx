@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function TapOracle() {
+  const t = useT();
   const [data, setData] = useState(null);
-  const [view, setView] = useState('main'); // main | shop
+  const [view, setView] = useState('main');
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
@@ -41,13 +43,13 @@ export default function TapOracle() {
 
   return (
     <div className="oracle-panel">
-      <div className="oracle-header">🔮 Tap Oracle</div>
+      <div className="oracle-header">{t('oracle_header')}</div>
 
       {view === 'main' && (
         <>
           <div className="oracle-coins-row">
-            <span className="oracle-coins">🪙 {data.coins} Oracle Coins</span>
-            <button className="oracle-shop-btn" onClick={() => setView('shop')}>🛒 Магазин</button>
+            <span className="oracle-coins">{t('oracle_coins', { n: data.coins })}</span>
+            <button className="oracle-shop-btn" onClick={() => setView('shop')}>{t('oracle_shop_btn')}</button>
           </div>
 
           {ch && !ch.completed ? (
@@ -68,24 +70,24 @@ export default function TapOracle() {
           ) : ch?.completed ? (
             <div className="oracle-completed">
               <div className="oracle-completed-icon">✅</div>
-              <div className="oracle-completed-text">Виклик виконано!</div>
-              <button className="oracle-claim-btn" onClick={() => act(() => api.oracle.claim(), r => `+${r.coins} 🪙 Oracle Coins!`)} disabled={loading}>
-                Забрати нагороду
+              <div className="oracle-completed-text">{t('oracle_completed')}</div>
+              <button className="oracle-claim-btn" onClick={() => act(() => api.oracle.claim(), r => t('oracle_claim_alert', { n: r.coins }))} disabled={loading}>
+                {t('oracle_claim_btn')}
               </button>
             </div>
           ) : (
             <div className="oracle-empty">
               <div className="oracle-empty-icon">🔮</div>
-              <div className="oracle-empty-text">Oracle чекає на тебе</div>
+              <div className="oracle-empty-text">{t('oracle_empty')}</div>
               <button className="oracle-request-btn" onClick={() => act(() => api.oracle.request())} disabled={loading}>
-                🔮 Отримати виклик
+                {t('oracle_request_btn')}
               </button>
             </div>
           )}
 
           {!ch && data.canRequest && (
             <button className="oracle-request-btn" onClick={() => act(() => api.oracle.request())} disabled={loading}>
-              🔮 Отримати виклик
+              {t('oracle_request_btn')}
             </button>
           )}
         </>
@@ -94,23 +96,23 @@ export default function TapOracle() {
       {view === 'shop' && (
         <div className="oracle-shop">
           <div className="oracle-shop-header">
-            <button className="oracle-back-btn" onClick={() => setView('main')}>← Назад</button>
-            <span className="oracle-coins">🪙 {data.coins}</span>
+            <button className="oracle-back-btn" onClick={() => setView('main')}>{t('oracle_back_btn')}</button>
+            <span className="oracle-coins">{t('oracle_coins', { n: data.coins })}</span>
           </div>
           {data.shop?.map(item => (
             <div key={item.key} className={`oracle-shop-item ${item.owned ? 'owned' : ''}`}>
               <span className="oracle-shop-icon">{item.icon}</span>
               <div className="oracle-shop-info">
                 <div className="oracle-shop-name">{item.name}</div>
-                <div className="oracle-shop-cost">🪙 {item.cost} Oracle Coins</div>
+                <div className="oracle-shop-cost">{t('oracle_coins', { n: item.cost })}</div>
               </div>
               {item.owned
                 ? <span className="oracle-shop-owned">✅</span>
                 : <button
                     className="oracle-shop-buy-btn"
-                    onClick={() => act(() => api.oracle.buy(item.key), () => 'Куплено!')}
+                    onClick={() => act(() => api.oracle.buy(item.key), () => t('oracle_bought'))}
                     disabled={loading || data.coins < item.cost}
-                  >Купити</button>
+                  >{t('oracle_buy_btn')}</button>
               }
             </div>
           ))}

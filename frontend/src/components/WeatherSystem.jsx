@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function WeatherSystem() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
@@ -38,10 +40,10 @@ export default function WeatherSystem() {
           <div className="weather-desc">{data.desc}</div>
         </div>
         <div className="weather-timer">
-          {hrs > 0 && `${hrs}г `}{String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
+          {hrs > 0 && `${hrs}${t('weather_hr')} `}{String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
         </div>
       </div>
-      <div className="weather-tag">🌤 Погода дня</div>
+      <div className="weather-tag">{t('weather_tag')}</div>
     </div>
   );
 }

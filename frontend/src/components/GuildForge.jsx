@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const TIER_COLOR = { 1: '#9ca3af', 2: '#3b82f6', 3: '#f59e0b' };
 
 export default function GuildForge() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [contributeAmt, setContributeAmt] = useState('');
@@ -16,7 +18,7 @@ export default function GuildForge() {
     try {
       const r = await api.guildforge.forge(recipeKey);
       await load();
-      alert(`⚒️ Викуто: ${r.recipe}! Активне до ${new Date(r.expiresAt).toLocaleTimeString()}`);
+      alert(t('forge_forged', { name: r.recipe, time: new Date(r.expiresAt).toLocaleTimeString() }));
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
   };
@@ -36,26 +38,26 @@ export default function GuildForge() {
 
   return (
     <div className="forge-panel">
-      <div className="forge-header">⚒️ Guild Forge</div>
+      <div className="forge-header">{t('forge_header')}</div>
 
       <div className="forge-info">
         <div className="forge-level">
-          <span className="forge-level-num">Рівень {data.forgeLevel}</span>
-          <span className="forge-xp">{data.forgeXp} / {data.nextLevelXp || '∞'} XP</span>
+          <span className="forge-level-num">{t('forge_level', { n: data.forgeLevel })}</span>
+          <span className="forge-xp">{t('forge_xp', { xp: data.forgeXp, next: data.nextLevelXp || '∞' })}</span>
         </div>
-        <div className="forge-guild-coins">Монети гільдії: {Number(data.guildCoins).toLocaleString()}</div>
+        <div className="forge-guild-coins">{t('forge_coins', { n: Number(data.guildCoins).toLocaleString() })}</div>
       </div>
 
       {data.activeBoosts?.length > 0 && (
         <div className="forge-active">
-          <div className="forge-active-title">⚡ Активні бусти:</div>
+          <div className="forge-active-title">{t('forge_active_title')}</div>
           {data.activeBoosts.map(b => {
             const recipe = data.allRecipes?.find(r => r.key === b.recipeKey);
             const left = Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 60000));
             return (
               <div key={b.recipeKey} className="forge-active-item">
                 <span>{recipe?.icon} {recipe?.name}</span>
-                <span className="forge-active-time">{left}хв залишилось</span>
+                <span className="forge-active-time">{t('forge_time_left', { n: left })}</span>
               </div>
             );
           })}
@@ -76,7 +78,7 @@ export default function GuildForge() {
                 </div>
               </div>
               <div className="forge-recipe-cost">
-                💰 {Number(recipe.cost.coins).toLocaleString()} монет гільдії
+                {t('forge_cost_coins', { n: Number(recipe.cost.coins).toLocaleString() })}
                 {recipe.cost.guild_xp ? ` • ${recipe.cost.guild_xp} XP` : ''}
               </div>
               {isOfficer ? (
@@ -86,10 +88,10 @@ export default function GuildForge() {
                   onClick={() => forge(recipe.key)}
                   disabled={loading || !!active || Number(data.guildCoins) < recipe.cost.coins}
                 >
-                  {active ? '✅ Активне' : '⚒️ Кувати'}
+                  {active ? t('forge_active_badge') : t('forge_btn')}
                 </button>
               ) : (
-                <div className="forge-officer-only">⚠️ Тільки офіцери</div>
+                <div className="forge-officer-only">{t('forge_officer_only')}</div>
               )}
             </div>
           );
@@ -97,7 +99,7 @@ export default function GuildForge() {
       </div>
 
       <div className="forge-contribute">
-        <div className="forge-contribute-title">💰 Поповнити скарбницю гільдії</div>
+        <div className="forge-contribute-title">{t('forge_contribute_title')}</div>
         <div className="forge-contribute-row">
           <input
             className="forge-contribute-input"
@@ -105,10 +107,10 @@ export default function GuildForge() {
             min="1"
             value={contributeAmt}
             onChange={e => setContributeAmt(e.target.value)}
-            placeholder="Кількість монет"
+            placeholder={t('forge_contribute_ph')}
           />
           <button className="forge-contribute-btn" onClick={contribute} disabled={loading || !contributeAmt}>
-            Здати
+            {t('forge_contribute_btn')}
           </button>
         </div>
       </div>
