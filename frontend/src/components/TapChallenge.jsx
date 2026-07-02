@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const DIFF_COLOR = { easy: '#34d399', medium: '#f59e0b', hard: '#ef4444', legend: '#a78bfa' };
 
 export default function TapChallenge() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [activeRun, setActiveRun] = useState(null);
   const [tab, setTab] = useState('list');
@@ -62,9 +64,9 @@ export default function TapChallenge() {
         setTab('list');
         await load();
         if (result.status === 'completed') {
-          alert(`✅ Challenge complete! +${result.gemsEarned} 💎`);
+          alert(t('challenge_done', { n: result.gemsEarned }));
         } else {
-          alert('⏰ Time\'s up! Try again.');
+          alert(t('challenge_timeout'));
         }
       }
     } catch { /* ignore */ }
@@ -89,12 +91,12 @@ export default function TapChallenge() {
 
   return (
     <div className="tapchallenge-panel">
-      <div className="tapchallenge-header">⚡ Tap Challenges</div>
+      <div className="tapchallenge-header">{t('challenge_title')}</div>
 
       <div className="tapchallenge-tabs">
-        <button className={tab === 'list' ? 'active' : ''} onClick={() => setTab('list')}>Challenges</button>
-        {activeRun && <button className={tab === 'active' ? 'active' : ''} onClick={() => setTab('active')}>▶ Active</button>}
-        {tab === 'lb' && <button className="active">Leaderboard</button>}
+        <button className={tab === 'list' ? 'active' : ''} onClick={() => setTab('list')}>{t('challenge_tab_list')}</button>
+        {activeRun && <button className={tab === 'active' ? 'active' : ''} onClick={() => setTab('active')}>{t('challenge_tab_active')}</button>}
+        {tab === 'lb' && <button className="active">{t('challenge_tab_lb')}</button>}
       </div>
 
       {tab === 'list' && (
@@ -108,8 +110,8 @@ export default function TapChallenge() {
                   <div className="tapchallenge-desc">{c.desc}</div>
                   {c.myRecord && (
                     <div className="tapchallenge-record">
-                      Best: {c.myRecord.bestTaps.toLocaleString()} taps
-                      {c.myRecord.bestTimeMs && ` in ${(c.myRecord.bestTimeMs / 1000).toFixed(1)}s`}
+                      {t('challenge_best', { n: c.myRecord.bestTaps.toLocaleString() })}
+                      {c.myRecord.bestTimeMs && t('challenge_best_time', { n: (c.myRecord.bestTimeMs / 1000).toFixed(1) })}
                     </div>
                   )}
                 </div>
@@ -120,10 +122,10 @@ export default function TapChallenge() {
               </div>
               <div className="tapchallenge-card-actions">
                 <button className="tapchallenge-start-btn" onClick={() => startChallenge(c.key)} disabled={loading || !!activeRun}>
-                  {activeRun ? 'Finish current first' : '▶ Start'}
+                  {activeRun ? t('challenge_finish_first') : t('challenge_start_btn')}
                 </button>
                 <button className="tapchallenge-lb-btn" onClick={() => showLb(c.key)}>
-                  🏆 Records
+                  {t('challenge_records_btn')}
                 </button>
               </div>
             </div>
@@ -135,32 +137,32 @@ export default function TapChallenge() {
         <div className="tapchallenge-active">
           <div className="tapchallenge-active-name">{cfg.icon} {cfg.name}</div>
           <div className={`tapchallenge-timer ${timeLeft <= 5 ? 'danger' : ''}`}>{timeLeft}s</div>
-          <div className="tapchallenge-taps">{tapsDone.toLocaleString()} taps{cfg.tapTarget ? ` / ${cfg.tapTarget.toLocaleString()}` : ''}</div>
+          <div className="tapchallenge-taps">{t('challenge_taps', { n: tapsDone.toLocaleString() })}{cfg.tapTarget ? ` / ${cfg.tapTarget.toLocaleString()}` : ''}</div>
           {cfg.tapTarget && (
             <div className="tapchallenge-progress-bar">
               <div className="tapchallenge-progress-fill" style={{ width: `${Math.min(100, tapsDone / cfg.tapTarget * 100)}%` }} />
             </div>
           )}
-          <button className="tapchallenge-tap-btn" onClick={tapChallenge}>💥 TAP! (×20)</button>
-          <button className="tapchallenge-abandon-btn" onClick={abandon}>✕ Abandon</button>
+          <button className="tapchallenge-tap-btn" onClick={tapChallenge}>{t('challenge_tap_btn')}</button>
+          <button className="tapchallenge-abandon-btn" onClick={abandon}>{t('challenge_abandon_btn')}</button>
         </div>
       )}
 
       {tab === 'lb' && (
         <div className="tapchallenge-lb">
           <div className="tapchallenge-lb-title">
-            🏆 {data.challenges?.find(c => c.key === lbKey)?.name} — Records
+            {t('challenge_lb_title', { name: data.challenges?.find(c => c.key === lbKey)?.name || '' })}
           </div>
-          {lb.length === 0 && <div className="tapchallenge-lb-empty">No records yet. Be the first!</div>}
+          {lb.length === 0 && <div className="tapchallenge-lb-empty">{t('challenge_lb_empty')}</div>}
           {lb.map(r => (
             <div key={r.rank} className="tapchallenge-lb-row">
               <span className="tapchallenge-lb-rank">#{r.rank}</span>
               <span className="tapchallenge-lb-name">{r.username}</span>
-              <span className="tapchallenge-lb-taps">{r.bestTaps.toLocaleString()} taps</span>
+              <span className="tapchallenge-lb-taps">{t('challenge_taps', { n: r.bestTaps.toLocaleString() })}</span>
               {r.bestTimeMs && <span className="tapchallenge-lb-time">{(r.bestTimeMs / 1000).toFixed(1)}s</span>}
             </div>
           ))}
-          <button className="tapchallenge-back-btn" onClick={() => setTab('list')}>← Back</button>
+          <button className="tapchallenge-back-btn" onClick={() => setTab('list')}>{t('challenge_back_btn')}</button>
         </div>
       )}
     </div>

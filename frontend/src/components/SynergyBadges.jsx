@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const SYNERGY_COLOR = {
   hyper_tap: '#ef4444',
@@ -11,6 +12,7 @@ const SYNERGY_COLOR = {
 };
 
 export default function SynergyBadges() {
+  const t = useT();
   const [data, setData] = useState(null);
 
   useEffect(() => { api.tapper.upgrades().then(setData).catch(() => {}); }, []);
@@ -19,7 +21,7 @@ export default function SynergyBadges() {
 
   return (
     <div className="synergy-panel">
-      <div className="synergy-header">⚡ Active Synergies</div>
+      <div className="synergy-header">{t('synergy_header')}</div>
       <div className="synergy-list">
         {data.synergies.map(s => (
           <div key={s.key} className="synergy-badge" style={{ borderColor: SYNERGY_COLOR[s.key] || '#888' }}>
@@ -28,12 +30,12 @@ export default function SynergyBadges() {
             <div className="synergy-badge-bonus">
               {Object.entries(s.bonus).map(([k, v]) => (
                 <span key={k} className="synergy-bonus-tag">
-                  {k === 'tapMultiplier' && `×${v} tap`}
-                  {k === 'energyMax' && `+${v} energy`}
-                  {k === 'energyRegen' && `+${v}/s regen`}
-                  {k === 'passiveMultiplier' && `×${v} passive`}
-                  {k === 'gemBonus' && `+${v} gems`}
-                  {k === 'xpBonus' && `+${v} XP`}
+                  {k === 'tapMultiplier' && t('synergy_tap_mult', { n: v })}
+                  {k === 'energyMax' && t('synergy_energy_max', { n: v })}
+                  {k === 'energyRegen' && t('synergy_energy_regen', { n: v })}
+                  {k === 'passiveMultiplier' && t('synergy_passive', { n: v })}
+                  {k === 'gemBonus' && t('synergy_gem_bonus', { n: v })}
+                  {k === 'xpBonus' && t('synergy_xp_bonus', { n: v })}
                 </span>
               ))}
             </div>

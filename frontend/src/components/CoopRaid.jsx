@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 export default function CoopRaid() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState('list');
@@ -67,7 +69,7 @@ export default function CoopRaid() {
     try {
       const r = await api.coopraid.tap(activeLobby.lobbyId, 25);
       setActiveLobby(prev => prev ? { ...prev, hp: r.newHp } : prev);
-      if (r.lootEarned) { alert('💥 Boss defeated! Loot distributed!'); load(); }
+      if (r.lootEarned) { alert(t('coop_cleared')); load(); }
     } catch (err) { alert(err.message); }
   };
 
@@ -77,7 +79,7 @@ export default function CoopRaid() {
 
   return (
     <div className="coopraid-panel">
-      <div className="coopraid-header">👥 Cooperative Raid</div>
+      <div className="coopraid-header">{t('coop_header')}</div>
 
       {view === 'raid' && activeLobby ? (
         <div className="coopraid-active">
@@ -91,9 +93,9 @@ export default function CoopRaid() {
 
           {activeLobby.status === 'waiting' && (
             <div className="coopraid-waiting">
-              <div className="coopraid-waiting-label">⏳ Waiting for players...</div>
+              <div className="coopraid-waiting-label">{t('coop_waiting')}</div>
               <button className="coopraid-start-btn" onClick={() => act(() => api.coopraid.start(activeLobby.lobbyId))} disabled={loading}>
-                🚀 Start Raid
+                {t('coop_start_raid')}
               </button>
             </div>
           )}
@@ -102,18 +104,18 @@ export default function CoopRaid() {
             <>
               <div className="coopraid-timer">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
               <button className="coopraid-tap-btn" onClick={tap} disabled={loading || activeLobby.hp <= 0}>
-                ⚔️ ATTACK! (×25 taps)
+                {t('coop_attack')}
               </button>
             </>
           )}
 
           <button className="coopraid-leave-btn" onClick={() => act(() => api.coopraid.leave(activeLobby.lobbyId))}>
-            ← Leave Raid
+            {t('coop_leave')}
           </button>
         </div>
       ) : (
         <>
-          <div className="coopraid-create-title">Create a Raid</div>
+          <div className="coopraid-create-title">{t('coop_create_title')}</div>
           <div className="coopraid-boss-list">
             {(data.bossDefs || []).map(boss => (
               <div key={boss.key} className="coopraid-boss-card">
@@ -124,7 +126,7 @@ export default function CoopRaid() {
                   <div className="coopraid-boss-loot">💎 {boss.loot.gems} + {boss.loot.topBonus} top bonus</div>
                 </div>
                 <button className="coopraid-create-btn" onClick={() => create(boss.key)} disabled={loading}>
-                  Create
+                  {t('coop_create')}
                 </button>
               </div>
             ))}
@@ -132,7 +134,7 @@ export default function CoopRaid() {
 
           {data.lobbies?.length > 0 && (
             <>
-              <div className="coopraid-lobbies-title">Open Lobbies</div>
+              <div className="coopraid-lobbies-title">{t('coop_open_lobbies')}</div>
               {data.lobbies.map(l => {
                 const def = data.bossDefs?.find(b => b.key === l.bossKey);
                 return (
@@ -141,7 +143,7 @@ export default function CoopRaid() {
                     <span className="coopraid-lobby-boss">{def?.name}</span>
                     <span className="coopraid-lobby-members">{l.memberCount}/{def?.maxPlayers}</span>
                     <button className="coopraid-join-btn" onClick={() => act(() => api.coopraid.join(l.id))} disabled={loading}>
-                      Join
+                      {t('coop_join')}
                     </button>
                   </div>
                 );

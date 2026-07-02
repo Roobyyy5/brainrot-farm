@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function RelicsPanel() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,10 +21,9 @@ export default function RelicsPanel() {
 
   return (
     <div className="relics-panel">
-      <div className="relics-header">🔷 Prestige Relics</div>
+      <div className="relics-header">{t('relics_header')}</div>
       <div className="relics-sub">
-        Ascension 3+ unlocks Relics — a 5th equipment slot with active abilities.
-        Current Ascension: <b>{data.ascensionCount}</b>
+        {t('relics_sub')} {t('relics_current_asc', { n: data.ascensionCount })}
       </div>
 
       <div className="relics-list">
@@ -41,14 +42,14 @@ export default function RelicsPanel() {
                   <div className="relic-name">{r.name}</div>
                   <div className="relic-passive">{r.passiveDesc}</div>
                   <div className="relic-active">⚡ {r.activeDesc}</div>
-                  <div className="relic-cd-info">Cooldown: {Math.round(r.activeCooldownMs / 60000)}min</div>
+                  <div className="relic-cd-info">{t('relics_cd_info', { n: Math.round(r.activeCooldownMs / 60000) })}</div>
                 </div>
                 {!r.unlockable && (
-                  <div className="relic-lock">🔒 Asc {r.requiredAscension}</div>
+                  <div className="relic-lock">{t('relics_lock', { n: r.requiredAscension })}</div>
                 )}
                 {r.unlockable && !r.owned && (
                   <button className="relic-btn relic-btn--grant" onClick={() => act(() => api.relics.grant(r.key))} disabled={loading}>
-                    Claim
+                    {t('relics_claim')}
                   </button>
                 )}
               </div>
@@ -57,21 +58,21 @@ export default function RelicsPanel() {
                 <div className="relic-actions">
                   {r.equipped ? (
                     <>
-                      <span className="relic-equipped-badge">✅ Equipped</span>
+                      <span className="relic-equipped-badge">{t('relics_equipped')}</span>
                       {onCooldown ? (
-                        <span className="relic-cooldown">⏳ {fmtCd}</span>
+                        <span className="relic-cooldown">{t('relics_cooldown_badge', { time: fmtCd })}</span>
                       ) : (
                         <button className="relic-btn relic-btn--activate" onClick={() => act(() => api.relics.activate(r.key))} disabled={loading}>
-                          ⚡ Activate
+                          {t('relics_activate')}
                         </button>
                       )}
                       <button className="relic-btn relic-btn--unequip" onClick={() => act(() => api.relics.unequip())} disabled={loading}>
-                        Unequip
+                        {t('relics_unequip')}
                       </button>
                     </>
                   ) : (
                     <button className="relic-btn relic-btn--equip" onClick={() => act(() => api.relics.equip(r.key))} disabled={loading || !!data.equippedRelic}>
-                      {data.equippedRelic ? 'Unequip current first' : 'Equip'}
+                      {data.equippedRelic ? t('relics_equip_first') : t('relics_equip')}
                     </button>
                   )}
                 </div>

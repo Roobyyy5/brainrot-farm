@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const TIER_COLOR = { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', platinum: '#00e5ff' };
 
 export default function QuestBoard() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [tab, setTab] = useState('daily');
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function QuestBoard() {
     try {
       const r = await api.questboard.chest();
       await load();
-      alert(`🎁 Quest Chest opened! +${r.gems} 💎${r.artifactGranted ? ` + ${r.artifactGranted} artifact!` : ''}`);
+      alert(t('quest_chest_alert', { gems: r.gems }) + (r.artifactGranted ? t('quest_chest_artifact', { name: r.artifactGranted }) : ''));
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
   };
@@ -33,13 +35,13 @@ export default function QuestBoard() {
 
   return (
     <div className="questboard-panel">
-      <div className="questboard-header">📋 Quest Board</div>
+      <div className="questboard-header">{t('quest_title')}</div>
 
       <div className="questboard-tabs">
         <button className={tab === 'daily' ? 'active' : ''} onClick={() => setTab('daily')}>
-          Daily ({data.completedToday}/5)
+          {t('quest_tab_daily', { n: data.completedToday })}
         </button>
-        <button className={tab === 'weekly' ? 'active' : ''} onClick={() => setTab('weekly')}>Weekly</button>
+        <button className={tab === 'weekly' ? 'active' : ''} onClick={() => setTab('weekly')}>{t('quest_tab_weekly')}</button>
       </div>
 
       {tab === 'daily' && (
@@ -47,9 +49,9 @@ export default function QuestBoard() {
           onClick={data.chestReady && !loading ? openChest : undefined}>
           <span className="questboard-chest-icon">🎁</span>
           <div className="questboard-chest-info">
-            <div className="questboard-chest-title">Daily Quest Chest</div>
+            <div className="questboard-chest-title">{t('quest_daily')}</div>
             <div className="questboard-chest-sub">
-              {data.chestOpened ? '✅ Opened today' : data.chestReady ? 'TAP TO OPEN! +15 💎' : `${data.completedToday}/5 quests done`}
+              {data.chestOpened ? t('quest_chest_opened') : data.chestReady ? t('quest_chest_ready') : t('quest_chest_progress', { done: data.completedToday })}
             </div>
           </div>
           <div className="questboard-chest-bar">
@@ -78,7 +80,7 @@ export default function QuestBoard() {
               </div>
               {q.completed && !q.claimed && (
                 <button className="questboard-claim-btn" onClick={() => claim(q.key, q.periodKey)} disabled={loading}>
-                  Claim
+                  {t('quest_claim')}
                 </button>
               )}
               {q.claimed && <span className="questboard-claimed-badge">✅</span>}
