@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const MECHANIC_ICON = {
   standard: '⚔️', no_stop: '🏃', burst: '💥', regen_boss: '💚',
@@ -8,9 +9,10 @@ const MECHANIC_ICON = {
 };
 
 export default function StoryMode() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState('fight'); // fight | chapters
+  const [tab, setTab] = useState('fight');
   const tapBtnRef = useRef(null);
 
   const load = () => api.campaign.status().then(setData).catch(() => {});
@@ -27,7 +29,7 @@ export default function StoryMode() {
     try {
       const r = await api.campaign.tap(n);
       if (r.defeated) {
-        alert(`🏆 Розділ ${r.chapterId} пройдено! +${r.reward?.gems || 0} 💎`);
+        alert(t('story_completed', { n: r.chapterId, gems: r.reward?.gems || 0 }));
         await load();
       } else {
         setData(prev => prev ? { ...prev, bossHp: r.newHp } : prev);
@@ -36,7 +38,7 @@ export default function StoryMode() {
   };
 
   const abandon = async () => {
-    if (!confirm('Покинути поточний розділ?')) return;
+    if (!confirm(t('story_confirm'))) return;
     await api.campaign.abandon();
     load();
   };
@@ -48,14 +50,14 @@ export default function StoryMode() {
 
   return (
     <div className="campaign-panel">
-      <div className="campaign-header">📖 Story Campaign</div>
+      <div className="campaign-header">{t('story_header')}</div>
       <div className="campaign-progress-badge">
-        Розділ {data.chapter} / {data.maxChapter} • {data.completedChapters.length} пройдено
+        {t('story_progress', { n: data.chapter, max: data.maxChapter, done: data.completedChapters.length })}
       </div>
 
       <div className="campaign-tabs">
-        <button className={tab === 'fight' ? 'active' : ''} onClick={() => setTab('fight')}>⚔️ Бій</button>
-        <button className={tab === 'chapters' ? 'active' : ''} onClick={() => setTab('chapters')}>📚 Розділи</button>
+        <button className={tab === 'fight' ? 'active' : ''} onClick={() => setTab('fight')}>{t('story_tab_fight')}</button>
+        <button className={tab === 'chapters' ? 'active' : ''} onClick={() => setTab('chapters')}>{t('story_tab_chapters')}</button>
       </div>
 
       {tab === 'fight' && (
@@ -69,12 +71,11 @@ export default function StoryMode() {
                   {MECHANIC_ICON[ch?.mechanic]} {ch?.mechanicDesc}
                 </div>
                 <div className="campaign-boss-reward">
-                  Нагорода: {Object.entries(ch?.reward || {}).filter(([k]) => k !== 'gems').map(([k, v]) => `${k}: +${v}`).join(' • ')}
-                  {ch?.reward?.gems ? ` • 💎 ${ch.reward.gems}` : ''}
+                  {t('story_reward', { rewards: Object.entries(ch?.reward || {}).filter(([k]) => k !== 'gems').map(([k, v]) => `${k}: +${v}`).join(' • ') + (ch?.reward?.gems ? ` • 💎 ${ch.reward.gems}` : '') })}
                 </div>
               </div>
               <button className="campaign-start-btn" onClick={start} disabled={loading}>
-                ▶ Почати розділ {ch?.id}
+                {t('story_start_btn', { n: ch?.id })}
               </button>
             </>
           ) : (
@@ -100,9 +101,9 @@ export default function StoryMode() {
                 onClick={() => tapBoss(50)}
                 disabled={loading}
               >
-                ⚔️ АТАКА! (×50)
+                {t('story_attack')}
               </button>
-              <button className="campaign-abandon-btn" onClick={abandon}>← Покинути</button>
+              <button className="campaign-abandon-btn" onClick={abandon}>{t('story_abandon')}</button>
             </>
           )}
         </div>

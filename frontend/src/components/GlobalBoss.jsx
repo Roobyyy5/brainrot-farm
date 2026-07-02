@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 export default function GlobalBoss() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -51,7 +53,7 @@ export default function GlobalBoss() {
         event: { ...prev.event, currentHp: r.newHp },
         myDamage: (prev.myDamage || 0) + r.damage,
       } : prev);
-      if (r.defeated) { alert('💥 ГЛОБАЛЬНИЙ БОС ПЕРЕМОЖЕНИЙ! Нагороди розподілено!'); load(); }
+      if (r.defeated) { alert(t('gboss_defeated')); load(); }
       if (r.newMilestones?.length > 0) { load(); }
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
@@ -66,11 +68,11 @@ export default function GlobalBoss() {
   if (!data.active) {
     return (
       <div className="globalboss-panel">
-        <div className="globalboss-header">🌍 Global Community Boss</div>
+        <div className="globalboss-header">{t('gboss_header')}</div>
         <div className="globalboss-inactive">
           <div className="globalboss-next-icon">{data.nextBoss?.icon}</div>
-          <div className="globalboss-next-name">Наступний: {data.nextBoss?.name}</div>
-          <div className="globalboss-next-sub">З'являється щонеділі • Всі гравці б'ють разом</div>
+          <div className="globalboss-next-name">{t('gboss_next', { name: data.nextBoss?.name })}</div>
+          <div className="globalboss-next-sub">{t('gboss_schedule')}</div>
         </div>
       </div>
     );
@@ -81,7 +83,7 @@ export default function GlobalBoss() {
 
   return (
     <div className="globalboss-panel" style={{ borderColor: ev.color }}>
-      <div className="globalboss-header">🌍 Global Boss</div>
+      <div className="globalboss-header">{t('gboss_header_active')}</div>
 
       <div className="globalboss-boss" style={{ color: ev.color }}>
         <span className="globalboss-icon">{ev.icon}</span>
@@ -114,18 +116,18 @@ export default function GlobalBoss() {
       </div>
 
       <div className="globalboss-stats">
-        <div>👥 {ev.participants} учасників</div>
-        <div>⚔️ Мій удар: {(data.myDamage || 0).toLocaleString()}</div>
-        <div>⏱ {hours}г {String(mins).padStart(2,'0')}хв {String(secs).padStart(2,'0')}с</div>
+        <div>{t('gboss_participants', { n: ev.participants })}</div>
+        <div>{t('gboss_my_dmg', { n: (data.myDamage || 0).toLocaleString() })}</div>
+        <div>{t('gboss_timer', { h: hours, m: String(mins).padStart(2,'0'), s: String(secs).padStart(2,'0') })}</div>
       </div>
 
       <button className="globalboss-tap-btn" onClick={tap} disabled={loading} style={{ background: `linear-gradient(135deg, ${ev.color}88, ${ev.color})` }}>
-        ⚔️ АТАКУВАТИ! (×50 тапів)
+        {t('gboss_attack')}
       </button>
 
       {data.topDamage?.length > 0 && (
         <div className="globalboss-lb">
-          <div className="globalboss-lb-title">🏅 Топ атакуючі</div>
+          <div className="globalboss-lb-title">{t('gboss_lb_title')}</div>
           {data.topDamage.slice(0, 5).map(r => (
             <div key={r.rank} className={`globalboss-lb-row ${r.isMe ? 'me' : ''}`}>
               <span>{r.rank <= 3 ? ['🥇','🥈','🥉'][r.rank-1] : `#${r.rank}`}</span>

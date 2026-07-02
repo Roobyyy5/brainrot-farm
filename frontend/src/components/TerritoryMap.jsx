@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 export default function TerritoryMap() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -24,41 +26,41 @@ export default function TerritoryMap() {
 
   if (!data) return null;
 
-  const sel = data.territories.find(t => t.id === selected);
+  const sel = data.territories.find(ter => ter.id === selected);
 
   return (
     <div className="territory-panel">
-      <div className="territory-header">🗺️ Guild Territories</div>
+      <div className="territory-header">{t('ter_header')}</div>
       <div className="territory-sub">
-        Тапай на регіон щоб захопити його для гільдії • Поріг: {(data.captureThreshold / 1000).toFixed(0)}k тапів
+        {t('ter_sub', { n: (data.captureThreshold / 1000).toFixed(0) })}
       </div>
 
       {!data.myGuildId && (
-        <div className="territory-no-guild">⚠️ Потрібна гільдія щоб брати участь</div>
+        <div className="territory-no-guild">{t('ter_no_guild')}</div>
       )}
 
       <div className="territory-grid">
-        {data.territories.map(t => {
-          const controlled = t.controlledBy;
-          const isMyGuild = t.isMyGuild;
-          const pct = Math.min(100, (t.myGuildTaps / data.captureThreshold) * 100);
+        {data.territories.map(ter => {
+          const controlled = ter.controlledBy;
+          const isMyGuild = ter.isMyGuild;
+          const pct = Math.min(100, (ter.myGuildTaps / data.captureThreshold) * 100);
           return (
             <div
-              key={t.id}
-              className={`territory-card ${isMyGuild ? 'mine' : controlled ? 'enemy' : 'neutral'} ${selected === t.id ? 'selected' : ''}`}
-              style={{ borderColor: isMyGuild ? '#34d399' : controlled ? '#ef4444' : t.color }}
-              onClick={() => setSelected(selected === t.id ? null : t.id)}
+              key={ter.id}
+              className={`territory-card ${isMyGuild ? 'mine' : controlled ? 'enemy' : 'neutral'} ${selected === ter.id ? 'selected' : ''}`}
+              style={{ borderColor: isMyGuild ? '#34d399' : controlled ? '#ef4444' : ter.color }}
+              onClick={() => setSelected(selected === ter.id ? null : ter.id)}
             >
-              <div className="territory-icon" style={{ color: t.color }}>{t.icon}</div>
-              <div className="territory-name">{t.name}</div>
+              <div className="territory-icon" style={{ color: ter.color }}>{ter.icon}</div>
+              <div className="territory-name">{ter.name}</div>
               {controlled && (
                 <div className="territory-owner" style={{ color: isMyGuild ? '#34d399' : '#f87171' }}>
-                  {isMyGuild ? '✅ Наша' : `[${controlled.tag}]`}
+                  {isMyGuild ? t('ter_mine') : `[${controlled.tag}]`}
                 </div>
               )}
               {data.myGuildId && (
                 <div className="territory-my-bar">
-                  <div className="territory-my-fill" style={{ width: `${pct}%`, background: t.color }} />
+                  <div className="territory-my-fill" style={{ width: `${pct}%`, background: ter.color }} />
                 </div>
               )}
             </div>
@@ -70,17 +72,17 @@ export default function TerritoryMap() {
         <div className="territory-detail">
           <div className="territory-detail-name">{sel.icon} {sel.name}</div>
           <div className="territory-detail-bonus">
-            Бонус: {formatBonus(sel.bonus)}
+            {t('ter_bonus', { n: formatBonus(sel.bonus) })}
           </div>
           {sel.controlledBy ? (
             <div className="territory-detail-ctrl">
-              Контролює: <b>{sel.controlledBy.name}</b> [{sel.controlledBy.tag}]
+              {t('ter_controlled_by', { name: sel.controlledBy.name, tag: sel.controlledBy.tag })}
             </div>
           ) : (
-            <div className="territory-detail-ctrl neutral">Нейтральна територія</div>
+            <div className="territory-detail-ctrl neutral">{t('ter_neutral')}</div>
           )}
           <div className="territory-detail-taps">
-            Мої тапи: {sel.myGuildTaps.toLocaleString()} / {data.captureThreshold.toLocaleString()}
+            {t('ter_my_taps', { cur: sel.myGuildTaps.toLocaleString(), max: data.captureThreshold.toLocaleString() })}
           </div>
           {data.myGuildId && (
             <button
@@ -88,7 +90,7 @@ export default function TerritoryMap() {
               onClick={() => tap(sel.id)}
               disabled={loading}
             >
-              ⚔️ Атакувати (+100 тапів)
+              {t('ter_attack')}
             </button>
           )}
         </div>
@@ -99,9 +101,9 @@ export default function TerritoryMap() {
 
 function formatBonus(bonus) {
   const parts = [];
-  if (bonus.tapMultiplier) parts.push(`+${Math.round(bonus.tapMultiplier * 100)}% тап`);
-  if (bonus.energyMax)    parts.push(`+${bonus.energyMax} енергія`);
-  if (bonus.passiveIncome)parts.push(`+${Math.round(bonus.passiveIncome * 100)}% пасив`);
+  if (bonus.tapMultiplier) parts.push(`+${Math.round(bonus.tapMultiplier * 100)}% tap`);
+  if (bonus.energyMax)    parts.push(`+${bonus.energyMax} energy`);
+  if (bonus.passiveIncome)parts.push(`+${Math.round(bonus.passiveIncome * 100)}% passive`);
   if (bonus.gemBonus)     parts.push(`+${Math.round(bonus.gemBonus * 100)}% gems`);
   if (bonus.xpBonus)      parts.push(`+${Math.round(bonus.xpBonus * 100)}% XP`);
   if (bonus.energyRegen)  parts.push(`+${Math.round(bonus.energyRegen * 100)}% regen`);

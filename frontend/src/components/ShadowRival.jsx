@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const CHALLENGE_DURATION = 30;
 
 export default function ShadowRival() {
+  const t = useT();
   const [data, setData] = useState(null);
-  const [view, setView] = useState('menu'); // menu | challenge | result | upgrades
+  const [view, setView] = useState('menu');
   const [taps, setTaps] = useState(0);
   const [timeLeft, setTimeLeft] = useState(CHALLENGE_DURATION);
   const [result, setResult] = useState(null);
@@ -51,12 +53,12 @@ export default function ShadowRival() {
 
   const cooldownSec = Math.ceil(data.cooldownMs / 1000);
   const cooldownStr = cooldownSec > 3600
-    ? `${Math.floor(cooldownSec / 3600)}г ${Math.floor((cooldownSec % 3600) / 60)}хв`
-    : `${Math.floor(cooldownSec / 60)}хв ${cooldownSec % 60}с`;
+    ? t('rival_cd_long', { h: Math.floor(cooldownSec / 3600), m: Math.floor((cooldownSec % 3600) / 60) })
+    : t('rival_cd_short', { m: Math.floor(cooldownSec / 60), s: cooldownSec % 60 });
 
   return (
     <div className="rival-panel">
-      <div className="rival-header">👻 AI Shadow Rival</div>
+      <div className="rival-header">{t('rival_header')}</div>
 
       {view === 'menu' && (
         <>
@@ -64,67 +66,67 @@ export default function ShadowRival() {
             <div className="rival-icon">{data.rival.icon}</div>
             <div className="rival-info">
               <div className="rival-name">{data.rival.name}</div>
-              <div className="rival-lvl">Рівень {data.rival.level} / 5</div>
-              <div className="rival-score">Rival score: {data.rival.score.toLocaleString()}</div>
+              <div className="rival-lvl">{t('rival_level', { n: data.rival.level })}</div>
+              <div className="rival-score">{t('rival_score', { n: data.rival.score.toLocaleString() })}</div>
             </div>
           </div>
 
           <div className="rival-record">
-            <span className="rival-wins">✅ {data.wins} перемог</span>
-            <span className="rival-losses">❌ {data.losses} поразок</span>
-            <span className="rival-shards">🔮 {data.shards} shards</span>
+            <span className="rival-wins">{t('rival_wins', { n: data.wins })}</span>
+            <span className="rival-losses">{t('rival_losses', { n: data.losses })}</span>
+            <span className="rival-shards">{t('rival_shards', { n: data.shards })}</span>
           </div>
 
           <div className="rival-reward-preview">
-            Перемога: <b>+{data.shardRewardWin} 🔮</b> · Поразка: <b>+{data.shardRewardLoss} 🔮</b>
+            {t('rival_reward', { win: data.shardRewardWin, loss: data.shardRewardLoss })}
           </div>
 
           {data.canChallenge ? (
-            <button className="rival-challenge-btn" onClick={startChallenge}>⚔️ Кинути виклик (30с)</button>
+            <button className="rival-challenge-btn" onClick={startChallenge}>{t('rival_challenge_btn')}</button>
           ) : (
-            <div className="rival-cooldown">⏳ Наступний виклик через {cooldownStr}</div>
+            <div className="rival-cooldown">{t('rival_cooldown', { time: cooldownStr })}</div>
           )}
 
-          <button className="rival-upgrades-btn" onClick={() => setView('upgrades')}>🔮 Шард-апгрейди</button>
+          <button className="rival-upgrades-btn" onClick={() => setView('upgrades')}>{t('rival_upgrades_btn')}</button>
         </>
       )}
 
       {view === 'challenge' && (
         <div className="rival-challenge">
-          <div className="rival-ch-timer">{timeLeft}с</div>
-          <div className="rival-ch-score">{taps} тапів</div>
+          <div className="rival-ch-timer">{timeLeft}s</div>
+          <div className="rival-ch-score">{t('challenge_taps', { n: taps })}</div>
           <div className="rival-ch-vs">vs {data.rival.icon} {data.rival.name}</div>
           <button
             className="rival-tap-btn"
-            onClick={() => setTaps(t => t + 1)}
+            onClick={() => setTaps(v => v + 1)}
           >
-            👆 ТАП!
+            {t('rival_tap_btn')}
           </button>
-          <button className="rival-give-up" onClick={endChallenge} disabled={loading}>Завершити</button>
+          <button className="rival-give-up" onClick={endChallenge} disabled={loading}>{t('rival_finish')}</button>
         </div>
       )}
 
       {view === 'result' && result && (
         <div className="rival-result">
           <div className={`rival-result-banner ${result.won ? 'won' : 'lost'}`}>
-            {result.won ? '🏆 ПЕРЕМОГА!' : '💀 ПОРАЗКА'}
+            {result.won ? t('rival_win_banner') : t('rival_loss_banner')}
           </div>
           <div className="rival-result-scores">
-            <div>Ти: <b>{result.myScore}</b> тапів</div>
-            <div>Rival: <b>{result.rivalScore}</b> тапів</div>
+            <div>{t('rival_my_score', { n: result.myScore })}</div>
+            <div>{t('rival_rival_score', { n: result.rivalScore })}</div>
           </div>
-          <div className="rival-result-shards">+{result.shards} 🔮 shards</div>
-          {result.levelUp && <div className="rival-levelup">⬆ Rival leveled up to {result.newLevel}!</div>}
-          <button className="rival-challenge-btn" onClick={() => setView('menu')}>← Назад</button>
+          <div className="rival-result-shards">{t('rival_shards_gained', { n: result.shards })}</div>
+          {result.levelUp && <div className="rival-levelup">{t('rival_level_up', { n: result.newLevel })}</div>}
+          <button className="rival-challenge-btn" onClick={() => setView('menu')}>{t('challenge_back_btn')}</button>
         </div>
       )}
 
-      {view === 'upgrades' && <RivalUpgrades shards={data.shards} onBack={() => { setView('menu'); load(); }} />}
+      {view === 'upgrades' && <RivalUpgrades shards={data.shards} onBack={() => { setView('menu'); load(); }} t={t} />}
     </div>
   );
 }
 
-function RivalUpgrades({ shards, onBack }) {
+function RivalUpgrades({ shards, onBack, t }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => { api.shadowrival.upgrades().then(setData).catch(() => {}); }, []);
@@ -140,18 +142,18 @@ function RivalUpgrades({ shards, onBack }) {
 
   return (
     <div className="rival-upg-panel">
-      <div className="rival-upg-shards">🔮 {data.shards} shards</div>
+      <div className="rival-upg-shards">{t('rival_shards', { n: data.shards })}</div>
       {data.upgrades.map(u => (
         <div key={u.key} className={`rival-upg-card ${u.owned ? 'owned' : ''}`}>
           <div className="rival-upg-name">{u.name}</div>
           <div className="rival-upg-cost">🔮 {u.cost}</div>
           {u.owned
             ? <span className="rival-upg-owned">✅</span>
-            : <button className="rival-upg-btn" onClick={() => buy(u.key)} disabled={loading || data.shards < u.cost}>Купити</button>
+            : <button className="rival-upg-btn" onClick={() => buy(u.key)} disabled={loading || data.shards < u.cost}>{t('rival_buy')}</button>
           }
         </div>
       ))}
-      <button className="rival-back-btn" onClick={onBack}>← Назад</button>
+      <button className="rival-back-btn" onClick={onBack}>{t('challenge_back_btn')}</button>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const RARITY_COLOR = { common: '#9ca3af', rare: '#3b82f6', legendary: '#f59e0b' };
 const ING_ICONS = { tap_shard: '🔷', energy_crystal: '💠', combo_dust: '✨', prestige_essence: '🌀' };
 
 export default function TapAlchemy() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('brew');
@@ -17,7 +19,9 @@ export default function TapAlchemy() {
     try {
       const r = await api.alchemy.brew(recipeKey);
       await load();
-      alert(`🧪 Виварено: ${r.recipe}!${r.expiresAt ? ` Активне до ${new Date(r.expiresAt).toLocaleTimeString()}` : ''}`);
+      let msg = t('alch_brewed', { name: r.recipe });
+      if (r.expiresAt) msg += t('alch_brewed_until', { time: new Date(r.expiresAt).toLocaleTimeString() });
+      alert(msg);
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
   };
@@ -28,7 +32,7 @@ export default function TapAlchemy() {
 
   return (
     <div className="alchemy-panel">
-      <div className="alchemy-header">🧪 Tap Alchemy</div>
+      <div className="alchemy-header">{t('alch_header')}</div>
 
       <div className="alchemy-ingredients">
         {Object.entries(data.ingredients).map(([key, val]) => (
@@ -41,7 +45,7 @@ export default function TapAlchemy() {
 
       {data.activeBrews?.length > 0 && (
         <div className="alchemy-active">
-          <div className="alchemy-active-title">⚡ Активні зілля:</div>
+          <div className="alchemy-active-title">{t('alch_active_title')}</div>
           {data.activeBrews.map(b => {
             const recipe = data.recipes.find(r => r.key === b.recipeKey);
             const left = b.expiresAt ? Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 1000)) : null;
@@ -90,7 +94,7 @@ export default function TapAlchemy() {
                 disabled={loading || !affordable || !!active}
                 style={{ borderColor: RARITY_COLOR[recipe.rarity] }}
               >
-                {active ? '✅ Активне' : affordable ? '🧪 Варити' : '🔒 Недостатньо'}
+                {active ? t('alch_active_badge') : affordable ? t('alch_brew_btn') : t('alch_locked')}
               </button>
             </div>
           );
