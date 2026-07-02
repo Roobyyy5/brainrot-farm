@@ -74,6 +74,12 @@ const guildForgeRoute    = require('./routes/guildforge');
 const { router: oracleRoute } = require('./routes/oracle');
 const { router: championshipRoute, seedBracket } = require('./routes/championship');
 const { router: neuralTreeRoute } = require('./routes/neuraltree');
+const weatherRoute        = require('./routes/weather');
+const { router: mentorRoute } = require('./routes/mentor');
+const auctionRoute        = require('./routes/auction');
+const constellationRoute  = require('./routes/constellation');
+const tapStreakCalRoute    = require('./routes/tapstreakcal');
+const olympicsRoute       = require('./routes/olympics');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -177,6 +183,12 @@ app.use('/guildforge',      telegramAuthMiddleware, actionLimiter, guildForgeRou
 app.use('/oracle',          telegramAuthMiddleware, actionLimiter, oracleRoute);
 app.use('/championship',    telegramAuthMiddleware, actionLimiter, championshipRoute);
 app.use('/neuraltree',      telegramAuthMiddleware, actionLimiter, neuralTreeRoute);
+app.use('/weather',         telegramAuthMiddleware, actionLimiter, weatherRoute);
+app.use('/mentor',          telegramAuthMiddleware, actionLimiter, mentorRoute);
+app.use('/auction',         telegramAuthMiddleware, actionLimiter, auctionRoute);
+app.use('/constellation',   telegramAuthMiddleware, actionLimiter, constellationRoute);
+app.use('/tapstreakcal',    telegramAuthMiddleware, actionLimiter, tapStreakCalRoute);
+app.use('/olympics',        telegramAuthMiddleware, actionLimiter, olympicsRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would

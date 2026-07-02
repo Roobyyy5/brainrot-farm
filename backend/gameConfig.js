@@ -1467,4 +1467,122 @@ module.exports = {
     { id: 'apex',        name: 'GOD BRAIN',         icon: '🧠✨',x: 50, y: 95, requires: ['tap3','eng3','combo3','syn_all'], cost: 500, bonus: { allMult: 0.25 } },
   ],
   NEURAL_TREE_UNLOCK_ASCENSION: 1,
+
+  // ── Layer 37: Weather System ──────────────────────────────────────────────
+  WEATHER_TYPES: [
+    { key: 'clear',        name: 'Clear Sky',    icon: '☀️',  desc: '+10% all rewards today',             effect: 'allRewards',  value: 0.10, color: '#fbbf24' },
+    { key: 'energy_storm', name: 'Energy Storm', icon: '⚡',  desc: '+50% energy regen, −20% tap power',  effect: 'energyStorm', value: 1,    color: '#6366f1' },
+    { key: 'fire_day',     name: 'Fire Day',     icon: '🔥',  desc: '×2 combo multiplier all day',        effect: 'comboDouble', value: 2,    color: '#ef4444' },
+    { key: 'ice_age',      name: 'Ice Age',      icon: '❄️',  desc: '+80% manual tap, auto-tap paused',   effect: 'iceAge',      value: 1,    color: '#38bdf8' },
+    { key: 'gem_rain',     name: 'Gem Rain',     icon: '💎',  desc: '×3 gem drop rate today',             effect: 'gemMult',     value: 3,    color: '#00e5ff' },
+    { key: 'void_mist',    name: 'Void Mist',    icon: '🌫️', desc: '×2 boss damage all day',             effect: 'bossDmg',     value: 2,    color: '#8b5cf6' },
+    { key: 'golden_hour',  name: 'Golden Hour',  icon: '🌅',  desc: '×2 coins per tap today',             effect: 'coinsMult',   value: 2,    color: '#f59e0b' },
+  ],
+  WEATHER_DURATION_MS: 24 * 60 * 60 * 1000,
+
+  getDailyWeather() {
+    const types = module.exports.WEATHER_TYPES;
+    const dayIdx = Math.floor(Date.now() / module.exports.WEATHER_DURATION_MS);
+    return types[dayIdx % types.length];
+  },
+
+  // ── Layer 38: Mentor / Apprentice ─────────────────────────────────────────
+  MENTOR_MAX_APPRENTICES: 3,
+  MENTOR_BONUS_PCT: 0.15,
+  MENTOR_MILESTONES: [
+    { xp: 100,  reward: { gems: 5   }, name: 'First Steps'  },
+    { xp: 500,  reward: { gems: 15  }, name: 'Growing Bond' },
+    { xp: 2000, reward: { gems: 50  }, name: 'True Mentor'  },
+    { xp: 5000, reward: { gems: 100, title: 'Grandmaster' }, name: 'Legend' },
+  ],
+
+  // ── Layer 39: Auction House ───────────────────────────────────────────────
+  AUCTION_DURATION_MS: 24 * 60 * 60 * 1000,
+  AUCTION_COMMISSION_PCT: 0.05,
+  AUCTION_MAX_ACTIVE_PER_USER: 3,
+
+  // ── Layer 40: Prestige Constellation ─────────────────────────────────────
+  CONSTELLATION_UNLOCK_ASCENSION: 3,
+  CONSTELLATION_PRESTIGE_STARDUST: 10,
+  CONSTELLATION_ASCENSION_STARDUST: 80,
+  CONSTELLATION_NODES: [
+    { id:'cs_root', name:'Cosmic Heart',  icon:'⭐',  x:50, y:50, requires:[],                                cost:0,   bonus:{allMult:0.05} },
+    { id:'cs_n',    name:'Polar Star',    icon:'🌟',  x:50, y:28, requires:['cs_root'],                      cost:25,  bonus:{tapMult:0.10} },
+    { id:'cs_ne',   name:'Dawn Star',     icon:'✨',  x:68, y:37, requires:['cs_root'],                      cost:25,  bonus:{gemMult:0.12} },
+    { id:'cs_se',   name:'Dusk Star',     icon:'💫',  x:68, y:63, requires:['cs_root'],                      cost:25,  bonus:{passiveMult:0.12} },
+    { id:'cs_s',    name:'Deep Star',     icon:'🔮',  x:50, y:72, requires:['cs_root'],                      cost:25,  bonus:{energyMax:50} },
+    { id:'cs_sw',   name:'Void Star',     icon:'🌌',  x:32, y:63, requires:['cs_root'],                      cost:25,  bonus:{comboMult:0.12} },
+    { id:'cs_nw',   name:'Storm Star',    icon:'⚡',  x:32, y:37, requires:['cs_root'],                      cost:25,  bonus:{energyRegen:0.10} },
+    { id:'cs_n1',   name:'Crown Nebula',  icon:'👑',  x:36, y:14, requires:['cs_n'],                         cost:70,  bonus:{tapMult:0.15} },
+    { id:'cs_n2',   name:'Heaven Gate',   icon:'🚪',  x:64, y:14, requires:['cs_n'],                         cost:70,  bonus:{critChance:0.05} },
+    { id:'cs_ne1',  name:'Gold Nebula',   icon:'💰',  x:82, y:24, requires:['cs_ne'],                        cost:70,  bonus:{gemMult:0.20} },
+    { id:'cs_ne2',  name:'Treasure Star', icon:'💎',  x:90, y:46, requires:['cs_ne'],                        cost:70,  bonus:{allMult:0.06} },
+    { id:'cs_se1',  name:'Harvest Star',  icon:'🌾',  x:86, y:68, requires:['cs_se'],                        cost:70,  bonus:{passiveMult:0.20} },
+    { id:'cs_se2',  name:'Gravity Well',  icon:'🪐',  x:74, y:84, requires:['cs_se'],                        cost:70,  bonus:{energyMax:100} },
+    { id:'cs_s1',   name:'Deep Core',     icon:'⚛️',  x:36, y:86, requires:['cs_s'],                         cost:70,  bonus:{energyRegen:0.15} },
+    { id:'cs_s2',   name:'Dark Matter',   icon:'🕳️',  x:62, y:86, requires:['cs_s'],                         cost:70,  bonus:{tapMult:0.12} },
+    { id:'cs_sw1',  name:'Chaos Cloud',   icon:'🌀',  x:18, y:76, requires:['cs_sw'],                        cost:70,  bonus:{comboMult:0.22} },
+    { id:'cs_sw2',  name:'Nebula Storm',  icon:'💥',  x:10, y:56, requires:['cs_sw'],                        cost:70,  bonus:{critChance:0.08} },
+    { id:'cs_nw1',  name:'Lightning',     icon:'🌩️', x:14, y:38, requires:['cs_nw'],                        cost:70,  bonus:{energyRegen:0.20} },
+    { id:'cs_nw2',  name:'Electron Sea',  icon:'🔋',  x:22, y:18, requires:['cs_nw'],                        cost:70,  bonus:{energyMax:80} },
+    { id:'cs_syn1', name:'Cosmic Bridge', icon:'🌉',  x:51, y:38, requires:['cs_n','cs_ne','cs_nw'],          cost:140, bonus:{tapMult:0.08,gemMult:0.08} },
+    { id:'cs_syn2', name:'Void Bridge',   icon:'🌫️', x:51, y:62, requires:['cs_s','cs_se','cs_sw'],          cost:140, bonus:{comboMult:0.10,passiveMult:0.08} },
+    { id:'cs_leg1', name:'Nova Prime',    icon:'💫',  x:20, y:50, requires:['cs_nw2','cs_sw2'],               cost:240, bonus:{allMult:0.10} },
+    { id:'cs_leg2', name:'Quasar Mind',   icon:'🧿',  x:80, y:50, requires:['cs_ne2','cs_se2'],               cost:240, bonus:{allMult:0.10} },
+    { id:'cs_apex', name:'Universe Core', icon:'🌐',  x:50, y:6,  requires:['cs_n1','cs_n2','cs_syn1','cs_syn2','cs_leg1','cs_leg2'], cost:500, bonus:{tapMult:0.25,allMult:0.15} },
+  ],
+
+  // ── Layer 41: Tap Streak Calendar ─────────────────────────────────────────
+  TAP_STREAK_CALENDAR: [
+    { day:  1, reward: { gems: 2  }, special: false },
+    { day:  2, reward: { gems: 3  }, special: false },
+    { day:  3, reward: { gems: 3  }, special: false },
+    { day:  4, reward: { gems: 4  }, special: false },
+    { day:  5, reward: { gems: 4  }, special: false },
+    { day:  6, reward: { gems: 5  }, special: false },
+    { day:  7, reward: { gems: 10, title: 'Week Warrior' }, special: true },
+    { day:  8, reward: { gems: 5  }, special: false },
+    { day:  9, reward: { gems: 5  }, special: false },
+    { day: 10, reward: { gems: 6  }, special: false },
+    { day: 11, reward: { gems: 6  }, special: false },
+    { day: 12, reward: { gems: 7  }, special: false },
+    { day: 13, reward: { gems: 7  }, special: false },
+    { day: 14, reward: { gems: 20, skin: 'streak_14' }, special: true },
+    { day: 15, reward: { gems: 8  }, special: false },
+    { day: 16, reward: { gems: 8  }, special: false },
+    { day: 17, reward: { gems: 9  }, special: false },
+    { day: 18, reward: { gems: 9  }, special: false },
+    { day: 19, reward: { gems: 10 }, special: false },
+    { day: 20, reward: { gems: 10 }, special: false },
+    { day: 21, reward: { gems: 25, title: 'Tap Addict' }, special: true },
+    { day: 22, reward: { gems: 12 }, special: false },
+    { day: 23, reward: { gems: 12 }, special: false },
+    { day: 24, reward: { gems: 15 }, special: false },
+    { day: 25, reward: { gems: 15 }, special: false },
+    { day: 26, reward: { gems: 18 }, special: false },
+    { day: 27, reward: { gems: 18 }, special: false },
+    { day: 28, reward: { gems: 20 }, special: false },
+    { day: 29, reward: { gems: 25 }, special: false },
+    { day: 30, reward: { gems: 100, title: 'TAP LEGEND', skin: 'legend_30' }, special: true },
+  ],
+
+  // ── Layer 42: Guild Olympics ──────────────────────────────────────────────
+  OLYMPICS_EVENTS: [
+    { key: 'tap_marathon', name: 'Tap Marathon', icon: '⚡', desc: 'Lifetime total taps'         },
+    { key: 'combo_peak',   name: 'Combo Peak',   icon: '🌀', desc: 'Best gauntlet waves reached' },
+    { key: 'gauntlet_run', name: 'Gauntlet Run', icon: '🔥', desc: 'Best Gauntlet wave'          },
+    { key: 'boss_slayer',  name: 'Boss Slayer',  icon: '💀', desc: 'Total boss damage dealt'     },
+    { key: 'alchemist',    name: 'Alchemist',    icon: '⚗️', desc: 'Total potions brewed'        },
+  ],
+  OLYMPICS_DURATION_DAYS: 7,
+  OLYMPICS_GUILD_REWARDS: [
+    { place: 1, gems: 200, title: '🥇 Olympic Champions' },
+    { place: 2, gems: 80,  title: '🥈 Olympic Finalists'  },
+    { place: 3, gems: 40,  title: '🥉 Olympic Bronze'     },
+  ],
+
+  olympicsMonthKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  },
 };

@@ -941,3 +941,69 @@ CREATE TABLE IF NOT EXISTS neural_points (
   telegram_id TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
   points      INTEGER NOT NULL DEFAULT 0
 );
+
+-- ── Layer 38: Mentor / Apprentice ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS mentor_relations (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  mentor_id     TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  apprentice_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  teaching_xp   INTEGER NOT NULL DEFAULT 0,
+  joined_at     BIGINT  NOT NULL,
+  UNIQUE (apprentice_id)
+);
+CREATE INDEX IF NOT EXISTS idx_mentor_relations ON mentor_relations(mentor_id);
+
+-- ── Layer 39: Auction House ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS auctions (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  seller_id   TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  item_type   TEXT    NOT NULL,
+  quantity    INTEGER NOT NULL DEFAULT 1,
+  price_gems  INTEGER NOT NULL,
+  buyer_id    TEXT    REFERENCES users(telegram_id),
+  status      TEXT    NOT NULL DEFAULT 'active',
+  created_at  BIGINT  NOT NULL,
+  expires_at  BIGINT  NOT NULL,
+  settled_at  BIGINT
+);
+CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status, expires_at DESC);
+CREATE INDEX IF NOT EXISTS idx_auctions_seller ON auctions(seller_id, status);
+
+-- ── Layer 40: Prestige Constellation ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS constellation_unlocks (
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  node_id     TEXT    NOT NULL,
+  unlocked_at BIGINT  NOT NULL,
+  PRIMARY KEY (telegram_id, node_id)
+);
+CREATE INDEX IF NOT EXISTS idx_constellation_unlocks ON constellation_unlocks(telegram_id);
+
+-- ── Layer 41: Tap Streak Calendar ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tap_streak_cal (
+  telegram_id    TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
+  current_streak INTEGER NOT NULL DEFAULT 0,
+  longest_streak INTEGER NOT NULL DEFAULT 0,
+  last_active_day TEXT   NOT NULL DEFAULT '',
+  claimed_days   JSONB   NOT NULL DEFAULT '[]'
+);
+
+-- ── Layer 42: Guild Olympics ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS olympics_seasons (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  month_key   TEXT    NOT NULL UNIQUE,
+  starts_at   BIGINT  NOT NULL,
+  ends_at     BIGINT  NOT NULL,
+  status      TEXT    NOT NULL DEFAULT 'active',
+  settled     BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE TABLE IF NOT EXISTS olympics_scores (
+  id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  season_id    INTEGER NOT NULL REFERENCES olympics_seasons(id) ON DELETE CASCADE,
+  telegram_id  TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  guild_id     INTEGER REFERENCES guilds(id) ON DELETE SET NULL,
+  event_key    TEXT    NOT NULL,
+  score        BIGINT  NOT NULL DEFAULT 0,
+  submitted_at BIGINT  NOT NULL,
+  UNIQUE (season_id, telegram_id, event_key)
+);
+CREATE INDEX IF NOT EXISTS idx_olympics_scores ON olympics_scores(season_id, event_key, score DESC);

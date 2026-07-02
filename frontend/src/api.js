@@ -369,6 +369,39 @@ export const api = {
     buy:      (itemKey) => request('/oracle/buy', { method: 'POST', body: { itemKey } }),
   },
 
+  weather: {
+    status: () => request('/weather'),
+  },
+
+  mentor: {
+    status:  () => request('/mentor'),
+    take:    (username) => request('/mentor/take',   { method: 'POST', body: { username } }),
+    resign:  () => request('/mentor/resign',          { method: 'POST' }),
+    remove:  (apprenticeId) => request('/mentor/remove', { method: 'POST', body: { apprenticeId } }),
+  },
+
+  auction: {
+    status:  () => request('/auction'),
+    list:    (itemType, quantity, priceGems) => request('/auction/list', { method: 'POST', body: { itemType, quantity, priceGems } }),
+    buy:     (auctionId) => request('/auction/buy',    { method: 'POST', body: { auctionId } }),
+    cancel:  (auctionId) => request('/auction/cancel', { method: 'POST', body: { auctionId } }),
+  },
+
+  constellation: {
+    status: () => request('/constellation'),
+    unlock: (nodeId) => request('/constellation/unlock', { method: 'POST', body: { nodeId } }),
+  },
+
+  tapstreakcal: {
+    status: () => request('/tapstreakcal'),
+    claim:  (day) => request('/tapstreakcal/claim', { method: 'POST', body: { day } }),
+  },
+
+  olympics: {
+    status: () => request('/olympics'),
+    submit: (eventKey) => request('/olympics/submit', { method: 'POST', body: { eventKey } }),
+  },
+
   championship: {
     status:       () => request('/championship'),
     matchResult:  (matchId, taps) => request('/championship/match-result', { method: 'POST', body: { matchId, taps } }),

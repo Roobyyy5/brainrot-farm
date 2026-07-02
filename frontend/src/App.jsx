@@ -75,6 +75,12 @@ import GuildForge from './components/GuildForge';
 import TapOracle from './components/TapOracle';
 import Championship from './components/Championship';
 import NeuralTree from './components/NeuralTree';
+import WeatherSystem from './components/WeatherSystem';
+import MentorSystem from './components/MentorSystem';
+import AuctionHouse from './components/AuctionHouse';
+import Constellation from './components/Constellation';
+import TapStreakCalendar from './components/TapStreakCalendar';
+import GuildOlympics from './components/GuildOlympics';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -137,6 +143,8 @@ export default function App() {
 
       {tab === 'home' && (
         <>
+          <WeatherSystem />
+          <TapStreakCalendar />
           <WeeklyEvent event={user?._weeklyEvent} />
           <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
           <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
@@ -148,6 +156,7 @@ export default function App() {
 
       {tab === 'tap' && (
         <>
+          <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
           <GlobalBoss />
           <WorldEvents />
           <QuestBoard />
@@ -157,7 +166,6 @@ export default function App() {
           <SeasonNarrative />
           <TapRush />
           <ActiveAbilities />
-          <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
           <TapChallenge />
           <BossEcosystem />
           <BossRush />
@@ -190,6 +198,7 @@ export default function App() {
           <MasteryPanel />
           <BuildPresets />
           <NeuralTree />
+          <Constellation />
           <TapAlchemy />
           <TapOracle />
           <CardFusion />
@@ -201,6 +210,9 @@ export default function App() {
 
       {tab === 'club' && (
         <>
+          <GuildOlympics />
+          <MentorSystem />
+          <AuctionHouse />
           <GuildSkillTree />
           <GuildForge />
           <TerritoryMap />
