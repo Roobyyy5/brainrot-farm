@@ -1,4 +1,5 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
@@ -43,8 +44,27 @@ const challengesRoute   = require('./routes/challenges');
 const craftingRoute     = require('./routes/crafting');
 const { router: seasonRoute, settleSeason } = require('./routes/season');
 const referralBoardRoute = require('./routes/referralboard');
+const abilitiesRoute     = require('./routes/abilities');
+const ascensionRoute     = require('./routes/ascension');
+const { router: artifactsRoute } = require('./routes/artifacts');
+const rankedDuelsRoute   = require('./routes/rankedduels');
+const { router: masteryRoute }  = require('./routes/mastery');
+const clanBracketRoute   = require('./routes/clanbracket');
+const tapChallengeRoute  = require('./routes/tapchallenge');
+const seasonNarrativeRoute = require('./routes/seasonnarrative');
+const guildSkillTreeRoute  = require('./routes/guildskilltree');
+const { router: worldEventsRoute, spawnRandomEvent } = require('./routes/worldevents');
+const buildPresetsRoute    = require('./routes/buildpresets');
+const { router: bossEcoRoute, initBossEcosystem } = require('./routes/bossecosystem');
+const ghostRaceRoute       = require('./routes/ghostrace');
+const { router: questBoardRoute } = require('./routes/questboard');
+const coopRaidRoute        = require('./routes/coopraid');
+const { router: relicsRoute } = require('./routes/relics');
+const { router: divisionRoute, settleDivisions } = require('./routes/divisionleague');
+const galleryRoute         = require('./routes/gallery');
 
 const app = express();
+const httpServer = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
@@ -115,6 +135,24 @@ app.use('/challenges',   telegramAuthMiddleware, actionLimiter, challengesRoute)
 app.use('/crafting',     telegramAuthMiddleware, actionLimiter, craftingRoute);
 app.use('/season',       telegramAuthMiddleware, actionLimiter, seasonRoute);
 app.use('/referralboard',telegramAuthMiddleware, actionLimiter, referralBoardRoute);
+app.use('/abilities',       telegramAuthMiddleware, actionLimiter, abilitiesRoute);
+app.use('/ascension',       telegramAuthMiddleware, actionLimiter, ascensionRoute);
+app.use('/artifacts',       telegramAuthMiddleware, actionLimiter, artifactsRoute);
+app.use('/rankedduels',     telegramAuthMiddleware, tapperLimiter, rankedDuelsRoute);
+app.use('/mastery',         telegramAuthMiddleware, actionLimiter, masteryRoute);
+app.use('/clanbracket',     telegramAuthMiddleware, tapperLimiter, clanBracketRoute);
+app.use('/tapchallenge',    telegramAuthMiddleware, tapperLimiter, tapChallengeRoute);
+app.use('/seasonnarrative', telegramAuthMiddleware, actionLimiter, seasonNarrativeRoute);
+app.use('/guildskilltree',  telegramAuthMiddleware, actionLimiter, guildSkillTreeRoute);
+app.use('/worldevents',     telegramAuthMiddleware, actionLimiter, worldEventsRoute);
+app.use('/buildpresets',    telegramAuthMiddleware, actionLimiter, buildPresetsRoute);
+app.use('/bossecosystem',   telegramAuthMiddleware, tapperLimiter, bossEcoRoute);
+app.use('/ghostrace',       telegramAuthMiddleware, actionLimiter, ghostRaceRoute);
+app.use('/questboard',      telegramAuthMiddleware, actionLimiter, questBoardRoute);
+app.use('/coopraid',        telegramAuthMiddleware, tapperLimiter, coopRaidRoute);
+app.use('/relics',          telegramAuthMiddleware, actionLimiter, relicsRoute);
+app.use('/divisionleague',  telegramAuthMiddleware, actionLimiter, divisionRoute);
+app.use('/gallery',         telegramAuthMiddleware, actionLimiter, galleryRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
@@ -127,15 +165,26 @@ app.use((err, req, res, next) => {
 async function main() {
   await db.init();
 
+  // Attach WebSocket server to HTTP server (Layer 7)
+  const { attachToServer } = require('./wsManager');
+  attachToServer(httpServer);
+
   const { startSeasonScheduler } = require('./seasons');
   startSeasonScheduler();
   setInterval(() => settleTournament().catch(err => console.error('Tournament settle error:', err.message)), 5 * 60 * 1000);
   setInterval(() => settleExpiredBosses().catch(err => console.error('World boss settle error:', err.message)), 10 * 60 * 1000);
   setInterval(() => settleSeason().catch(err => console.error('Season settle error:', err.message)), 60 * 60 * 1000);
+  setInterval(() => spawnRandomEvent().catch(err => console.error('World event spawn error:', err.message)), 60 * 60 * 1000);
+  setInterval(() => settleDivisions().catch(err => console.error('Division settle error:', err.message)), 24 * 60 * 60 * 1000);
+
+  // Init boss ecosystem on startup
+  const { pool: dbPool } = require('./db');
+  const initClient = await dbPool.connect();
+  try { await initBossEcosystem(initClient); } finally { initClient.release(); }
 
   const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => {
-    console.log(`Brainrot Farm backend running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`Brainrot Farm backend running on http://localhost:${PORT} (WebSocket on /ws)`);
   });
 
   // On free hosting tiers (e.g. Render) only a single Web Service is free —

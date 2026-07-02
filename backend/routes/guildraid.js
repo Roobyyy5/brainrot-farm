@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const { withTransaction } = require('../db');
+const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 const { GUILD_RAID_WAVES, GUILD_RAID_BASE_HP } = require('../gameConfig');
 
@@ -11,11 +10,11 @@ const RAID_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 router.get('/', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id.toString();
 
-  const memberR = await db.query('SELECT guild_id FROM guild_members WHERE telegram_id = $1', [telegramId]);
+  const memberR = await pool.query('SELECT guild_id FROM guild_members WHERE telegram_id = $1', [telegramId]);
   if (!memberR.rows[0]) return res.json({ raid: null, waves: GUILD_RAID_WAVES, message: 'Not in a guild' });
   const guildId = memberR.rows[0].guild_id;
 
-  const raidR = await db.query(
+  const raidR = await pool.query(
     "SELECT * FROM guild_raids WHERE guild_id = $1 AND status = 'active' ORDER BY started_at DESC LIMIT 1",
     [guildId]
   );
@@ -24,12 +23,12 @@ router.get('/', asyncHandler(async (req, res) => {
   const raid = raidR.rows[0];
 
   if (Date.now() - Number(raid.started_at) > RAID_TIMEOUT_MS) {
-    await db.query("UPDATE guild_raids SET status = 'failed', ended_at = $1 WHERE id = $2", [Date.now(), raid.id]);
+    await pool.query("UPDATE guild_raids SET status = 'failed', ended_at = $1 WHERE id = $2", [Date.now(), raid.id]);
     return res.json({ raid: null, waves: GUILD_RAID_WAVES, message: 'Raid timed out' });
   }
 
-  const myHit = await db.query('SELECT damage FROM guild_raid_hits WHERE raid_id = $1 AND telegram_id = $2', [raid.id, telegramId]);
-  const participants = await db.query(`
+  const myHit = await pool.query('SELECT damage FROM guild_raid_hits WHERE raid_id = $1 AND telegram_id = $2', [raid.id, telegramId]);
+  const participants = await pool.query(`
     SELECT u.username, grh.damage FROM guild_raid_hits grh
     JOIN users u ON u.telegram_id = grh.telegram_id
     WHERE grh.raid_id = $1 ORDER BY grh.damage DESC
@@ -57,17 +56,17 @@ router.post('/start', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id.toString();
   const now = Date.now();
 
-  const memberR = await db.query('SELECT guild_id FROM guild_members WHERE telegram_id = $1', [telegramId]);
+  const memberR = await pool.query('SELECT guild_id FROM guild_members WHERE telegram_id = $1', [telegramId]);
   if (!memberR.rows[0]) return res.status(400).json({ error: 'Not in a guild' });
   const guildId = memberR.rows[0].guild_id;
 
-  const existingR = await db.query("SELECT id FROM guild_raids WHERE guild_id = $1 AND status = 'active'", [guildId]);
+  const existingR = await pool.query("SELECT id FROM guild_raids WHERE guild_id = $1 AND status = 'active'", [guildId]);
   if (existingR.rows[0]) return res.status(400).json({ error: 'Raid already active' });
 
   const wave = GUILD_RAID_WAVES[0];
   const bossHp = Math.floor(GUILD_RAID_BASE_HP * wave.hpMult);
 
-  const ins = await db.query(
+  const ins = await pool.query(
     "INSERT INTO guild_raids (guild_id, current_wave, boss_hp, boss_max_hp, boss_name, total_damage, status, started_at) VALUES ($1,1,$2,$2,$3,0,'active',$4) RETURNING id",
     [guildId, bossHp, wave.name, now]
   );

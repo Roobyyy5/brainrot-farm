@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const { withTransaction } = require('../db');
+const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 const { CRAFTING_RECIPES, INVENTORY_ITEMS } = require('../gameConfig');
 
@@ -13,7 +12,7 @@ function itemMeta(key) {
 // GET /crafting
 router.get('/', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id.toString();
-  const inv = await db.query('SELECT item_key, quantity FROM user_inventory WHERE telegram_id = $1', [telegramId]);
+  const inv = await pool.query('SELECT item_key, quantity FROM user_inventory WHERE telegram_id = $1', [telegramId]);
   const qty = {};
   inv.rows.forEach(r => { qty[r.item_key] = Number(r.quantity); });
 
@@ -36,7 +35,7 @@ router.post('/craft', asyncHandler(async (req, res) => {
   if (!recipe) return res.status(400).json({ error: 'Unknown recipe' });
 
   // Pre-check
-  const inv = await db.query('SELECT item_key, quantity FROM user_inventory WHERE telegram_id = $1', [telegramId]);
+  const inv = await pool.query('SELECT item_key, quantity FROM user_inventory WHERE telegram_id = $1', [telegramId]);
   const qty = {};
   inv.rows.forEach(r => { qty[r.item_key] = Number(r.quantity); });
   for (const inp of recipe.inputs) {

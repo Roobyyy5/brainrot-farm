@@ -200,4 +200,113 @@ export const api = {
   referralboard: {
     status: () => request('/referralboard'),
   },
+
+  abilities: {
+    status:   () => request('/abilities'),
+    activate: (abilityKey) => request('/abilities/activate', { method: 'POST', body: { abilityKey } }),
+  },
+
+  ascension: {
+    status:    () => request('/ascension'),
+    ascend:    () => request('/ascension/ascend', { method: 'POST' }),
+    upgrade:   (upgradeKey) => request('/ascension/upgrade', { method: 'POST', body: { upgradeKey } }),
+    leaderboard: () => request('/ascension/leaderboard'),
+  },
+
+  artifacts: {
+    list:    () => request('/artifacts'),
+    equip:   (artifactId) => request('/artifacts/equip', { method: 'POST', body: { artifactId } }),
+    unequip: (slot) => request('/artifacts/unequip', { method: 'POST', body: { slot } }),
+    combine: (artifactKey, rarity) => request('/artifacts/combine', { method: 'POST', body: { artifactKey, rarity } }),
+  },
+
+  rankedduels: {
+    me:         () => request('/rankedduels/me'),
+    find:       () => request('/rankedduels/find', { method: 'POST' }),
+    tap:        (count) => request('/rankedduels/tap', { method: 'POST', body: { count } }),
+    settle:     (id) => request(`/rankedduels/settle/${id}`, { method: 'POST' }),
+    leaderboard: () => request('/rankedduels/leaderboard'),
+  },
+
+  mastery: {
+    list: () => request('/mastery'),
+  },
+
+  clanbracket: {
+    status:   () => request('/clanbracket'),
+    register: () => request('/clanbracket/register', { method: 'POST' }),
+    start:    () => request('/clanbracket/start', { method: 'POST' }),
+    tap:      (count) => request('/clanbracket/tap', { method: 'POST', body: { count } }),
+    settle:   (matchId) => request(`/clanbracket/settle-match/${matchId}`, { method: 'POST' }),
+  },
+
+  tapchallenge: {
+    list:        () => request('/tapchallenge'),
+    start:       (challengeKey) => request('/tapchallenge/start', { method: 'POST', body: { challengeKey } }),
+    tap:         (count) => request('/tapchallenge/tap', { method: 'POST', body: { count } }),
+    abandon:     () => request('/tapchallenge/abandon', { method: 'POST' }),
+    leaderboard: (key) => request(`/tapchallenge/leaderboard/${key}`),
+  },
+
+  seasonnarrative: {
+    status: () => request('/seasonnarrative'),
+  },
+
+  guildskilltree: {
+    status:     () => request('/guildskilltree'),
+    contribute: (count) => request('/guildskilltree/contribute', { method: 'POST', body: { count } }),
+    upgrade:    (skillKey) => request('/guildskilltree/upgrade', { method: 'POST', body: { skillKey } }),
+  },
+
+  worldevents: {
+    list: () => request('/worldevents'),
+  },
+
+  buildpresets: {
+    list:   () => request('/buildpresets'),
+    save:   (slot, name) => request('/buildpresets/save', { method: 'POST', body: { slot, name } }),
+    delete: (slot) => request('/buildpresets/delete', { method: 'POST', body: { slot } }),
+  },
+
+  bossecosystem: {
+    list: () => request('/bossecosystem'),
+    tap:  (key, count) => request(`/bossecosystem/tap/${key}`, { method: 'POST', body: { count } }),
+  },
+
+  ghostrace: {
+    get:  (key) => request(`/ghostrace/${key}`),
+    save: (challengeKey, totalTaps, timeline) => request('/ghostrace/save', { method: 'POST', body: { challengeKey, totalTaps, timeline } }),
+  },
+
+  questboard: {
+    status: () => request('/questboard'),
+    claim:  (questKey, periodKey) => request('/questboard/claim', { method: 'POST', body: { questKey, periodKey } }),
+    chest:  () => request('/questboard/chest', { method: 'POST' }),
+  },
+
+  coopraid: {
+    list:   () => request('/coopraid'),
+    create: (bossKey) => request('/coopraid/create', { method: 'POST', body: { bossKey } }),
+    join:   (lobbyId) => request('/coopraid/join',   { method: 'POST', body: { lobbyId } }),
+    start:  (lobbyId) => request('/coopraid/start',  { method: 'POST', body: { lobbyId } }),
+    tap:    (lobbyId, count) => request('/coopraid/tap', { method: 'POST', body: { lobbyId, count } }),
+    leave:  (lobbyId) => request('/coopraid/leave',  { method: 'POST', body: { lobbyId } }),
+  },
+
+  relics: {
+    list:     () => request('/relics'),
+    grant:    (relicKey) => request('/relics/grant',    { method: 'POST', body: { relicKey } }),
+    equip:    (relicKey) => request('/relics/equip',    { method: 'POST', body: { relicKey } }),
+    unequip:  () => request('/relics/unequip',          { method: 'POST' }),
+    activate: (relicKey) => request('/relics/activate', { method: 'POST', body: { relicKey } }),
+  },
+
+  divisionleague: {
+    status: () => request('/divisionleague'),
+  },
+
+  gallery: {
+    list:  () => request('/gallery'),
+    claim: (achKey) => request('/gallery/claim', { method: 'POST', body: { achKey } }),
+  },
 };

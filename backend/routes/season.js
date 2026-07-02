@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const { withTransaction } = require('../db');
+const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 const { SEASON_TOP_GEMS, SEASON_TROPHY_ICONS, SEASON_DURATION_TAPPER_MS } = require('../gameConfig');
 
 async function getSeasonInfo() {
-  const sR = await db.query("SELECT value FROM app_state WHERE key='tapper_season'");
-  const eR = await db.query("SELECT value FROM app_state WHERE key='tapper_season_ends_at'");
+  const sR = await pool.query("SELECT value FROM app_state WHERE key='tapper_season'");
+  const eR = await pool.query("SELECT value FROM app_state WHERE key='tapper_season_ends_at'");
   const seasonNum = sR.rows[0] ? Number(sR.rows[0].value) : 1;
   const endsAt    = eR.rows[0] ? Number(eR.rows[0].value) : Date.now() + SEASON_DURATION_TAPPER_MS;
   return { seasonNum, endsAt };
@@ -18,7 +17,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id.toString();
   const { seasonNum, endsAt } = await getSeasonInfo();
 
-  const top20 = await db.query(`
+  const top20 = await pool.query(`
     SELECT u.username, tp.season_bp, tp.prestige
     FROM tapper_profiles tp
     JOIN users u ON u.telegram_id = tp.telegram_id
@@ -26,13 +25,13 @@ router.get('/', asyncHandler(async (req, res) => {
     ORDER BY tp.season_bp DESC LIMIT 20
   `);
 
-  const myR = await db.query(`
+  const myR = await pool.query(`
     SELECT season_bp,
       (SELECT COUNT(*)+1 FROM tapper_profiles WHERE season_bp > tp.season_bp)::int AS rank
     FROM tapper_profiles tp WHERE telegram_id = $1
   `, [telegramId]);
 
-  const trophyR = await db.query(
+  const trophyR = await pool.query(
     'SELECT season_num, rank, bp_earned, trophy_icon FROM season_trophies WHERE telegram_id=$1 ORDER BY season_num DESC LIMIT 5',
     [telegramId]
   );

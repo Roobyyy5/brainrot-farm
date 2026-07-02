@@ -27,8 +27,6 @@ export default function TapRush() {
       timerRef.current = setInterval(tick, 500);
     } else if (data.cooldownMs > 0) {
       const tick = () => {
-        const ms = Math.max(0, data.cooldownMs - (Date.now() - (Date.now() - data.cooldownMs)));
-        // Recalculate from data.cooldownMs stored at load time
         const remaining = Math.max(0, data.cooldownMs - (Date.now() - loadedAt.current));
         const h = Math.floor(remaining / 3600000);
         const m = Math.floor((remaining % 3600000) / 60000);

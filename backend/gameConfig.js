@@ -475,4 +475,656 @@ module.exports = {
   // ─── Round 7: Referral Leaderboard ───────────────────────────────────────────
 
   REFERRAL_TOP_GEMS: [100, 75, 50, 25, 10, 10, 5, 5, 5, 5],
+
+  // ─── Elite Layer 1: Active Abilities ─────────────────────────────────────────
+
+  ACTIVE_ABILITIES: {
+    brain_burst: {
+      name: 'Brain Burst',
+      icon: '💥',
+      desc: '×10 tap power for 3 seconds',
+      cooldownMs: 2 * 60 * 1000,
+      durationMs: 3 * 1000,
+      effect: 'tap_mult',
+      value: 10,
+    },
+    frenzy: {
+      name: 'Frenzy',
+      icon: '⚡',
+      desc: '-50% energy cost for 5 seconds',
+      cooldownMs: 3 * 60 * 1000,
+      durationMs: 5 * 1000,
+      effect: 'energy_cost_mult',
+      value: 0.5,
+    },
+    golden_tap: {
+      name: 'Golden Tap',
+      icon: '✨',
+      desc: '100% crit rate for next 20 taps',
+      cooldownMs: 5 * 60 * 1000,
+      durationMs: null,
+      effect: 'golden_taps',
+      value: 20,
+    },
+    energy_nova: {
+      name: 'Energy Nova',
+      icon: '🔮',
+      desc: 'Instant full energy refill + 5s free tapping',
+      cooldownMs: 4 * 60 * 1000,
+      durationMs: 5 * 1000,
+      effect: 'energy_nova',
+      value: 0,
+    },
+  },
+
+  // ─── Elite Layer 2: Server-side Combo ────────────────────────────────────────
+
+  COMBO_WINDOW_MS: 1500,
+  COMBO_TIERS: [
+    { batches: 0,  mult: 1,  name: 'Bronze',   color: '#cd7f32', icon: '🥉' },
+    { batches: 5,  mult: 2,  name: 'Silver',   color: '#c0c5ce', icon: '🥈' },
+    { batches: 10, mult: 3,  name: 'Gold',     color: '#f5c344', icon: '🥇' },
+    { batches: 20, mult: 5,  name: 'Platinum', color: '#00e5ff', icon: '💎' },
+    { batches: 30, mult: 10, name: 'Diamond',  color: '#ff4fa3', icon: '🔮' },
+  ],
+
+  getComboMult(batches) {
+    const tiers = module.exports.COMBO_TIERS;
+    let mult = 1;
+    for (const t of tiers) {
+      if (batches >= t.batches) mult = t.mult;
+    }
+    return mult;
+  },
+
+  getComboTier(batches) {
+    const tiers = module.exports.COMBO_TIERS;
+    let tier = tiers[0];
+    for (const t of tiers) {
+      if (batches >= t.batches) tier = t;
+    }
+    return tier;
+  },
+
+  // ─── Elite Layer 4: Ascension Tree ───────────────────────────────────────────
+
+  ASCENSION_REQUIRED_PRESTIGES: 5,
+
+  ASCENSION_TREE: {
+    brain_forge: {
+      name: 'Brain Forge',
+      icon: '🔨',
+      maxLevel: 5,
+      desc: '+2 tap power per level (permanent, stacks with prestige)',
+      costPerLevel: 1,
+    },
+    infinity_vessel: {
+      name: 'Infinity Vessel',
+      icon: '♾️',
+      maxLevel: 5,
+      desc: '+1000 max energy per level',
+      costPerLevel: 1,
+    },
+    soul_regen: {
+      name: 'Soul Regen',
+      icon: '🌊',
+      maxLevel: 5,
+      desc: '+5 energy regen/sec per level',
+      costPerLevel: 2,
+    },
+    cosmic_luck: {
+      name: 'Cosmic Luck',
+      icon: '🌌',
+      maxLevel: 3,
+      desc: '+5% gem drop chance per level',
+      costPerLevel: 2,
+    },
+    ascended_crits: {
+      name: 'Ascended Crits',
+      icon: '💫',
+      maxLevel: 3,
+      desc: 'Crit multiplier ×20 per level (additive)',
+      costPerLevel: 3,
+    },
+    time_warp: {
+      name: 'Time Warp',
+      icon: '⏰',
+      maxLevel: 1,
+      desc: 'Ability cooldowns reduced by 50%',
+      costPerLevel: 5,
+    },
+  },
+
+  // ─── Elite Layer 5: ELO / Ranked Duels ───────────────────────────────────────
+
+  ELO_START: 1000,
+  ELO_K_FACTOR: 32,
+  ELO_MATCHMAKING_RANGE: 150,
+  RANKED_DUEL_DURATION_MS: 60 * 1000,
+  RANKED_DUEL_SEASON: 1,
+
+  ELO_LEAGUES: [
+    { name: 'Rookie',  minElo: 0,    icon: '🔘', gemReward: 5 },
+    { name: 'Bronze',  minElo: 1100, icon: '🥉', gemReward: 15 },
+    { name: 'Silver',  minElo: 1300, icon: '🥈', gemReward: 35 },
+    { name: 'Gold',    minElo: 1500, icon: '🥇', gemReward: 75 },
+    { name: 'Legend',  minElo: 1800, icon: '🏆', gemReward: 200 },
+  ],
+
+  getLeagueForElo(elo) {
+    const leagues = module.exports.ELO_LEAGUES;
+    let league = leagues[0];
+    for (const l of leagues) {
+      if (elo >= l.minElo) league = l;
+    }
+    return league;
+  },
+
+  computeEloChange(winnerElo, loserElo) {
+    const K = module.exports.ELO_K_FACTOR;
+    const expected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+    const gain = Math.round(K * (1 - expected));
+    return { gain, loss: Math.round(K * expected) };
+  },
+
+  // ─── Elite Layer 6: Artifacts ─────────────────────────────────────────────────
+
+  ARTIFACT_RARITIES: ['common', 'rare', 'epic', 'legendary'],
+
+  ARTIFACT_DEFINITIONS: {
+    // Weapons — tap power bonuses
+    iron_fist:     { slot: 'weapon', rarity: 'common',    name: 'Iron Fist',      icon: '👊', stats: { tapPower: 2 } },
+    steel_brain:   { slot: 'weapon', rarity: 'rare',      name: 'Steel Brain',    icon: '🔩', stats: { tapPower: 5 } },
+    golden_mind:   { slot: 'weapon', rarity: 'epic',      name: 'Golden Mind',    icon: '🧠', stats: { tapPower: 12, critChance: 0.05 } },
+    omega_tap:     { slot: 'weapon', rarity: 'legendary', name: 'Omega Tap',      icon: '⚡', stats: { tapPower: 25, critChance: 0.10, tapMult: 1.5 } },
+    // Armor — energy bonuses
+    leather_skull: { slot: 'armor',  rarity: 'common',    name: 'Leather Skull',  icon: '💀', stats: { energyMax: 500 } },
+    iron_helmet:   { slot: 'armor',  rarity: 'rare',      name: 'Iron Helmet',    icon: '⛑️', stats: { energyMax: 1200, regenBonus: 2 } },
+    crystal_core:  { slot: 'armor',  rarity: 'epic',      name: 'Crystal Core',   icon: '💠', stats: { energyMax: 2500, regenBonus: 5 } },
+    void_shell:    { slot: 'armor',  rarity: 'legendary', name: 'Void Shell',     icon: '🌑', stats: { energyMax: 5000, regenBonus: 10, efficiencyPct: 20 } },
+    // Relics — passive income bonuses
+    bronze_relic:  { slot: 'relic',  rarity: 'common',    name: 'Bronze Relic',   icon: '🏺', stats: { cardBoostPct: 10 } },
+    silver_relic:  { slot: 'relic',  rarity: 'rare',      name: 'Silver Relic',   icon: '🥈', stats: { cardBoostPct: 25 } },
+    gold_relic:    { slot: 'relic',  rarity: 'epic',      name: 'Gold Relic',     icon: '🏆', stats: { cardBoostPct: 50, offlinePct: 20 } },
+    eternal_relic: { slot: 'relic',  rarity: 'legendary', name: 'Eternal Relic',  icon: '✨', stats: { cardBoostPct: 100, offlinePct: 50, gemDropPct: 0.03 } },
+    // Charms — luck / gem bonuses
+    lucky_coin:    { slot: 'charm',  rarity: 'common',    name: 'Lucky Coin',     icon: '🪙', stats: { gemDropPct: 0.02 } },
+    four_leaf:     { slot: 'charm',  rarity: 'rare',      name: 'Four-Leaf',      icon: '🍀', stats: { gemDropPct: 0.05, critChance: 0.03 } },
+    prismatic_gem: { slot: 'charm',  rarity: 'epic',      name: 'Prismatic Gem',  icon: '💎', stats: { gemDropPct: 0.08, tapMult: 1.2 } },
+    chaos_stone:   { slot: 'charm',  rarity: 'legendary', name: 'Chaos Stone',    icon: '🌀', stats: { gemDropPct: 0.15, tapMult: 2.0, critChance: 0.10 } },
+  },
+
+  ARTIFACT_COMBINE_COUNT: 3,
+
+  // ── Layer 8: Artifact Set Bonuses ─────────────────────────────────────────
+  ARTIFACT_SETS: {
+    iron_warrior:   { name: 'Iron Warrior',    pieces: ['iron_fist',    'leather_skull'], bonus: { tapPower: 5,  energyMax: 500 },             icon: '⚔️' },
+    crystal_mage:   { name: 'Crystal Mage',    pieces: ['steel_brain',  'iron_helmet'],   bonus: { critChance: 0.05, tapMult: 1.3 },            icon: '🔮' },
+    golden_legend:  { name: 'Golden Legend',   pieces: ['golden_mind',  'crystal_core'],  bonus: { tapPower: 15, gemDropPct: 0.05 },            icon: '✨' },
+    void_reaper:    { name: 'Void Reaper',     pieces: ['omega_tap',    'void_shell'],    bonus: { tapMult: 2.0, critChance: 0.15, regenBonus: 10 }, icon: '🌑' },
+    nature_spirit:  { name: 'Nature Spirit',   pieces: ['lucky_coin',   'bronze_relic'],  bonus: { gemDropPct: 0.03, cardBoostPct: 15 },        icon: '🌿' },
+    chaos_master:   { name: 'Chaos Master',    pieces: ['chaos_stone',  'eternal_relic'], bonus: { tapMult: 3.0, offlinePct: 75 },              icon: '🌀' },
+    full_legendary: { name: 'FULL LEGEND SET', pieces: ['omega_tap','void_shell','eternal_relic','chaos_stone'], bonus: { tapMult: 5.0, critChance: 0.25, gemDropPct: 0.15, energyMax: 10000 }, icon: '💥' },
+  },
+
+  getArtifactSetBonuses(equippedKeys) {
+    const sets = module.exports.ARTIFACT_SETS;
+    const equipped = new Set(equippedKeys);
+    const active = [];
+    const totalBonus = { tapPower: 0, energyMax: 0, regenBonus: 0, efficiencyPct: 0, gemDropPct: 0, critChance: 0, tapMult: 1, cardBoostPct: 0, offlinePct: 0 };
+    for (const [key, set] of Object.entries(sets)) {
+      if (set.pieces.every(p => equipped.has(p))) {
+        active.push({ key, ...set });
+        for (const [stat, val] of Object.entries(set.bonus)) {
+          if (stat === 'tapMult') totalBonus.tapMult *= val;
+          else totalBonus[stat] = (totalBonus[stat] || 0) + val;
+        }
+      }
+    }
+    return { active, totalBonus };
+  },
+
+  // ── Layer 10: Mastery System ───────────────────────────────────────────────
+  MASTERY_XP_PER_UPGRADE: 10,
+  MASTERY_LEVEL_XP: 50,
+  MASTERY_MAX_LEVEL: 100,
+
+  MASTERY_MILESTONES: {
+    10:  { type: 'pct_bonus', value: 5,   label: '+5% effect' },
+    25:  { type: 'pct_bonus', value: 10,  label: '+10% effect' },
+    50:  { type: 'pct_bonus', value: 15,  label: '+15% effect + skin' },
+    75:  { type: 'pct_bonus', value: 20,  label: '+20% effect' },
+    100: { type: 'pct_bonus', value: 30,  label: '+30% effect (MASTERED)' },
+  },
+
+  getMasteryBonus(level) {
+    const milestones = module.exports.MASTERY_MILESTONES;
+    let pct = 0;
+    for (const [lvl, m] of Object.entries(milestones)) {
+      if (level >= Number(lvl)) pct = m.value;
+    }
+    return pct;
+  },
+
+  // ── Layer 11: Tap Challenges ───────────────────────────────────────────────
+  TAP_CHALLENGES: [
+    { key: 'sprint_1000',  name: 'Sprint 1K',      icon: '⚡', desc: 'Tap 1000 times in 60 seconds',    timeLimit: 60,  tapTarget: 1000,  rewardGems: 10,  difficulty: 'easy'   },
+    { key: 'burst_500',    name: 'Burst 500',       icon: '💥', desc: 'Tap 500 times in 20 seconds',     timeLimit: 20,  tapTarget: 500,   rewardGems: 15,  difficulty: 'medium' },
+    { key: 'no_boost_500', name: 'Clean 500',       icon: '🧘', desc: '500 taps — no active abilities',  timeLimit: 30,  tapTarget: 500,   rewardGems: 20,  noAbilities: true,   difficulty: 'hard'   },
+    { key: 'marathon_5k',  name: 'Marathon 5K',     icon: '🏃', desc: 'Tap 5000 times in 5 minutes',     timeLimit: 300, tapTarget: 5000,  rewardGems: 25,  difficulty: 'medium' },
+    { key: 'ultra_10k',    name: 'Ultra 10K',       icon: '🔥', desc: 'Tap 10000 times in 10 minutes',   timeLimit: 600, tapTarget: 10000, rewardGems: 50,  difficulty: 'hard'   },
+    { key: 'godlike_30s',  name: 'Godlike 30s',     icon: '🌟', desc: 'Maximum taps possible in 30s',    timeLimit: 30,  tapTarget: null,  rewardGems: 30,  scoreMode: true,     difficulty: 'legend' },
+  ],
+
+  // ── Layer 12: Seasonal Narrative ──────────────────────────────────────────
+  SEASON_NARRATIVES: [
+    {
+      season: 1,
+      name: 'Brain Awakening',
+      icon: '🧠',
+      theme: 'origin',
+      story: 'The first neurons fire. A mind stirs from nothing. You are the spark.',
+      mechanic: 'standard',
+      bossNameOverride: null,
+      bpMultiplier: 1,
+      specialDrop: null,
+    },
+    {
+      season: 2,
+      name: 'Quantum Apocalypse',
+      icon: '⚛️',
+      theme: 'chaos',
+      story: 'Reality fractures. Every tap echoes through parallel dimensions. Crits are doubled — but bosses have 3× HP.',
+      mechanic: 'double_crits',
+      bpMultiplier: 1,
+      critMultOverride: 2,
+      bossHpMultOverride: 3,
+      specialDrop: 'chaos_stone',
+    },
+    {
+      season: 3,
+      name: 'Elite Era',
+      icon: '💎',
+      theme: 'prestige',
+      story: 'The age of gods. Artifacts pulse with ancient power. Ascension calls.',
+      mechanic: 'artifact_boost',
+      bpMultiplier: 1.5,
+      artifactDropBonus: 2,
+      specialDrop: 'eternal_relic',
+    },
+    {
+      season: 4,
+      name: 'Void Storm',
+      icon: '🌀',
+      theme: 'endgame',
+      story: 'The void consumes all. Only the strongest survive. Every second counts.',
+      mechanic: 'energy_drain',
+      bpMultiplier: 2,
+      energyDrainRate: 2,
+      specialDrop: 'void_shell',
+    },
+  ],
+
+  getSeasonNarrative(seasonNum) {
+    const narratives = module.exports.SEASON_NARRATIVES;
+    return narratives[(seasonNum - 1) % narratives.length] || narratives[0];
+  },
+
+  // ── Layer 13: Guild Skill Tree ────────────────────────────────────────────
+  GUILD_XP_PER_TAP: 1,
+  GUILD_LEVEL_XP: 500,
+  GUILD_MAX_LEVEL: 30,
+
+  GUILD_SKILLS: {
+    tap_sync: {
+      name: 'Tap Sync',
+      icon: '⚡',
+      desc: '+2% tap power for all members per level',
+      maxLevel: 10,
+      costPerLevel: 100,
+      branch: 'offense',
+      effect: (lvl) => ({ tapPctBonus: lvl * 2 }),
+    },
+    energy_grid: {
+      name: 'Energy Grid',
+      icon: '🔋',
+      desc: '+200 max energy for all members per level',
+      maxLevel: 10,
+      costPerLevel: 100,
+      branch: 'defense',
+      effect: (lvl) => ({ energyBonus: lvl * 200 }),
+    },
+    loot_protocol: {
+      name: 'Loot Protocol',
+      icon: '💎',
+      desc: '+1% gem drop chance per level',
+      maxLevel: 5,
+      costPerLevel: 200,
+      branch: 'economy',
+      effect: (lvl) => ({ gemDropPct: lvl * 0.01 }),
+    },
+    boss_cracker: {
+      name: 'Boss Cracker',
+      icon: '💣',
+      desc: '+5% boss damage per level',
+      maxLevel: 8,
+      costPerLevel: 150,
+      branch: 'offense',
+      effect: (lvl) => ({ bossDamagePct: lvl * 5 }),
+    },
+    passive_matrix: {
+      name: 'Passive Matrix',
+      icon: '🤖',
+      desc: '+10% offline income for all members per level',
+      maxLevel: 8,
+      costPerLevel: 150,
+      branch: 'economy',
+      effect: (lvl) => ({ offlinePct: lvl * 10 }),
+    },
+    war_drums: {
+      name: 'War Drums',
+      icon: '🥁',
+      desc: '+5% damage in bracket wars per level',
+      maxLevel: 5,
+      costPerLevel: 300,
+      branch: 'war',
+      effect: (lvl) => ({ bracketDmgPct: lvl * 5 }),
+    },
+  },
+
+  getGuildBonuses(skillMap) {
+    const GUILD_SKILLS = module.exports.GUILD_SKILLS;
+    const result = { tapPctBonus: 0, energyBonus: 0, gemDropPct: 0, bossDamagePct: 0, offlinePct: 0, bracketDmgPct: 0 };
+    for (const [key, lvl] of Object.entries(skillMap)) {
+      const def = GUILD_SKILLS[key];
+      if (!def || lvl <= 0) continue;
+      const eff = def.effect(lvl);
+      for (const [stat, val] of Object.entries(eff)) {
+        result[stat] = (result[stat] || 0) + val;
+      }
+    }
+    return result;
+  },
+
+  // ── Layer 15: Live World Events ───────────────────────────────────────────
+  LIVE_WORLD_EVENTS: [
+    { key: 'meteor_shower',  name: 'Meteor Shower',   icon: '☄️',  durationMs: 3 * 60 * 1000, desc: 'Tap power ×2 for all players',      effect: 'tapMult',      value: 2    },
+    { key: 'brain_storm',    name: 'Brain Storm',     icon: '🌩️', durationMs: 5 * 60 * 1000, desc: 'Combo decay disabled — keep your streak!', effect: 'noComboDecay', value: 1    },
+    { key: 'gem_rain',       name: 'Gem Rain',        icon: '💎',  durationMs: 4 * 60 * 1000, desc: 'Every 5th tap drops a gem',         effect: 'gemFreq',      value: 5    },
+    { key: 'void_surge',     name: 'Void Surge',      icon: '🌀',  durationMs: 2 * 60 * 1000, desc: 'All crits auto-hit for 2 minutes',  effect: 'autoCrit',     value: 1    },
+    { key: 'energy_flood',   name: 'Energy Flood',    icon: '🌊',  durationMs: 6 * 60 * 1000, desc: 'Energy regen ×3 globally',          effect: 'regenMult',    value: 3    },
+    { key: 'xp_frenzy',     name: 'XP Frenzy',       icon: '🔥',  durationMs: 5 * 60 * 1000, desc: 'Mastery XP gain ×5',               effect: 'masteryMult',  value: 5    },
+  ],
+  LIVE_EVENT_COOLDOWN_MS: 55 * 60 * 1000,
+  LIVE_EVENT_MIN_GAP_MS:  50 * 60 * 1000,
+
+  // ── Layer 17: Boss Ecosystem ──────────────────────────────────────────────
+  BOSS_ECOSYSTEM: [
+    {
+      key: 'inferno_titan',
+      name: 'Inferno Titan',
+      icon: '🔥',
+      type: 'fire',
+      weakness: 'water',
+      baseHp: 500_000,
+      respawnMs: 4 * 60 * 60 * 1000,
+      loot: { gems: 20, artifactKeys: ['chaos_stone'], xp: 500 },
+      weaknessArtifacts: ['void_shell', 'crystal_core'],
+    },
+    {
+      key: 'void_leviathan',
+      name: 'Void Leviathan',
+      icon: '🌀',
+      type: 'void',
+      weakness: 'light',
+      baseHp: 750_000,
+      respawnMs: 6 * 60 * 60 * 1000,
+      loot: { gems: 30, artifactKeys: ['void_shell'], xp: 750 },
+      weaknessArtifacts: ['omega_tap', 'golden_mind'],
+    },
+    {
+      key: 'crystal_colossus',
+      name: 'Crystal Colossus',
+      icon: '💠',
+      type: 'ice',
+      weakness: 'fire',
+      baseHp: 400_000,
+      respawnMs: 3 * 60 * 60 * 1000,
+      loot: { gems: 15, artifactKeys: ['crystal_core'], xp: 400 },
+      weaknessArtifacts: ['iron_fist', 'chaos_stone'],
+    },
+    {
+      key: 'thunder_deity',
+      name: 'Thunder Deity',
+      icon: '⚡',
+      type: 'lightning',
+      weakness: 'earth',
+      baseHp: 1_000_000,
+      respawnMs: 8 * 60 * 60 * 1000,
+      loot: { gems: 50, artifactKeys: ['omega_tap'], xp: 1000 },
+      weaknessArtifacts: ['bronze_relic', 'leather_skull'],
+    },
+    {
+      key: 'arcane_overlord',
+      name: 'Arcane Overlord',
+      icon: '🔮',
+      type: 'arcane',
+      weakness: 'void',
+      baseHp: 2_000_000,
+      respawnMs: 12 * 60 * 60 * 1000,
+      loot: { gems: 100, artifactKeys: ['eternal_relic', 'chaos_stone'], xp: 2000 },
+      weaknessArtifacts: ['void_shell', 'chaos_stone'],
+    },
+  ],
+
+  // ── Layer 19: Quest Board ──────────────────────────────────────────────────
+  questDayKey: () => new Date().toISOString().slice(0, 10),
+  questWeekKey: () => {
+    const d = new Date();
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    return `${d.getFullYear()}-W${week}`;
+  },
+
+  DAILY_QUEST_POOL: [
+    { key: 'tap_500',       name: 'Tap 500 Times',        icon: '👆', type: 'taps',      target: 500,   reward: { gems: 3  } },
+    { key: 'tap_2000',      name: 'Tap 2000 Times',       icon: '⚡', type: 'taps',      target: 2000,  reward: { gems: 8  } },
+    { key: 'spend_energy',  name: 'Spend 1000 Energy',    icon: '🔋', type: 'energy',    target: 1000,  reward: { gems: 5  } },
+    { key: 'boss_hit',      name: 'Hit Any Boss',         icon: '💥', type: 'boss_hit',  target: 1,     reward: { gems: 4  } },
+    { key: 'earn_bp',       name: 'Earn 50K BP',          icon: '🧠', type: 'bp_earned', target: 50000, reward: { gems: 6  } },
+    { key: 'combo_gold',    name: 'Reach Gold Combo',     icon: '🥇', type: 'combo_tier',target: 3,     reward: { gems: 5  } },
+    { key: 'gem_drop',      name: 'Get 3 Gem Drops',      icon: '💎', type: 'gem_drops', target: 3,     reward: { gems: 4  } },
+    { key: 'guild_contrib', name: 'Contribute to Guild',  icon: '🏰', type: 'guild_xp',  target: 50,    reward: { gems: 4  } },
+  ],
+
+  WEEKLY_QUESTS: [
+    { key: 'w_tap_20k',    name: 'Tap 20,000 Times',      icon: '🔥', type: 'taps',      target: 20000,  reward: { gems: 30, artifactKey: 'iron_fist'  } },
+    { key: 'w_prestige',   name: 'Prestige Once',         icon: '✨', type: 'prestige',   target: 1,      reward: { gems: 50 } },
+    { key: 'w_boss_kills', name: 'Kill 3 Ecosystem Bosses',icon: '☠️', type: 'boss_kills', target: 3,      reward: { gems: 40, artifactKey: 'four_leaf'  } },
+    { key: 'w_challenges', name: 'Complete 5 Challenges', icon: '⚡', type: 'challenges', target: 5,      reward: { gems: 35 } },
+  ],
+
+  DAILY_QUEST_CHEST: { gems: 15, artifactChance: 0.5 },
+
+  // ── Layer 20: Cooperative Raid ────────────────────────────────────────────
+  COOP_RAID_BOSSES: [
+    { key: 'mega_brain',   name: 'Mega Brain',     icon: '🧠', hp: 5_000_000,  maxPlayers: 10, durationMs: 10 * 60 * 1000, loot: { gems: 50, topBonus: 25 } },
+    { key: 'omega_void',   name: 'Omega Void',     icon: '🌑', hp: 10_000_000, maxPlayers: 10, durationMs: 15 * 60 * 1000, loot: { gems: 80, topBonus: 40 } },
+    { key: 'titan_forge',  name: 'Titan Forge',    icon: '⚒️', hp: 20_000_000, maxPlayers: 10, durationMs: 20 * 60 * 1000, loot: { gems: 150, topBonus: 75 } },
+  ],
+  COOP_RAID_LOBBY_EXPIRE_MS: 5 * 60 * 1000,
+
+  // ── Layer 21: Prestige Relics ─────────────────────────────────────────────
+  RELIC_DEFINITIONS: {
+    time_crystal: {
+      name: 'Time Crystal',
+      icon: '🔷',
+      rarity: 'relic',
+      requiredAscension: 3,
+      passiveDesc: '+15 tap power always',
+      passiveStats: { tapPower: 15 },
+      activeDesc: 'Freeze combo decay for 60 seconds',
+      activeCooldownMs: 5 * 60 * 1000,
+      activeDurationMs: 60 * 1000,
+      activeEffect: 'freeze_combo',
+    },
+    neural_core: {
+      name: 'Neural Core',
+      icon: '🧬',
+      rarity: 'relic',
+      requiredAscension: 3,
+      passiveDesc: '+10% gem drop chance always',
+      passiveStats: { gemDropPct: 0.10 },
+      activeDesc: 'Auto-tap 10/sec for 2 minutes',
+      activeCooldownMs: 10 * 60 * 1000,
+      activeDurationMs: 2 * 60 * 1000,
+      activeEffect: 'auto_tap',
+    },
+    void_prism: {
+      name: 'Void Prism',
+      icon: '🔮',
+      rarity: 'relic',
+      requiredAscension: 4,
+      passiveDesc: '×1.5 offline income always',
+      passiveStats: { offlineMult: 1.5 },
+      activeDesc: '×3 gem drops for 30 seconds',
+      activeCooldownMs: 8 * 60 * 1000,
+      activeDurationMs: 30 * 1000,
+      activeEffect: 'gem_surge',
+    },
+    soul_anchor: {
+      name: 'Soul Anchor',
+      icon: '⚓',
+      rarity: 'relic',
+      requiredAscension: 5,
+      passiveDesc: '+500 energy cap, +5 regen/sec',
+      passiveStats: { energyMax: 500, regenBonus: 5 },
+      activeDesc: 'Infinite energy for 45 seconds',
+      activeCooldownMs: 12 * 60 * 1000,
+      activeDurationMs: 45 * 1000,
+      activeEffect: 'infinite_energy',
+    },
+    chaos_core: {
+      name: 'Chaos Core',
+      icon: '🌀',
+      rarity: 'relic',
+      requiredAscension: 5,
+      passiveDesc: '+25% crit chance, ×2 crit mult',
+      passiveStats: { critChance: 0.25, critMult: 2 },
+      activeDesc: '100% crit + ×5 crit mult for 20 seconds',
+      activeCooldownMs: 15 * 60 * 1000,
+      activeDurationMs: 20 * 1000,
+      activeEffect: 'crit_storm',
+    },
+  },
+
+  // ── Layer 22: Division Leagues ────────────────────────────────────────────
+  DIVISION_SIZE: 20,
+  DIVISION_TIERS: [
+    { name: 'Iron',     icon: '⚙️',  minRank: 1,  promote: 3, relegate: 5, gemReward: 10  },
+    { name: 'Bronze',   icon: '🥉',  minRank: 1,  promote: 3, relegate: 5, gemReward: 20  },
+    { name: 'Silver',   icon: '🥈',  minRank: 1,  promote: 3, relegate: 5, gemReward: 40  },
+    { name: 'Gold',     icon: '🥇',  minRank: 1,  promote: 3, relegate: 5, gemReward: 80  },
+    { name: 'Platinum', icon: '💎',  minRank: 1,  promote: 3, relegate: 5, gemReward: 150 },
+    { name: 'Diamond',  icon: '🔮',  minRank: 1,  promote: 3, relegate: 0, gemReward: 300 },
+  ],
+
+  divisionWeekKey: () => `div-${Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))}`,
+
+  // ── Layer 23: Upgrade Synergies ───────────────────────────────────────────
+  UPGRADE_SYNERGIES: [
+    {
+      key: 'hyper_tap',
+      name: 'Hyper Tap',
+      icon: '⚡',
+      desc: 'MAX Tap Power + MAX Multi-Tap → permanent ×1.5 tap bonus',
+      requires: { TAP_POWER: 5, MULTI_TAP: 3 },
+      bonus: { tapMult: 1.5 },
+      color: '#f59e0b',
+    },
+    {
+      key: 'infinite_loop',
+      name: 'Infinite Loop',
+      icon: '♾️',
+      desc: 'MAX Auto Brain + MAX Regen Rate → +5 passive BP/sec',
+      requires: { AUTO_BRAIN: 5, REGEN_RATE: 5 },
+      bonus: { passiveBpSec: 5 },
+      color: '#34d399',
+    },
+    {
+      key: 'quantum_battery',
+      name: 'Quantum Battery',
+      icon: '🔋',
+      desc: 'MAX Energy Max + MAX Regen Rate → energy overflow gives tap bonus',
+      requires: { ENERGY_MAX: 5, REGEN_RATE: 5 },
+      bonus: { energyOverflowTap: true },
+      color: '#00e5ff',
+    },
+    {
+      key: 'omega_brain',
+      name: 'Omega Brain',
+      icon: '🧠',
+      desc: 'ALL 5 upgrades maxed → global ×2 BP multiplier',
+      requires: { TAP_POWER: 5, ENERGY_MAX: 5, REGEN_RATE: 5, MULTI_TAP: 3, AUTO_BRAIN: 5 },
+      bonus: { globalBpMult: 2 },
+      color: '#ff4fa3',
+    },
+    {
+      key: 'tap_engine',
+      name: 'Tap Engine',
+      icon: '🔧',
+      desc: 'MAX Tap Power + MAX Auto Brain → auto-brain earns ×3',
+      requires: { TAP_POWER: 5, AUTO_BRAIN: 5 },
+      bonus: { autoBrainMult: 3 },
+      color: '#8b5cf6',
+    },
+    {
+      key: 'energy_god',
+      name: 'Energy God',
+      icon: '⚡',
+      desc: 'MAX Energy Max + MAX Multi-Tap → multi-tap costs 0 extra energy',
+      requires: { ENERGY_MAX: 5, MULTI_TAP: 3 },
+      bonus: { freeMultiTap: true },
+      color: '#6366f1',
+    },
+  ],
+
+  getActiveSynergies(profile) {
+    const synergies = module.exports.UPGRADE_SYNERGIES;
+    const levels = {
+      TAP_POWER:  profile.tap_power_level  || 0,
+      ENERGY_MAX: profile.energy_max_level || 0,
+      REGEN_RATE: profile.regen_rate_level || 0,
+      MULTI_TAP:  profile.multi_tap_level  || 0,
+      AUTO_BRAIN: profile.auto_brain_level || 0,
+    };
+    return synergies.filter(s =>
+      Object.entries(s.requires).every(([k, v]) => levels[k] >= v)
+    );
+  },
+
+  // ── Layer 24: Achievement Gallery ────────────────────────────────────────
+  ACHIEVEMENT_GALLERY: [
+    // Tapper category
+    { key: 'tap_bronze',   category: 'tapper', tier: 'bronze',   name: 'Beginner Tapper',   icon: '👆', desc: 'Reach 1,000 total taps',     check: (p) => p.total_taps >= 1000,    reward: { gems: 2  } },
+    { key: 'tap_silver',   category: 'tapper', tier: 'silver',   name: 'Skilled Tapper',    icon: '⚡', desc: 'Reach 10,000 taps',          check: (p) => p.total_taps >= 10000,   reward: { gems: 5  } },
+    { key: 'tap_gold',     category: 'tapper', tier: 'gold',     name: 'Elite Tapper',      icon: '🥇', desc: 'Reach 100,000 taps',         check: (p) => p.total_taps >= 100000,  reward: { gems: 15 } },
+    { key: 'tap_platinum', category: 'tapper', tier: 'platinum', name: 'Tap Grandmaster',   icon: '💎', desc: 'Reach 500,000 taps',         check: (p) => p.total_taps >= 500000,  reward: { gems: 50 } },
+    { key: 'tap_diamond',  category: 'tapper', tier: 'diamond',  name: 'GOD OF TAPS',       icon: '🔮', desc: 'Reach 1,000,000 taps',       check: (p) => p.total_taps >= 1000000, reward: { gems: 200 } },
+    // Prestige category
+    { key: 'prestige_1',   category: 'prestige', tier: 'bronze',   name: 'First Prestige',   icon: '✨', desc: 'Prestige for the first time', check: (p) => p.prestige >= 1,  reward: { gems: 5  } },
+    { key: 'prestige_3',   category: 'prestige', tier: 'silver',   name: 'Triple Prestige',  icon: '💫', desc: 'Prestige 3 times',           check: (p) => p.prestige >= 3,  reward: { gems: 15 } },
+    { key: 'prestige_5',   category: 'prestige', tier: 'gold',     name: 'Prestige Master',  icon: '🌟', desc: 'Prestige 5 times',           check: (p) => p.prestige >= 5,  reward: { gems: 40 } },
+    { key: 'prestige_10',  category: 'prestige', tier: 'platinum', name: 'Legend of Prestige',icon: '🏆', desc: 'Prestige 10 times',         check: (p) => p.prestige >= 10, reward: { gems: 100 } },
+    { key: 'ascension_1',  category: 'prestige', tier: 'diamond',  name: 'The Ascended',     icon: '🌌', desc: 'Ascend for the first time',  check: (p) => (p.ascension_count || 0) >= 1, reward: { gems: 300 } },
+    // Social category
+    { key: 'guild_join',   category: 'social',   tier: 'bronze',   name: 'Team Player',      icon: '🏰', desc: 'Join a guild',               check: (_, ctx) => ctx.inGuild,      reward: { gems: 3  } },
+    { key: 'referral_1',   category: 'social',   tier: 'silver',   name: 'Recruiter',        icon: '📢', desc: 'Refer 1 active player',      check: (_, ctx) => ctx.referrals >= 1, reward: { gems: 10 } },
+    { key: 'duel_win',     category: 'social',   tier: 'gold',     name: 'Duel Champion',    icon: '⚔️', desc: 'Win 10 ranked duels',        check: (_, ctx) => ctx.duelWins >= 10, reward: { gems: 25 } },
+    { key: 'top10_season', category: 'social',   tier: 'platinum', name: 'Season Rival',     icon: '🌐', desc: 'Finish top 10 in a season',  check: (_, ctx) => ctx.seasonTop10,   reward: { gems: 75 } },
+    { key: 'boss_kill_5',  category: 'social',   tier: 'diamond',  name: 'Boss Bane',        icon: '💀', desc: 'Kill 5 ecosystem bosses',    check: (_, ctx) => ctx.bossKills >= 5, reward: { gems: 150 } },
+  ],
+
+  TIER_ORDER: ['bronze', 'silver', 'gold', 'platinum', 'diamond'],
+  TIER_COLOR: { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', platinum: '#00e5ff', diamond: '#ff4fa3' },
 };

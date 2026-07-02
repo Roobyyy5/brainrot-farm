@@ -44,6 +44,25 @@ import ChallengeBoard from './components/ChallengeBoard';
 import Crafting from './components/Crafting';
 import SeasonLeaderboard from './components/SeasonLeaderboard';
 import ReferralLeaderboard from './components/ReferralLeaderboard';
+import ActiveAbilities from './components/ActiveAbilities';
+import Ascension from './components/Ascension';
+import Artifacts from './components/Artifacts';
+import RankedDuels from './components/RankedDuels';
+import MasteryPanel from './components/MasteryPanel';
+import ClanBracket from './components/ClanBracket';
+import TapChallenge from './components/TapChallenge';
+import SeasonNarrative from './components/SeasonNarrative';
+import GuildSkillTree from './components/GuildSkillTree';
+import WorldEvents from './components/WorldEvents';
+import BuildPresets from './components/BuildPresets';
+import BossEcosystem from './components/BossEcosystem';
+import GhostRace from './components/GhostRace';
+import QuestBoard from './components/QuestBoard';
+import CoopRaid from './components/CoopRaid';
+import RelicsPanel from './components/RelicsPanel';
+import DivisionLeague from './components/DivisionLeague';
+import SynergyBadges from './components/SynergyBadges';
+import AchievementGallery from './components/AchievementGallery';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -117,8 +136,14 @@ export default function App() {
 
       {tab === 'tap' && (
         <>
+          <WorldEvents />
+          <QuestBoard />
+          <SeasonNarrative />
           <TapRush />
+          <ActiveAbilities />
           <TapGame user={user} onCoinsEarned={handleCoinsEarned} onAchievements={handleAchievements} />
+          <TapChallenge />
+          <BossEcosystem />
           <BossRush />
           <WorldBoss />
         </>
@@ -144,16 +169,26 @@ export default function App() {
           <SkillTree />
           <BattlePass onGemsChanged={handleGemsChanged} />
           <PrestigeShop />
+          <Ascension />
+          <Artifacts />
+          <MasteryPanel />
+          <BuildPresets />
+          <SynergyBadges />
+          <RelicsPanel />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
         </>
       )}
 
       {tab === 'club' && (
         <>
+          <GuildSkillTree />
+          <ClanBracket />
+          <CoopRaid />
           <GuildWars />
           <GuildRaid />
           <Guilds onGemsChanged={handleGemsChanged} currentUsername={user?.username} />
           <GuildChat currentUsername={user?.username} />
+          <RankedDuels />
           <TapDuel currentUserId={user?.telegram_id} />
           <Friends />
         </>
@@ -161,6 +196,8 @@ export default function App() {
 
       {tab === 'board' && (
         <>
+          <DivisionLeague />
+          <AchievementGallery />
           <SeasonLeaderboard />
           <Tournament />
           <StatsDashboard />

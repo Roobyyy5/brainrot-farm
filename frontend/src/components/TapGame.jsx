@@ -40,6 +40,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [critFlash, setCritFlash] = useState(false);
   const [talentChoices, setTalentChoices] = useState(null);
   const [choosingTalent, setChoosingTalent] = useState(null);
+  const [comboTier, setComboTier] = useState({ name: 'Bronze', color: '#cd7f32', icon: '🥉', mult: 1 });
 
   const pendingTaps = useRef(0);
   const lastTapAt = useRef(0);
@@ -91,6 +92,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setEnergy(res.energy);
       if (res.bpEarned > 0) onCoinsRef.current?.(res.bpEarned);
       if (res.unlockedAchievements?.length) onAchRef.current?.(res.unlockedAchievements);
+      if (res.comboTier) setComboTier(res.comboTier);
       if (res.isCrit) {
         haptic('heavy');
         setShaking(true);
@@ -251,9 +253,10 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       )}
 
       {showCombo && (
-        <div className="combo-meter">
-          <span className="combo-label">COMBO</span>
-          <span className="combo-value">×{combo.toFixed(1)}</span>
+        <div className="combo-meter" style={{ borderColor: comboTier.color }}>
+          <span className="combo-tier-icon">{comboTier.icon}</span>
+          <span className="combo-label" style={{ color: comboTier.color }}>{comboTier.name}</span>
+          <span className="combo-value" style={{ color: comboTier.color }}>×{comboTier.mult}</span>
         </div>
       )}
 

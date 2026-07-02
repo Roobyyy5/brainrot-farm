@@ -22,6 +22,12 @@ const {
   PRESTIGE_SHOP,
   getCurrentWeeklyEvent,
   TAP_RUSH_MULTIPLIER,
+  COMBO_WINDOW_MS,
+  getComboMult,
+  getComboTier,
+  ASCENSION_TREE,
+  getArtifactSetBonuses,
+  getActiveSynergies,
 } = require('../gameConfig');
 
 // Build skill-level map for a user (key → level)
@@ -73,6 +79,60 @@ function prestigeBonuses(upgrades) {
     extraGemDrop: (upgrades.gem_vault || 0) * 0.01,
     incomePct: (upgrades.prestige_aura || 0) * 10,
   };
+}
+
+async function getAscensionUpgrades(client, telegramId) {
+  const { rows } = await client.query('SELECT upgrade_key, level FROM ascension_upgrades WHERE telegram_id=$1', [telegramId]);
+  const map = {};
+  for (const r of rows) map[r.upgrade_key] = r.level;
+  return map;
+}
+
+function ascensionBonuses(asc) {
+  return {
+    extraTapPower:   (asc.brain_forge || 0) * 2,
+    extraEnergyMax:  (asc.infinity_vessel || 0) * 1000,
+    extraRegen:      (asc.soul_regen || 0) * 5,
+    gemDropChance:   (asc.cosmic_luck || 0) * 0.05,
+    extraCritMult:   (asc.ascended_crits || 0) * 20,
+    cdReductionHalf: (asc.time_warp || 0) > 0,
+  };
+}
+
+async function getArtifactBonuses(client, telegramId) {
+  const { rows } = await client.query(
+    `SELECT artifact_key FROM user_artifacts WHERE telegram_id=$1 AND equipped_slot IS NOT NULL`,
+    [telegramId]
+  );
+  const { ARTIFACT_DEFINITIONS } = require('../gameConfig');
+  const bonuses = { tapPower: 0, energyMax: 0, regenBonus: 0, efficiencyPct: 0, gemDropPct: 0, critChance: 0, tapMult: 1, cardBoostPct: 0, offlinePct: 0 };
+  const equippedKeys = [];
+  for (const r of rows) {
+    const def = ARTIFACT_DEFINITIONS[r.artifact_key];
+    if (!def) continue;
+    equippedKeys.push(r.artifact_key);
+    const s = def.stats || {};
+    if (s.tapPower)    bonuses.tapPower    += s.tapPower;
+    if (s.energyMax)   bonuses.energyMax   += s.energyMax;
+    if (s.regenBonus)  bonuses.regenBonus  += s.regenBonus;
+    if (s.efficiencyPct) bonuses.efficiencyPct += s.efficiencyPct;
+    if (s.gemDropPct)  bonuses.gemDropPct  += s.gemDropPct;
+    if (s.critChance)  bonuses.critChance  += s.critChance;
+    if (s.tapMult)     bonuses.tapMult     *= s.tapMult;
+    if (s.cardBoostPct) bonuses.cardBoostPct += s.cardBoostPct;
+    if (s.offlinePct)  bonuses.offlinePct  += s.offlinePct;
+  }
+  // Apply artifact set bonuses
+  const { totalBonus: setB } = getArtifactSetBonuses(equippedKeys);
+  bonuses.tapPower    += setB.tapPower    || 0;
+  bonuses.energyMax   += setB.energyMax   || 0;
+  bonuses.regenBonus  += setB.regenBonus  || 0;
+  bonuses.gemDropPct  += setB.gemDropPct  || 0;
+  bonuses.critChance  += setB.critChance  || 0;
+  bonuses.tapMult     *= setB.tapMult     || 1;
+  bonuses.cardBoostPct += setB.cardBoostPct || 0;
+  bonuses.offlinePct  += setB.offlinePct  || 0;
+  return bonuses;
 }
 
 function computeEnergy(stored, energyMax, regenRate, lastEnergyAt) {
@@ -310,9 +370,12 @@ router.post('/tap', asyncHandler(async (req, res) => {
 
     const skills  = await getUserSkills(client, telegramId);
     const bonuses = skillBonuses(skills, profile.talents_chosen || []);
-    const energyMax = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax;
-    const regenRate = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen;
-    const tapPower  = TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower;
+    const ascUpgrades = await getAscensionUpgrades(client, telegramId);
+    const ascB = ascensionBonuses(ascUpgrades);
+    const artB = await getArtifactBonuses(client, telegramId);
+    const energyMax = TAPPER_UPGRADES.ENERGY_MAX.getEffect(profile.energy_max_level) + bonuses.extraEnergyMax + ascB.extraEnergyMax + artB.energyMax;
+    const regenRate = TAPPER_UPGRADES.REGEN_RATE.getEffect(profile.regen_rate_level) + bonuses.extraRegen + ascB.extraRegen + artB.regenBonus;
+    const tapPower  = TAPPER_UPGRADES.TAP_POWER.getEffect(profile.tap_power_level) + bonuses.extraTapPower + ascB.extraTapPower + artB.tapPower;
     const multiTap  = TAPPER_UPGRADES.MULTI_TAP.getEffect(profile.multi_tap_level);
     const now       = Date.now();
     const prevRank  = rankForTaps(profile.total_taps);
@@ -324,8 +387,8 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const maxClicks = Math.max(1, Math.floor(elapsedSec * TAPPER_MAX_TAPS_PER_SEC));
     const effectiveClicks = Math.min(count, maxClicks);
 
-    // Efficiency skill: reduce energy cost
-    const efficiencyMult = 1 - (bonuses.efficiencyPct / 100);
+    // Efficiency skill + artifact: reduce energy cost
+    const efficiencyMult = 1 - ((bonuses.efficiencyPct + artB.efficiencyPct) / 100);
     const effectiveMultiTap = Math.max(1, Math.floor(multiTap * efficiencyMult));
 
     const petB2 = getPetBonuses(profile.active_pet || '');
@@ -338,17 +401,50 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const bpXpMultWeekly = weeklyEvent2.effect === 'bpXpMult' ? weeklyEvent2.value : 1;
     const rushActive = Number(profile.rush_active_until || 0) > now;
     const rushMult   = rushActive ? TAP_RUSH_MULTIPLIER : 1;
+
+    // Active ability boosts
+    const brainBurst = await client.query(
+      "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='brain_burst' AND expires_at>$2 LIMIT 1",
+      [telegramId, now]
+    );
+    const frenzy = await client.query(
+      "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='frenzy' AND expires_at>$2 LIMIT 1",
+      [telegramId, now]
+    );
+    const energyNova = await client.query(
+      "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='energy_nova' AND expires_at>$2 LIMIT 1",
+      [telegramId, now]
+    );
+    const goldenTap = await client.query(
+      "SELECT id FROM user_boosts WHERE telegram_id=$1 AND boost_type='golden_tap' AND expires_at>$2 LIMIT 1",
+      [telegramId, now]
+    );
+
+    const brainBurstMult  = brainBurst.rows[0] ? 10 : 1;
+    const frenzyEnergyMult = frenzy.rows[0] ? 0.5 : 1;
+    const noEnergyNeeded  = energyNova.rows[0] ? true : false;
+    const isGoldenTap     = !!goldenTap.rows[0];
+
     // Check active crit_shield boost
     const critShield = await client.query(
       "SELECT 1 FROM user_boosts WHERE telegram_id=$1 AND boost_type='crit_shield' AND expires_at>$2 LIMIT 1",
-      [telegramId, Date.now()]
+      [telegramId, now]
     );
     const currentEnergy = computeEnergy(profile.energy, energyMax, regenRate, profile.last_energy_at);
-    const energyUsed = Math.min(effectiveClicks * effectiveMultiTap, currentEnergy);
+    const effectiveMultiTapFrenzy = Math.max(1, Math.floor(effectiveMultiTap * frenzyEnergyMult));
+    const energyUsed = noEnergyNeeded ? 0 : Math.min(effectiveClicks * effectiveMultiTapFrenzy, currentEnergy);
+    const tapsCounted = effectiveClicks;
 
-    if (energyUsed === 0) {
+    if (!noEnergyNeeded && energyUsed === 0) {
       return { bpEarned: 0, energy: currentEnergy, energyMax, isCrit: false, unlockedAchievements: [] };
     }
+
+    // Server-side combo
+    const lastBatchAt = Number(profile.last_batch_at || 0);
+    const withinWindow = now - lastBatchAt < COMBO_WINDOW_MS;
+    const newComboBatches = withinWindow ? (Number(profile.combo_batches || 0) + 1) : 1;
+    const comboMult = getComboMult(newComboBatches);
+    const serverCombo = comboMult;
 
     // Tap streak
     const today = new Date().toISOString().slice(0, 10);
@@ -369,12 +465,18 @@ router.post('/tap', asyncHandler(async (req, res) => {
 
     const baseTapPower = Math.floor((tapPower + zoneData2.tapPowerBonus + pBonuses2.extraTapPower) * (1 + (petB2.tapPowerPct || 0)));
     const incomeMult = 1 + (pBonuses2.incomePct || 0) / 100;
-    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier * incomeMult * bpMultWeekly * rushMult;
-    const critChance = critShield.rows[0] ? 1.0 : TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0);
+    const effectiveTapPower = baseTapPower * (1 + streakBonusPct / 100) * boostMultiplier * incomeMult * bpMultWeekly * rushMult * brainBurstMult * serverCombo * artB.tapMult;
+    const critChance = (isGoldenTap || critShield.rows[0]) ? 1.0 : TAPPER_CRIT_CHANCE + bonuses.extraCritChance + (petB2.critChancePct || 0) + ascB.gemDropChance + artB.critChance;
     const isCrit    = Math.random() < critChance;
-    const critMult  = bonuses.critMultiplier;
-    const bpEarned  = Math.floor(energyUsed * effectiveTapPower * (isCrit ? critMult : 1));
-    const newEnergy = currentEnergy - energyUsed;
+    const critMult  = bonuses.critMultiplier + ascB.extraCritMult;
+    const computedEnergy = noEnergyNeeded ? tapsCounted : energyUsed;
+    const bpEarned  = Math.floor(computedEnergy * effectiveTapPower * (isCrit ? critMult : 1));
+    const newEnergy = noEnergyNeeded ? currentEnergy : currentEnergy - energyUsed;
+
+    // Consume golden tap use
+    if (isGoldenTap) {
+      await client.query('DELETE FROM user_boosts WHERE id=$1', [goldenTap.rows[0].id]);
+    }
 
     // Gem drop luck (including pet + prestige + weekly event bonuses)
     const gemDropChanceFinal = (bonuses.gemDropChance + (petB2.gemDropPct || 0) + (pBonuses2.extraGemDrop || 0)) * gemMultWeekly;
@@ -410,9 +512,10 @@ router.post('/tap', asyncHandler(async (req, res) => {
          tap_streak = $5, last_tap_date = $6,
          energy_notif_at = $7, energy_notif_sent = FALSE,
          skill_points = skill_points + $9,
-         bp_xp = bp_xp + $10
+         bp_xp = bp_xp + $10,
+         current_combo = $11, combo_batches = $12, last_batch_at = $13
        WHERE telegram_id = $8`,
-      [newEnergy, now, energyUsed, bpEarned, newStreak, today, energyNotifAt, telegramId, skillPtsEarned, bpXpEarned]
+      [newEnergy, now, computedEnergy, bpEarned, newStreak, today, energyNotifAt, telegramId, skillPtsEarned, bpXpEarned, comboMult, newComboBatches, now]
     );
     if (gemDrop > 0) {
       await client.query('UPDATE users SET gems=gems+$1 WHERE telegram_id=$2', [gemDrop, telegramId]);
@@ -450,10 +553,14 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const newRank = rankForTaps(updatedProfile.rows[0].total_taps);
     const rankUp = newRank.name !== prevRank.name ? newRank : null;
 
+    const comboTier = getComboTier(newComboBatches);
+
     return {
       bpEarned, energy: newEnergy, energyMax, isCrit, critMult, unlockedAchievements,
       streakBonusPct, boostActive: !!boostRow.rows[0],
       gemDrop, skillPtsEarned, rankUp,
+      combo: comboMult, comboBatches: newComboBatches,
+      comboTier: { name: comboTier.name, color: comboTier.color, icon: comboTier.icon, mult: comboTier.mult },
     };
   });
 
@@ -467,7 +574,7 @@ router.get('/upgrades', asyncHandler(async (req, res) => {
     'SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]
   );
   const profile = rows[0] || { tap_power_level: 0, energy_max_level: 0, regen_rate_level: 0, multi_tap_level: 0, auto_brain_level: 0 };
-  res.json({ upgrades: buildUpgradeList(profile) });
+  res.json({ upgrades: buildUpgradeList(profile), synergies: getActiveSynergies(profile) });
 }));
 
 // POST /tapper/upgrade
@@ -502,6 +609,21 @@ router.post('/upgrade', asyncHandler(async (req, res) => {
       [telegramId]
     );
     logEvent(telegramId, 'tapper_upgrade');
+
+    // Mastery XP for this upgrade type
+    const { MASTERY_XP_PER_UPGRADE, MASTERY_LEVEL_XP, MASTERY_MAX_LEVEL } = require('../gameConfig');
+    const masteryKey = type.toLowerCase();
+    const mR = await client.query(
+      'SELECT mastery_xp, mastery_level FROM upgrade_mastery WHERE telegram_id=$1 AND upgrade_key=$2',
+      [telegramId, masteryKey]
+    );
+    const mXp = (mR.rows[0] ? Number(mR.rows[0].mastery_xp) : 0) + MASTERY_XP_PER_UPGRADE;
+    const mLvl = Math.min(MASTERY_MAX_LEVEL, Math.floor(mXp / MASTERY_LEVEL_XP));
+    await client.query(
+      `INSERT INTO upgrade_mastery (telegram_id, upgrade_key, mastery_xp, mastery_level) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (telegram_id, upgrade_key) DO UPDATE SET mastery_xp=$3, mastery_level=$4`,
+      [telegramId, masteryKey, mXp, mLvl]
+    );
 
     const updated = await client.query('SELECT * FROM tapper_profiles WHERE telegram_id = $1', [telegramId]);
     return { success: true, upgrades: buildUpgradeList(updated.rows[0]) };

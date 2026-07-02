@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const { withTransaction } = require('../db');
+const { pool, withTransaction } = require('../db');
 const { asyncHandler } = require('../asyncHandler');
 
 function getDayKey() {
@@ -116,7 +115,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const dayKey  = getDayKey();
   const weekKey = getWeekKey();
 
-  const claimed = await db.query(
+  const claimed = await pool.query(
     'SELECT challenge_key, period_key FROM challenge_claims WHERE telegram_id = $1 AND period_key IN ($2, $3)',
     [telegramId, dayKey, weekKey]
   );
@@ -147,7 +146,7 @@ router.post('/claim', asyncHandler(async (req, res) => {
 
   const periodKey = challenge.type === 'daily' ? getDayKey() : getWeekKey();
 
-  const claimedR = await db.query(
+  const claimedR = await pool.query(
     'SELECT 1 FROM challenge_claims WHERE telegram_id=$1 AND challenge_key=$2 AND period_key=$3',
     [telegramId, challengeKey, periodKey]
   );

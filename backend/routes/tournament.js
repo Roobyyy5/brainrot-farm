@@ -99,16 +99,16 @@ async function settleTournament() {
          WHERE tournament_id = $1 ORDER BY score DESC LIMIT 10`,
         [t.id]
       );
-      for (let i = 0; i < top.rows.length; i++) {
+      for (let i = 0; i < top.length; i++) {
         const gems = TOURNAMENT_TOP_GEMS[i] || 0;
         if (gems > 0) {
-          await client.query('UPDATE users SET gems=gems+$1 WHERE telegram_id=$2', [gems, top.rows[i].telegram_id]);
+          await client.query('UPDATE users SET gems=gems+$1 WHERE telegram_id=$2', [gems, top[i].telegram_id]);
         }
         if (i === 0 && t.prize_skin) {
           await client.query(
             `UPDATE tapper_profiles SET skins_unlocked=array_append(skins_unlocked,$1)
              WHERE telegram_id=$2 AND NOT ($1=ANY(skins_unlocked))`,
-            [t.prize_skin, top.rows[i].telegram_id]
+            [t.prize_skin, top[i].telegram_id]
           );
         }
       }
