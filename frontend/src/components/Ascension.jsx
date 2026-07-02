@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function Ascension() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [lb, setLb] = useState([]);
   const [tab, setTab] = useState('tree');
@@ -15,7 +17,7 @@ export default function Ascension() {
   useEffect(() => { load(); }, []);
 
   const doAscend = async () => {
-    if (!confirm('Ascend? This resets all prestiges, upgrades, skills, and talents but grants 3 Ascension Points.')) return;
+    if (!confirm(t('asc_confirm'))) return;
     setLoading(true);
     try { await api.ascension.ascend(); load(); }
     catch (err) { alert(err.message); }
@@ -34,25 +36,24 @@ export default function Ascension() {
   return (
     <div className="ascension-panel">
       <div className="ascension-header">
-        <span>🌟 Ascension</span>
+        <span>{t('asc_header')}</span>
         <span className="ascension-pts">{data.ascensionPoints} AP</span>
       </div>
 
       <div className="ascension-tabs">
-        <button className={tab === 'tree' ? 'active' : ''} onClick={() => setTab('tree')}>Tree</button>
-        <button className={tab === 'lb' ? 'active' : ''} onClick={() => setTab('lb')}>Leaderboard</button>
+        <button className={tab === 'tree' ? 'active' : ''} onClick={() => setTab('tree')}>{t('asc_tab_tree')}</button>
+        <button className={tab === 'lb' ? 'active' : ''} onClick={() => setTab('lb')}>{t('asc_tab_lb')}</button>
       </div>
 
       {tab === 'tree' && (
         <>
           <div className="ascension-info">
-            Prestige: <b>{data.prestige}</b> / {data.requiredPrestiges} needed to ascend |
-            Ascensions: <b>{data.ascensionCount}</b>
+            {t('asc_info', { p: data.prestige, req: data.requiredPrestiges, count: data.ascensionCount })}
           </div>
 
           {data.canAscend && (
             <button className="ascension-btn" onClick={doAscend} disabled={loading}>
-              🌟 ASCEND (+3 AP, reset all)
+              {t('asc_btn')}
             </button>
           )}
 
@@ -84,8 +85,8 @@ export default function Ascension() {
 
       {tab === 'lb' && (
         <div className="ascension-lb">
-          <div className="asc-lb-title">🏆 Prestige Score Leaderboard</div>
-          <div className="asc-lb-sub">Score = Total Taps × Prestige²</div>
+          <div className="asc-lb-title">{t('asc_lb_title')}</div>
+          <div className="asc-lb-sub">{t('asc_lb_sub')}</div>
           {lb.map(r => (
             <div key={r.rank} className="asc-lb-row">
               <span className="asc-lb-rank">#{r.rank}</span>
