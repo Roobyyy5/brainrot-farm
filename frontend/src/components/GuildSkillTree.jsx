@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const BRANCH_COLOR = { offense: '#ef4444', defense: '#60a5fa', economy: '#34d399', war: '#f59e0b' };
 
 export default function GuildSkillTree() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('skills');
@@ -21,8 +23,8 @@ export default function GuildSkillTree() {
   if (!data) return null;
   if (!data.inGuild) return (
     <div className="gskilltree-panel">
-      <div className="gskilltree-header">🌳 Guild Skill Tree</div>
-      <div className="gskilltree-noguild">Join a guild to access the Guild Skill Tree!</div>
+      <div className="gskilltree-header">{t('gst_header')}</div>
+      <div className="gskilltree-noguild">{t('gst_no_guild')}</div>
     </div>
   );
 
@@ -31,11 +33,11 @@ export default function GuildSkillTree() {
 
   return (
     <div className="gskilltree-panel">
-      <div className="gskilltree-header">🌳 Guild Skill Tree</div>
+      <div className="gskilltree-header">{t('gst_header')}</div>
 
       <div className="gskilltree-guild-info">
         <div className="gskilltree-guild-name">{guild.name}</div>
-        <div className="gskilltree-level">Guild Lv {guild.skillLevel}</div>
+        <div className="gskilltree-level">{t('gst_level', { n: guild.skillLevel })}</div>
         <div className="gskilltree-xp-bar">
           <div className="gskilltree-xp-fill" style={{ width: `${xpPct}%` }} />
         </div>
@@ -43,18 +45,18 @@ export default function GuildSkillTree() {
       </div>
 
       <div className="gskilltree-tabs">
-        <button className={tab === 'skills' ? 'active' : ''} onClick={() => setTab('skills')}>Skills</button>
-        <button className={tab === 'bonuses' ? 'active' : ''} onClick={() => setTab('bonuses')}>Bonuses</button>
-        <button className={tab === 'contribute' ? 'active' : ''} onClick={() => setTab('contribute')}>Contribute</button>
+        <button className={tab === 'skills' ? 'active' : ''} onClick={() => setTab('skills')}>{t('gst_tab_skills')}</button>
+        <button className={tab === 'bonuses' ? 'active' : ''} onClick={() => setTab('bonuses')}>{t('gst_tab_bonuses')}</button>
+        <button className={tab === 'contribute' ? 'active' : ''} onClick={() => setTab('contribute')}>{t('gst_tab_contribute')}</button>
       </div>
 
       {tab === 'contribute' && (
         <div className="gskilltree-contribute">
           <p style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
-            Tap to contribute to your guild and earn Guild XP. Guild XP unlocks skill upgrades for all members.
+            {t('gst_contribute_desc')}
           </p>
           <button className="gskilltree-contribute-btn" onClick={() => act(() => api.guildskilltree.contribute(100))} disabled={loading}>
-            ⚡ Contribute 100 Taps (+100 XP)
+            {t('gst_contribute_btn')}
           </button>
         </div>
       )}
@@ -68,7 +70,7 @@ export default function GuildSkillTree() {
           {bonuses.offlinePct > 0     && <div className="gskilltree-bonus-row">🤖 Offline Income <span>+{bonuses.offlinePct}%</span></div>}
           {bonuses.bracketDmgPct > 0  && <div className="gskilltree-bonus-row">🥁 War Damage <span>+{bonuses.bracketDmgPct}%</span></div>}
           {Object.values(bonuses).every(v => v === 0) && (
-            <div style={{ color: 'var(--text-faint)', fontSize: '0.8rem', textAlign: 'center', padding: 12 }}>No bonuses yet — upgrade skills!</div>
+            <div style={{ color: 'var(--text-faint)', fontSize: '0.8rem', textAlign: 'center', padding: 12 }}>{t('gst_no_bonuses')}</div>
           )}
         </div>
       )}
@@ -87,7 +89,7 @@ export default function GuildSkillTree() {
                     <div className="gskilltree-skill-desc">{s.desc}</div>
                   </div>
                   <div className="gskilltree-skill-level">
-                    {isMaxed ? <span className="gskilltree-maxed">MAX</span> : `${s.currentLevel}/${s.maxLevel}`}
+                    {isMaxed ? <span className="gskilltree-maxed">{t('common_max')}</span> : `${s.currentLevel}/${s.maxLevel}`}
                   </div>
                 </div>
                 {!isMaxed && (
@@ -96,7 +98,7 @@ export default function GuildSkillTree() {
                     onClick={() => act(() => api.guildskilltree.upgrade(s.key))}
                     disabled={loading || guild.skillXp < cost}
                   >
-                    Upgrade — {cost.toLocaleString()} XP
+                    {t('gst_upgrade_btn', { n: cost.toLocaleString() })}
                   </button>
                 )}
               </div>

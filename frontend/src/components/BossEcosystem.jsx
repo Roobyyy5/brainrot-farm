@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 const TYPE_COLOR = {
   fire:      '#ef4444',
@@ -11,6 +12,7 @@ const TYPE_COLOR = {
 };
 
 export default function BossEcosystem() {
+  const t = useT();
   const [bosses, setBosses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -41,8 +43,8 @@ export default function BossEcosystem() {
     try {
       const r = await api.bossecosystem.tap(key, 30);
       await load();
-      if (r.lootEarned) alert(`💥 Boss slain! Loot distributed to top damagers!`);
-      else if (r.hasWeakness) alert(`⚡ Weakness hit! ×${r.damageMult} damage!`);
+      if (r.lootEarned) alert(t('beco_slain'));
+      else if (r.hasWeakness) alert(t('beco_weakness_hit', { n: r.damageMult }));
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
   };
@@ -55,8 +57,8 @@ export default function BossEcosystem() {
 
   return (
     <div className="bosseco-panel">
-      <div className="bosseco-header">⚔️ Boss Ecosystem</div>
-      <div className="bosseco-sub">5 unique bosses. Each has a weakness. Kill them for artifacts & gems.</div>
+      <div className="bosseco-header">{t('beco_header')}</div>
+      <div className="bosseco-sub">{t('beco_sub')}</div>
 
       <div className="bosseco-list">
         {bosses.map(boss => {
@@ -74,15 +76,15 @@ export default function BossEcosystem() {
                 <div className="bosseco-info">
                   <div className="bosseco-name">{boss.name}</div>
                   <div className="bosseco-type" style={{ color }}>
-                    {boss.type.toUpperCase()} • Weak: {boss.weakness}
+                    {boss.type.toUpperCase()} • {t('beco_weak', { n: boss.weakness })}
                   </div>
                 </div>
                 <div className="bosseco-status">
                   {boss.alive ? (
-                    <span className="bosseco-alive" style={{ color }}>ALIVE</span>
+                    <span className="bosseco-alive" style={{ color }}>{t('beco_alive')}</span>
                   ) : (
                     <span className="bosseco-dead">
-                      {boss.respawnInMs > 0 ? `⏳ ${fmt(boss.respawnInMs)}` : 'RESPAWNING...'}
+                      {boss.respawnInMs > 0 ? `⏳ ${fmt(boss.respawnInMs)}` : t('beco_respawning')}
                     </span>
                   )}
                 </div>
@@ -102,18 +104,18 @@ export default function BossEcosystem() {
               {isSelected && (
                 <div className="bosseco-detail">
                   <div className="bosseco-weakness-note">
-                    ⚡ Equip {boss.weaknessArtifacts.join(' or ')} for ×2 damage!
+                    {t('beco_weakness_note', { items: boss.weaknessArtifacts.join(' or ') })}
                   </div>
                   <div className="bosseco-loot">
-                    💎 {boss.lootGems} gems + {boss.lootArtifacts.join(', ')} artifact (top 3)
+                    {t('beco_loot', { gems: boss.lootGems, arts: boss.lootArtifacts.join(', ') })}
                   </div>
                   {boss.myDamage > 0 && (
-                    <div className="bosseco-mydmg">Your damage: {boss.myDamage.toLocaleString()}</div>
+                    <div className="bosseco-mydmg">{t('bosscard_my_dmg', { n: boss.myDamage.toLocaleString() })}</div>
                   )}
                   {boss.alive && (
                     <button className="bosseco-tap-btn" style={{ background: `linear-gradient(135deg, ${color}, ${color}88)` }}
                       onClick={(e) => { e.stopPropagation(); tap(boss.key); }} disabled={loading}>
-                      ⚔️ Attack! (×30 taps)
+                      {t('beco_attack')}
                     </button>
                   )}
                 </div>

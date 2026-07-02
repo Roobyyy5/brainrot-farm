@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 export default function WorldEvents() {
+  const t = useT();
   const [events, setEvents] = useState([]);
   const [flash, setFlash] = useState(null);
   const timersRef = useRef({});
@@ -26,7 +28,6 @@ export default function WorldEvents() {
     },
   });
 
-  // Countdown timers
   useEffect(() => {
     const interval = setInterval(() => {
       setEvents(prev => prev
@@ -51,7 +52,7 @@ export default function WorldEvents() {
         <div className="worldevent-flash">
           <span className="worldevent-flash-icon">{flash.icon}</span>
           <div className="worldevent-flash-content">
-            <div className="worldevent-flash-name">🌐 GLOBAL EVENT: {flash.name}</div>
+            <div className="worldevent-flash-name">{t('we_flash_title', { name: flash.name })}</div>
             <div className="worldevent-flash-desc">{flash.desc}</div>
           </div>
         </div>
@@ -59,7 +60,7 @@ export default function WorldEvents() {
 
       {events.length > 0 && (
         <div className="worldevent-panel">
-          <div className="worldevent-header">🌐 Active World Events</div>
+          <div className="worldevent-header">{t('we_header')}</div>
           {events.map(ev => (
             <div key={ev.id} className="worldevent-card">
               <span className="worldevent-icon">{ev.icon}</span>

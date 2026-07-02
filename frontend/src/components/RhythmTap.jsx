@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const CIRCLE_LIFETIME = 1200;
 const PERFECT_WINDOW = 120;
@@ -10,7 +11,8 @@ const SPAWN_INTERVAL = 800;
 let nextId = 0;
 
 export default function RhythmTap() {
-  const [view, setView] = useState('menu'); // menu | playing | result
+  const t = useT();
+  const [view, setView] = useState('menu');
   const [data, setData] = useState(null);
   const [circles, setCircles] = useState([]);
   const [stats, setStats] = useState({ perfect: 0, good: 0, miss: 0, score: 0, streak: 0 });
@@ -60,7 +62,6 @@ export default function RhythmTap() {
 
     sessionRef.current = { timer, spawner };
 
-    // auto-miss stale circles
     const missChecker = setInterval(() => {
       const now = Date.now();
       setCircles(prev => {
@@ -124,23 +125,21 @@ export default function RhythmTap() {
 
   return (
     <div className="rhythm-panel">
-      <div className="rhythm-header">🎵 Rhythm Tap</div>
+      <div className="rhythm-header">{t('rhythm_header')}</div>
 
       {view === 'menu' && (
         <>
-          <div className="rhythm-desc">
-            Тап по колах у потрібний момент — Perfect = ×3, Good = ×1.5, серія 5+ дає бонус ×1.5
-          </div>
+          <div className="rhythm-desc">{t('rhythm_desc')}</div>
           {data.best && (
             <div className="rhythm-best">
-              🏆 Мій рекорд: <b>{data.best.score.toLocaleString()}</b> pts — {parseFloat(data.best.accuracy).toFixed(1)}% accuracy
+              {t('rhythm_best', { score: data.best.score.toLocaleString(), acc: parseFloat(data.best.accuracy).toFixed(1) })}
             </div>
           )}
-          <button className="rhythm-start-btn" onClick={startSession}>▶ Почати (30с)</button>
+          <button className="rhythm-start-btn" onClick={startSession}>{t('rhythm_start')}</button>
 
           {data.leaderboard?.length > 0 && (
             <div className="rhythm-lb">
-              <div className="rhythm-lb-title">🏅 Top Players</div>
+              <div className="rhythm-lb-title">{t('rhythm_lb_title')}</div>
               {data.leaderboard.slice(0, 10).map(r => (
                 <div key={r.rank} className={`rhythm-lb-row ${r.isMe ? 'me' : ''}`}>
                   <span className="rhythm-lb-rank">{r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `#${r.rank}`}</span>
@@ -161,7 +160,7 @@ export default function RhythmTap() {
             <span className="rhythm-hud-score">{stats.score.toLocaleString()}</span>
             <span className="rhythm-hud-streak">🔥 ×{stats.streak}</span>
           </div>
-          {flash && <div className={`rhythm-flash rhythm-flash--${flash}`}>{flash === 'perfect' ? 'PERFECT!' : 'GOOD'}</div>}
+          {flash && <div className={`rhythm-flash rhythm-flash--${flash}`}>{flash === 'perfect' ? t('rhythm_perfect') : t('rhythm_good')}</div>}
           <div className="rhythm-field">
             {circles.map(c => {
               const age = Math.min(1, (Date.now() - c.spawnedAt) / CIRCLE_LIFETIME);
@@ -179,9 +178,9 @@ export default function RhythmTap() {
             })}
           </div>
           <div className="rhythm-acc-bar">
-            <span className="rhythm-stat green">✅ {stats.perfect}</span>
-            <span className="rhythm-stat yellow">⭕ {stats.good}</span>
-            <span className="rhythm-stat red">❌ {stats.miss}</span>
+            <span className="rhythm-stat green">{t('rhythm_stat_perfect', { n: stats.perfect })}</span>
+            <span className="rhythm-stat yellow">{t('rhythm_stat_good', { n: stats.good })}</span>
+            <span className="rhythm-stat red">{t('rhythm_stat_miss', { n: stats.miss })}</span>
             <span className="rhythm-stat">{accuracy}%</span>
           </div>
         </div>
@@ -193,15 +192,15 @@ export default function RhythmTap() {
             {result.grade}
           </div>
           <div className="rhythm-result-score">{stats.score.toLocaleString()} pts</div>
-          <div className="rhythm-result-acc">{result.accuracy.toFixed(1)}% accuracy</div>
+          <div className="rhythm-result-acc">{result.accuracy.toFixed(1)}%</div>
           {result.gems > 0 && <div className="rhythm-result-gems">+{result.gems} 💎</div>}
           <div className="rhythm-result-stats">
-            <span className="rhythm-stat green">✅ {stats.perfect} Perfect</span>
-            <span className="rhythm-stat yellow">⭕ {stats.good} Good</span>
-            <span className="rhythm-stat red">❌ {stats.miss} Miss</span>
+            <span className="rhythm-stat green">{t('rhythm_stat_perfect', { n: stats.perfect })}</span>
+            <span className="rhythm-stat yellow">{t('rhythm_stat_good', { n: stats.good })}</span>
+            <span className="rhythm-stat red">{t('rhythm_stat_miss', { n: stats.miss })}</span>
           </div>
-          <button className="rhythm-start-btn" onClick={startSession}>🔄 Знову</button>
-          <button className="rhythm-back-btn" onClick={() => setView('menu')}>← Меню</button>
+          <button className="rhythm-start-btn" onClick={startSession}>{t('rhythm_again')}</button>
+          <button className="rhythm-back-btn" onClick={() => setView('menu')}>{t('rhythm_back')}</button>
         </div>
       )}
     </div>
