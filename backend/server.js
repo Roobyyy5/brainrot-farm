@@ -68,6 +68,12 @@ const territoriesRoute     = require('./routes/territories');
 const { router: alchemyRoute } = require('./routes/alchemy');
 const campaignRoute        = require('./routes/campaign');
 const { router: globalBossRoute, spawnGlobalBoss } = require('./routes/globalboss');
+const gauntletRoute      = require('./routes/gauntlet');
+const cardFusionRoute    = require('./routes/cardfusion');
+const guildForgeRoute    = require('./routes/guildforge');
+const { router: oracleRoute } = require('./routes/oracle');
+const { router: championshipRoute, seedBracket } = require('./routes/championship');
+const { router: neuralTreeRoute } = require('./routes/neuraltree');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -165,6 +171,12 @@ app.use('/territories',     telegramAuthMiddleware, tapperLimiter, territoriesRo
 app.use('/alchemy',         telegramAuthMiddleware, actionLimiter, alchemyRoute);
 app.use('/campaign',        telegramAuthMiddleware, tapperLimiter, campaignRoute);
 app.use('/globalboss',      telegramAuthMiddleware, tapperLimiter, globalBossRoute);
+app.use('/gauntlet',        telegramAuthMiddleware, tapperLimiter, gauntletRoute);
+app.use('/cardfusion',      telegramAuthMiddleware, actionLimiter, cardFusionRoute);
+app.use('/guildforge',      telegramAuthMiddleware, actionLimiter, guildForgeRoute);
+app.use('/oracle',          telegramAuthMiddleware, actionLimiter, oracleRoute);
+app.use('/championship',    telegramAuthMiddleware, actionLimiter, championshipRoute);
+app.use('/neuraltree',      telegramAuthMiddleware, actionLimiter, neuralTreeRoute);
 
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
@@ -189,6 +201,7 @@ async function main() {
   setInterval(() => spawnRandomEvent().catch(err => console.error('World event spawn error:', err.message)), 60 * 60 * 1000);
   setInterval(() => settleDivisions().catch(err => console.error('Division settle error:', err.message)), 24 * 60 * 60 * 1000);
   setInterval(() => spawnGlobalBoss().catch(err => console.error('Global boss spawn error:', err.message)), 60 * 60 * 1000);
+  setInterval(() => seedBracket().catch(err => console.error('Championship bracket error:', err.message)), 60 * 60 * 1000);
 
   // Init boss ecosystem on startup
   const { pool: dbPool } = require('./db');

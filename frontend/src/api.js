@@ -344,4 +344,38 @@ export const api = {
     status: () => request('/globalboss'),
     tap:    (count) => request('/globalboss/tap', { method: 'POST', body: { count } }),
   },
+
+  gauntlet: {
+    status: () => request('/gauntlet'),
+    submit: (waves, totalDamage) => request('/gauntlet/submit', { method: 'POST', body: { waves, totalDamage } }),
+  },
+
+  cardfusion: {
+    status:  () => request('/cardfusion'),
+    fuse:    (cardKey, slot) => request('/cardfusion/fuse',    { method: 'POST', body: { cardKey, slot } }),
+    destroy: (slot) =>         request('/cardfusion/destroy',  { method: 'POST', body: { slot } }),
+  },
+
+  guildforge: {
+    status:     () => request('/guildforge'),
+    forge:      (recipeKey) => request('/guildforge/forge',      { method: 'POST', body: { recipeKey } }),
+    contribute: (amount)    => request('/guildforge/contribute', { method: 'POST', body: { amount } }),
+  },
+
+  oracle: {
+    status:   () => request('/oracle'),
+    request:  () => request('/oracle/request', { method: 'POST' }),
+    claim:    () => request('/oracle/claim',   { method: 'POST' }),
+    buy:      (itemKey) => request('/oracle/buy', { method: 'POST', body: { itemKey } }),
+  },
+
+  championship: {
+    status:       () => request('/championship'),
+    matchResult:  (matchId, taps) => request('/championship/match-result', { method: 'POST', body: { matchId, taps } }),
+  },
+
+  neuraltree: {
+    status: () => request('/neuraltree'),
+    unlock: (nodeId) => request('/neuraltree/unlock', { method: 'POST', body: { nodeId } }),
+  },
 };

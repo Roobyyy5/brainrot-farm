@@ -3820,3 +3820,179 @@ body {
 .globalboss-lb-row.me { background: rgba(255,79,163,0.1); border-radius: 6px; }
 .globalboss-lb-name { flex: 1; color: var(--text); }
 .globalboss-lb-dmg { color: #ef4444; font-weight: 800; }
+
+/* ===== Layer 31: TapGauntlet ===== */
+.gauntlet-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.gauntlet-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.gauntlet-desc { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+.gauntlet-best { font-size: 0.82rem; color: var(--accent); margin-bottom: 8px; }
+.gauntlet-titles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.gauntlet-title-badge { font-size: 0.72rem; font-weight: 800; background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; color: #a78bfa; border-radius: 8px; padding: 3px 8px; }
+.gauntlet-milestones { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.gauntlet-ms { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); padding: 5px 10px; background: var(--card-strong); border-radius: 8px; border: 1px solid var(--border); }
+.gauntlet-ms.reached { border-color: #34d399; color: #34d399; }
+.gauntlet-start-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #ef4444, #f97316); border: none; border-radius: 12px; color: #fff; font-size: 0.95rem; font-weight: 800; cursor: pointer; margin-bottom: 8px; }
+.gauntlet-back-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; }
+.gauntlet-lb { margin-top: 14px; }
+.gauntlet-lb-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.gauntlet-lb-row { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-top: 1px solid var(--border); font-size: 0.78rem; }
+.gauntlet-lb-row.me { background: rgba(255,79,163,0.1); border-radius: 6px; }
+.gauntlet-lb-rank { width: 28px; font-weight: 800; }
+.gauntlet-lb-name { flex: 1; color: var(--text); }
+.gauntlet-lb-waves { color: #ef4444; font-weight: 800; }
+.gauntlet-fight { display: flex; flex-direction: column; gap: 10px; }
+.gauntlet-hud { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 800; }
+.gauntlet-wave { font-size: 1rem; }
+.gauntlet-timer { color: #f5c344; }
+.gauntlet-dmg { color: var(--text-dim); font-size: 0.78rem; }
+.gauntlet-hp-bar { height: 14px; background: var(--border); border-radius: 8px; overflow: hidden; }
+.gauntlet-hp-fill { height: 100%; border-radius: 8px; transition: width 0.15s; }
+.gauntlet-hp-text { text-align: center; font-size: 0.72rem; color: var(--text-dim); }
+.gauntlet-tap-btn { width: 100%; padding: 18px; background: transparent; border: 3px solid; border-radius: 16px; color: #fff; font-size: 1.2rem; font-weight: 900; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.gauntlet-result { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; }
+.gauntlet-result-wave { font-size: 2.5rem; font-weight: 900; }
+.gauntlet-result-dmg { font-size: 0.88rem; color: var(--text-dim); }
+.gauntlet-result-ms { font-size: 0.85rem; color: #34d399; font-weight: 700; }
+
+/* ===== Layer 32: CardFusion ===== */
+.fusion-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.fusion-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.fusion-sub { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 14px; }
+.fusion-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.fusion-slot { border-radius: 12px; padding: 12px 8px; border: 2px dashed var(--border); text-align: center; cursor: pointer; min-height: 80px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.fusion-slot.occupied { border-style: solid; border-color: #f5c344; background: rgba(245,195,68,0.08); }
+.fusion-slot.targeted { border-color: var(--primary); background: rgba(255,79,163,0.08); }
+.fusion-slot-card { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; }
+.fusion-slot-icon { font-size: 1.5rem; }
+.fusion-slot-name { font-size: 0.65rem; color: var(--text); font-weight: 700; word-break: break-all; }
+.fusion-slot-mult { font-size: 0.72rem; color: #f5c344; font-weight: 800; }
+.fusion-destroy-btn { background: transparent; border: none; color: #f87171; font-size: 0.75rem; cursor: pointer; padding: 2px; }
+.fusion-slot-empty { font-size: 0.72rem; color: var(--text-dim); }
+.fusion-available-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.fusion-cards-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.fusion-card-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--card-strong); border-radius: 10px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+.fusion-card-item.selected { border-color: var(--primary); background: rgba(255,79,163,0.1); }
+.fusion-card-key { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.fusion-card-count { font-size: 0.75rem; color: #f5c344; font-weight: 700; }
+.fusion-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #f5c344, #f97316); border: none; border-radius: 12px; color: #fff; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.fusion-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.fusion-empty-state { text-align: center; font-size: 0.78rem; color: var(--text-dim); padding: 16px; line-height: 1.6; }
+
+/* ===== Layer 33: GuildForge ===== */
+.forge-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.forge-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+.forge-info { display: flex; justify-content: space-between; align-items: center; background: var(--card-strong); border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; border: 1px solid var(--border); }
+.forge-level { display: flex; flex-direction: column; }
+.forge-level-num { font-size: 0.88rem; font-weight: 800; color: var(--text); }
+.forge-xp { font-size: 0.72rem; color: var(--text-dim); }
+.forge-guild-coins { font-size: 0.78rem; color: #f5c344; font-weight: 700; }
+.forge-active { background: rgba(52,211,153,0.08); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; border: 1px solid rgba(52,211,153,0.3); }
+.forge-active-title { font-size: 0.75rem; font-weight: 800; color: #34d399; margin-bottom: 4px; }
+.forge-active-item { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text); padding: 2px 0; }
+.forge-active-time { color: #f5c344; font-weight: 700; }
+.forge-recipes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.forge-recipe { background: var(--card-strong); border-radius: 14px; padding: 12px; border: 2px solid var(--border); transition: border-color 0.2s; }
+.forge-recipe.active { opacity: 0.6; }
+.forge-recipe-top { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 6px; }
+.forge-recipe-icon { font-size: 1.8rem; flex-shrink: 0; }
+.forge-recipe-name { font-size: 0.88rem; font-weight: 800; margin-bottom: 2px; }
+.forge-recipe-desc { font-size: 0.73rem; color: var(--text-dim); }
+.forge-recipe-cost { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; }
+.forge-btn { width: 100%; padding: 8px; background: transparent; border: 2px solid; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
+.forge-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.forge-officer-only { font-size: 0.72rem; color: #f59e0b; text-align: right; }
+.forge-contribute { background: var(--card-strong); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
+.forge-contribute-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.forge-contribute-row { display: flex; gap: 8px; }
+.forge-contribute-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 0.82rem; }
+.forge-contribute-btn { padding: 8px 16px; background: var(--primary-gradient); border: none; border-radius: 8px; color: #fff; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
+
+/* ===== Layer 34: TapOracle ===== */
+.oracle-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.oracle-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+.oracle-coins-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.oracle-coins { font-size: 0.88rem; font-weight: 800; color: #f5c344; }
+.oracle-shop-btn { padding: 6px 12px; background: rgba(245,195,68,0.15); border: 1px solid #f5c344; border-radius: 8px; color: #f5c344; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+.oracle-challenge { background: var(--card-strong); border-radius: 14px; padding: 14px; border: 1px solid var(--border); }
+.oracle-ch-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.oracle-ch-icon { font-size: 1.4rem; }
+.oracle-ch-name { flex: 1; font-size: 0.88rem; font-weight: 800; color: var(--text); }
+.oracle-ch-timer { font-size: 0.78rem; color: #f59e0b; font-weight: 700; font-variant-numeric: tabular-nums; }
+.oracle-ch-desc { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+.oracle-ch-progress-bar { height: 8px; background: var(--border); border-radius: 5px; overflow: hidden; margin-bottom: 4px; }
+.oracle-ch-progress-fill { height: 100%; background: var(--primary-gradient); border-radius: 5px; transition: width 0.3s; }
+.oracle-ch-progress-text { font-size: 0.72rem; color: var(--text-dim); text-align: right; }
+.oracle-completed { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; background: rgba(52,211,153,0.1); border-radius: 14px; border: 1px solid #34d399; }
+.oracle-completed-icon { font-size: 2rem; }
+.oracle-completed-text { font-size: 0.88rem; font-weight: 800; color: #34d399; }
+.oracle-claim-btn { padding: 10px 24px; background: linear-gradient(135deg, #34d399, #10b981); border: none; border-radius: 12px; color: #fff; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.oracle-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; }
+.oracle-empty-icon { font-size: 2.5rem; }
+.oracle-empty-text { font-size: 0.82rem; color: var(--text-dim); }
+.oracle-request-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: none; border-radius: 12px; color: #fff; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.oracle-shop { display: flex; flex-direction: column; gap: 8px; }
+.oracle-shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.oracle-back-btn { background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); font-size: 0.78rem; padding: 5px 10px; cursor: pointer; }
+.oracle-shop-item { display: flex; align-items: center; gap: 10px; background: var(--card-strong); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--border); }
+.oracle-shop-item.owned { opacity: 0.55; }
+.oracle-shop-icon { font-size: 1.4rem; flex-shrink: 0; }
+.oracle-shop-info { flex: 1; }
+.oracle-shop-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.oracle-shop-cost { font-size: 0.72rem; color: #f5c344; }
+.oracle-shop-owned { color: #34d399; font-size: 1rem; }
+.oracle-shop-buy-btn { padding: 6px 12px; background: rgba(245,195,68,0.15); border: 1px solid #f5c344; border-radius: 8px; color: #f5c344; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+.oracle-shop-buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== Layer 35: Championship ===== */
+.champ-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.champ-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.champ-month { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 12px; }
+.champ-my-card { background: var(--card-strong); border-radius: 14px; padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.champ-my-score { display: flex; flex-direction: column; }
+.champ-my-score-label { font-size: 0.72rem; color: var(--text-dim); }
+.champ-my-score-val { font-size: 1rem; font-weight: 800; color: var(--accent); }
+.champ-my-status { font-size: 0.78rem; color: var(--text-dim); font-weight: 700; }
+.champ-my-status.qualified { color: #34d399; }
+.champ-bracket { background: var(--card-strong); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+.champ-bracket-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.champ-match { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--border); font-size: 0.78rem; }
+.champ-match-player { flex: 1; color: var(--text-dim); }
+.champ-match-player.winner { color: #34d399; font-weight: 800; }
+.champ-match-vs { color: var(--text-dim); font-size: 0.68rem; }
+.champ-match-score { color: var(--accent); font-weight: 700; font-size: 0.72rem; }
+.champ-prizes { margin-bottom: 12px; }
+.champ-prizes-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.champ-prize-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--border); font-size: 0.78rem; }
+.champ-prize-row.dim { opacity: 0.65; }
+.champ-prize-place { width: 24px; }
+.champ-prize-title { flex: 1; color: var(--text); font-weight: 700; }
+.champ-prize-gems { color: #f5c344; font-weight: 800; }
+.champ-lb { }
+.champ-lb-title { font-size: 0.82rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.champ-lb-row { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-top: 1px solid var(--border); font-size: 0.78rem; }
+.champ-lb-row.me { background: rgba(255,79,163,0.1); border-radius: 6px; }
+.champ-lb-row.qualified { border-left: 2px solid #34d399; padding-left: 6px; }
+.champ-lb-rank { width: 28px; font-weight: 800; }
+.champ-lb-name { flex: 1; color: var(--text); }
+.champ-lb-score { color: var(--accent); font-weight: 800; }
+.champ-lb-q { color: #34d399; font-size: 0.82rem; }
+
+/* ===== Layer 36: NeuralTree ===== */
+.neural-panel { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.neural-header { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.neural-locked { text-align: center; padding: 20px; color: #f59e0b; font-size: 0.85rem; font-weight: 700; }
+.neural-locked-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 6px; font-weight: 400; }
+.neural-points { font-size: 0.82rem; color: #a78bfa; font-weight: 700; margin-bottom: 12px; }
+.neural-map { width: 100%; background: var(--card-strong); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+.neural-svg { width: 100%; height: 260px; cursor: pointer; }
+.neural-detail { background: var(--card-strong); border-radius: 12px; padding: 12px; border: 1px solid #8b5cf6; margin-top: 10px; }
+.neural-detail-name { font-size: 0.95rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.neural-detail-bonus { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.neural-bonus-tag { font-size: 0.72rem; font-weight: 700; background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 6px; padding: 2px 7px; color: #a78bfa; }
+.neural-detail-cost { font-size: 0.78rem; color: #a78bfa; font-weight: 700; margin-bottom: 4px; }
+.neural-detail-req { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 8px; }
+.neural-detail-status { font-size: 0.82rem; font-weight: 700; }
+.neural-detail-status.unlocked { color: #34d399; }
+.neural-detail-status.locked { color: var(--text-dim); }
+.neural-unlock-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: none; border-radius: 10px; color: #fff; font-size: 0.88rem; font-weight: 800; cursor: pointer; }
+.neural-hint { font-size: 0.68rem; color: var(--text-dim); text-align: center; margin-top: 8px; }

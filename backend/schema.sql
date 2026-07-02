@@ -849,3 +849,95 @@ CREATE TABLE IF NOT EXISTS global_boss_hits (
 );
 CREATE INDEX IF NOT EXISTS idx_global_boss_hits ON global_boss_hits(event_id, damage DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_global_boss_hits_unique ON global_boss_hits(event_id, telegram_id);
+
+-- ── Layer 31: Tap Gauntlet ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS gauntlet_runs (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  waves       INTEGER NOT NULL DEFAULT 0,
+  total_damage BIGINT NOT NULL DEFAULT 0,
+  played_at   BIGINT  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_gauntlet_lb  ON gauntlet_runs(waves DESC, total_damage DESC);
+CREATE INDEX IF NOT EXISTS idx_gauntlet_usr ON gauntlet_runs(telegram_id, played_at DESC);
+CREATE TABLE IF NOT EXISTS gauntlet_titles (
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  title       TEXT    NOT NULL,
+  earned_at   BIGINT  NOT NULL,
+  PRIMARY KEY (telegram_id, title)
+);
+
+-- ── Layer 32: Card Fusion ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS fusion_cards (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  card_key    TEXT    NOT NULL,
+  slot        INTEGER NOT NULL DEFAULT 0,
+  fused_at    BIGINT  NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fusion_cards_slot ON fusion_cards(telegram_id, slot);
+
+-- ── Layer 33: Guild Forge ─────────────────────────────────────────────────
+ALTER TABLE guilds ADD COLUMN IF NOT EXISTS forge_level INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE guilds ADD COLUMN IF NOT EXISTS forge_xp    INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS guild_forge_boosts (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id    INTEGER NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  recipe_key  TEXT    NOT NULL,
+  activated_at BIGINT NOT NULL,
+  expires_at  BIGINT  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_guild_forge_boosts ON guild_forge_boosts(guild_id, expires_at);
+
+-- ── Layer 34: Tap Oracle ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS oracle_state (
+  telegram_id      TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
+  oracle_coins     INTEGER NOT NULL DEFAULT 0,
+  challenge_type   TEXT,
+  challenge_target INTEGER,
+  challenge_time   INTEGER,
+  challenge_progress INTEGER NOT NULL DEFAULT 0,
+  challenge_issued_at BIGINT,
+  challenge_expires_at BIGINT,
+  challenge_completed BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE TABLE IF NOT EXISTS oracle_purchases (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  item_key    TEXT    NOT NULL,
+  bought_at   BIGINT  NOT NULL,
+  UNIQUE (telegram_id, item_key)
+);
+
+-- ── Layer 35: Monthly Championship ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS championship_seasons (
+  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  month_key   TEXT    NOT NULL UNIQUE,
+  status      TEXT    NOT NULL DEFAULT 'qualifying',
+  bracket     JSONB   NOT NULL DEFAULT '{}',
+  started_at  BIGINT,
+  ended_at    BIGINT
+);
+CREATE TABLE IF NOT EXISTS championship_entries (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  season_id     INTEGER NOT NULL REFERENCES championship_seasons(id) ON DELETE CASCADE,
+  telegram_id   TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  username      TEXT    NOT NULL,
+  qualify_score BIGINT  NOT NULL DEFAULT 0,
+  seed          INTEGER NOT NULL DEFAULT 0,
+  placement     INTEGER,
+  UNIQUE (season_id, telegram_id)
+);
+CREATE INDEX IF NOT EXISTS idx_champ_entries ON championship_entries(season_id, qualify_score DESC);
+
+-- ── Layer 36: Neural Prestige Tree ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS neural_tree (
+  telegram_id TEXT    NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  node_id     TEXT    NOT NULL,
+  unlocked_at BIGINT  NOT NULL,
+  PRIMARY KEY (telegram_id, node_id)
+);
+CREATE TABLE IF NOT EXISTS neural_points (
+  telegram_id TEXT    PRIMARY KEY REFERENCES users(telegram_id) ON DELETE CASCADE,
+  points      INTEGER NOT NULL DEFAULT 0
+);

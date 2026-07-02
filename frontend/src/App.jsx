@@ -69,6 +69,12 @@ import TerritoryMap from './components/TerritoryMap';
 import TapAlchemy from './components/TapAlchemy';
 import StoryMode from './components/StoryMode';
 import GlobalBoss from './components/GlobalBoss';
+import TapGauntlet from './components/TapGauntlet';
+import CardFusion from './components/CardFusion';
+import GuildForge from './components/GuildForge';
+import TapOracle from './components/TapOracle';
+import Championship from './components/Championship';
+import NeuralTree from './components/NeuralTree';
 
 const TABS = [
   { id: 'home',  icon: '🏠', label: 'Home' },
@@ -146,6 +152,7 @@ export default function App() {
           <WorldEvents />
           <QuestBoard />
           <RhythmTap />
+          <TapGauntlet />
           <StoryMode />
           <SeasonNarrative />
           <TapRush />
@@ -182,7 +189,10 @@ export default function App() {
           <Artifacts />
           <MasteryPanel />
           <BuildPresets />
+          <NeuralTree />
           <TapAlchemy />
+          <TapOracle />
+          <CardFusion />
           <SynergyBadges />
           <RelicsPanel />
           <UpgradeShop userCoins={user?.coins || 0} onCoinsSpent={handleCoinsSpent} />
@@ -192,6 +202,7 @@ export default function App() {
       {tab === 'club' && (
         <>
           <GuildSkillTree />
+          <GuildForge />
           <TerritoryMap />
           <ClanBracket />
           <CoopRaid />
@@ -208,6 +219,7 @@ export default function App() {
 
       {tab === 'board' && (
         <>
+          <Championship />
           <DivisionLeague />
           <AchievementGallery />
           <SeasonLeaderboard />

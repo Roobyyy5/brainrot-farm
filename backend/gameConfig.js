@@ -1320,4 +1320,151 @@ module.exports = {
       killReward: { gems: 120, artifact: true },
     },
   ],
+
+  // ── Layer 31: Tap Gauntlet ────────────────────────────────────────────────
+  GAUNTLET: {
+    baseHp: 10000,
+    hpScalingPerWave: 1.22,
+    baseTapPowerMult: 1,
+    sessionDurationMs: 45000,
+    milestones: [
+      { wave: 10,  reward: { gems: 5,  title: null } },
+      { wave: 25,  reward: { gems: 15, title: null } },
+      { wave: 50,  reward: { gems: 40, title: 'Gauntlet Veteran' } },
+      { wave: 100, reward: { gems: 150,title: 'Gauntlet Legend' } },
+    ],
+    waveColors: ['#9ca3af','#34d399','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#ff4fa3'],
+  },
+
+  // ── Layer 32: Card Fusion ─────────────────────────────────────────────────
+  CARD_FUSION: {
+    maxFusionSlots: 3,
+    cardsRequiredToFuse: 3,
+    fusionMultiplier: 3.5,
+    fusionAnimDurationMs: 1500,
+  },
+
+  // ── Layer 33: Guild Forge ─────────────────────────────────────────────────
+  GUILD_FORGE_RECIPES: [
+    {
+      key: 'passive_surge',
+      name: 'Passive Surge',
+      icon: '⚙️',
+      desc: '×2 passive income for all guild members for 2 hours',
+      cost: { coins: 500000, guild_xp: 100 },
+      effect: { type: 'passive_mult', value: 2, durationMs: 2 * 60 * 60 * 1000 },
+      tier: 1,
+    },
+    {
+      key: 'energy_flood',
+      name: 'Energy Flood',
+      icon: '💙',
+      desc: '+100% energy max for all members for 1 hour',
+      cost: { coins: 800000, guild_xp: 200 },
+      effect: { type: 'energy_max_mult', value: 2, durationMs: 60 * 60 * 1000 },
+      tier: 1,
+    },
+    {
+      key: 'gem_magnet',
+      name: 'Gem Magnet',
+      icon: '💎',
+      desc: '+50% gems from all sources for 3 hours',
+      cost: { coins: 1500000, guild_xp: 350 },
+      effect: { type: 'gem_mult', value: 1.5, durationMs: 3 * 60 * 60 * 1000 },
+      tier: 2,
+    },
+    {
+      key: 'tap_overdrive',
+      name: 'Tap Overdrive',
+      icon: '⚡',
+      desc: '×3 tap power for all members for 30 minutes',
+      cost: { coins: 2000000, guild_xp: 500 },
+      effect: { type: 'tap_mult', value: 3, durationMs: 30 * 60 * 1000 },
+      tier: 2,
+    },
+    {
+      key: 'gods_blessing',
+      name: "God's Blessing",
+      icon: '🌟',
+      desc: '×5 everything for all members for 15 minutes',
+      cost: { coins: 5000000, guild_xp: 1000 },
+      effect: { type: 'all_mult', value: 5, durationMs: 15 * 60 * 1000 },
+      tier: 3,
+    },
+  ],
+  GUILD_FORGE_LEVEL_XP: [0, 500, 1500, 4000, 10000],
+
+  // ── Layer 34: Tap Oracle ──────────────────────────────────────────────────
+  ORACLE_CHALLENGE_TYPES: [
+    { type: 'taps_in_time',   icon: '⚡', name: 'Speed Burst',   desc: (t,n) => `Зроби ${n} тапів за ${t}с` },
+    { type: 'hold_combo',     icon: '🌀', name: 'Combo Hold',    desc: (t,n) => `Утримай combo ×${n} протягом ${t}с` },
+    { type: 'no_miss_rhythm', icon: '🎵', name: 'Rhythm Flow',   desc: (t,n) => `${n} Perfect у Rhythm Tap без пропусків` },
+    { type: 'boss_damage',    icon: '💀', name: 'Boss Slayer',   desc: (t,n) => `Нанеси ${n} урону боссам за ${t}с` },
+    { type: 'energy_spend',   icon: '💙', name: 'Energy Burn',   desc: (t,n) => `Витрать ${n} енергії за ${t}с` },
+  ],
+  ORACLE_SHOP: [
+    { key: 'oracle_tap_boost',   name: '+10% Tap Power (permanent)', icon: '⚡', cost: 50 },
+    { key: 'oracle_gem_boost',   name: '+5% Gem Drops (permanent)',  icon: '💎', cost: 40 },
+    { key: 'oracle_energy_boost',name: '+20 Energy Max (permanent)', icon: '💙', cost: 35 },
+    { key: 'oracle_combo_boost', name: '+0.2× Combo (permanent)',    icon: '🌀', cost: 60 },
+    { key: 'oracle_xp_boost',    name: '+15% XP (permanent)',        icon: '📈', cost: 45 },
+  ],
+  ORACLE_COOLDOWN_MS: 4 * 60 * 60 * 1000,
+
+  // ── Layer 35: Monthly Championship ───────────────────────────────────────
+  CHAMPIONSHIP: {
+    bracketSize: 32,
+    roundDurationMs: 60000,
+    qualifyByTopN: 32,
+    rounds: [
+      { name: 'Round of 32', matches: 16 },
+      { name: 'Round of 16', matches: 8  },
+      { name: 'Quarter-Finals', matches: 4 },
+      { name: 'Semi-Finals',  matches: 2  },
+      { name: 'Grand Final',  matches: 1  },
+    ],
+    prizes: [
+      { place: 1, gems: 500, title: '🏆 Champion',    skin: 'champion_brain' },
+      { place: 2, gems: 200, title: '🥈 Finalist',    skin: null },
+      { place: 3, gems: 100, title: '🥉 Semi-Finalist',skin: null },
+      { place: 4, gems: 100, title: '🥉 Semi-Finalist',skin: null },
+    ],
+    topNRewards: [
+      { upTo: 8,  gems: 50, label: 'Top 8' },
+      { upTo: 16, gems: 25, label: 'Top 16' },
+      { upTo: 32, gems: 10, label: 'Qualified' },
+    ],
+  },
+
+  // ── Layer 36: Neural Prestige Tree ────────────────────────────────────────
+  NEURAL_TREE_NODES: [
+    // Root
+    { id: 'root',        name: 'Neural Core',      icon: '🧠', x: 50, y: 5,  requires: [],                   cost: 0,   bonus: { tapMult: 0.05 } },
+    // Tap branch
+    { id: 'tap1',        name: 'Synapse Tap',       icon: '⚡', x: 20, y: 20, requires: ['root'],              cost: 10,  bonus: { tapMult: 0.08 } },
+    { id: 'tap2',        name: 'Neural Burst',      icon: '💥', x: 10, y: 38, requires: ['tap1'],              cost: 25,  bonus: { tapMult: 0.12 } },
+    { id: 'tap3',        name: 'God Fingers',       icon: '🔥', x: 5,  y: 56, requires: ['tap2'],              cost: 60,  bonus: { tapMult: 0.20 } },
+    { id: 'tap_crit',    name: 'Crit Matrix',       icon: '🎯', x: 18, y: 56, requires: ['tap2'],              cost: 50,  bonus: { critChance: 0.05 } },
+    // Energy branch
+    { id: 'eng1',        name: 'Capacitor',         icon: '🔋', x: 80, y: 20, requires: ['root'],              cost: 10,  bonus: { energyMax: 25 } },
+    { id: 'eng2',        name: 'Super Cell',        icon: '⚛️', x: 90, y: 38, requires: ['eng1'],              cost: 25,  bonus: { energyMax: 50 } },
+    { id: 'eng3',        name: 'Infinite Loop',     icon: '♾️', x: 95, y: 56, requires: ['eng2'],              cost: 60,  bonus: { energyRegen: 0.15 } },
+    { id: 'eng_free',    name: 'Zero Cost',         icon: '💫', x: 78, y: 56, requires: ['eng2'],              cost: 50,  bonus: { energyCostMult: -0.2 } },
+    // Combo branch
+    { id: 'combo1',      name: 'Echo Chamber',      icon: '🌀', x: 50, y: 25, requires: ['root'],              cost: 15,  bonus: { comboMult: 0.1 } },
+    { id: 'combo2',      name: 'Cascade',           icon: '🌊', x: 50, y: 42, requires: ['combo1'],            cost: 35,  bonus: { comboMult: 0.15 } },
+    { id: 'combo3',      name: 'Quantum Combo',     icon: '🔮', x: 50, y: 60, requires: ['combo2'],            cost: 80,  bonus: { comboMult: 0.25 } },
+    // Passive branch
+    { id: 'pass1',       name: 'Idle Brain',        icon: '😴', x: 33, y: 38, requires: ['root'],              cost: 20,  bonus: { passiveMult: 0.1 } },
+    { id: 'pass2',       name: 'Dream Engine',      icon: '🌙', x: 28, y: 56, requires: ['pass1'],             cost: 45,  bonus: { passiveMult: 0.2 } },
+    // Gem branch
+    { id: 'gem1',        name: 'Gem Sense',         icon: '💎', x: 68, y: 38, requires: ['root'],              cost: 20,  bonus: { gemMult: 0.08 } },
+    { id: 'gem2',        name: 'Diamond Mind',      icon: '🔷', x: 72, y: 56, requires: ['gem1'],              cost: 45,  bonus: { gemMult: 0.15 } },
+    // Cross-branch synergies (require 2 branches)
+    { id: 'syn_tap_eng', name: 'Power Surge',       icon: '⚡🔋',x: 35, y: 72,requires: ['tap1','eng1'],       cost: 75,  bonus: { tapMult: 0.1, energyMax: 30 } },
+    { id: 'syn_combo_gem',name:'Lucky Streak',      icon: '🍀', x: 60, y: 72, requires: ['combo1','gem1'],     cost: 75,  bonus: { comboMult: 0.1, gemMult: 0.1 } },
+    { id: 'syn_all',     name: 'Neural Ascension',  icon: '🌌', x: 50, y: 85, requires: ['tap2','eng2','combo2'],cost:200, bonus: { tapMult:0.15,energyMax:50,comboMult:0.15,gemMult:0.1 } },
+    { id: 'apex',        name: 'GOD BRAIN',         icon: '🧠✨',x: 50, y: 95, requires: ['tap3','eng3','combo3','syn_all'], cost: 500, bonus: { allMult: 0.25 } },
+  ],
+  NEURAL_TREE_UNLOCK_ASCENSION: 1,
 };
