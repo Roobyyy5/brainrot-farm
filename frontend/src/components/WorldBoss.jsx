@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 const PHASE_CONFIG = {
-  normal:     { label: 'Normal',      color: '#34d399', icon: '🟢' },
-  rage:       { label: '⚠️ RAGE',     color: '#ef4444', icon: '🔴' },
-  vulnerable: { label: '✨ VULNERABLE ×3!', color: '#f59e0b', icon: '⭐' },
+  normal:     { key: 'Normal',      color: '#34d399', icon: '🟢' },
+  rage:       { key: '⚠️ RAGE',     color: '#ef4444', icon: '🔴' },
+  vulnerable: { key: '✨ VULNERABLE ×3!', color: '#f59e0b', icon: '⭐' },
 };
 
 export default function WorldBoss() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [liveHp, setLiveHp] = useState(null);
   const [livePct, setLivePct] = useState(null);
@@ -91,16 +93,16 @@ export default function WorldBoss() {
 
   return (
     <div className="worldboss-section">
-      <div className="worldboss-header">🌍 World Boss</div>
+      <div className="worldboss-header">{t('wboss_title')}</div>
 
       {boss.hp <= 0 ? (
-        <div className="worldboss-dead">Boss defeated! A new boss will spawn soon.</div>
+        <div className="worldboss-dead">{t('wboss_dead')}</div>
       ) : (
         <>
           <div className="worldboss-name">{boss.name}</div>
 
           <div className="worldboss-phase-badge" style={{ background: phaseCfg.color + '22', color: phaseCfg.color, border: `1px solid ${phaseCfg.color}` }}>
-            {phaseCfg.icon} {phaseCfg.label}
+            {phaseCfg.icon} {phaseCfg.key}
             {phase === 'vulnerable' && vulnLeft > 0 && <span> — {vulnLeft}s</span>}
           </div>
 
@@ -111,23 +113,23 @@ export default function WorldBoss() {
             {Number(hp).toLocaleString()} / {Number(boss.maxHp).toLocaleString()} HP
           </div>
           <div className="worldboss-meta">
-            <span>⏰ {countdown} left</span>
-            <span>⚔️ My damage: {myDamage.toLocaleString()}</span>
-            {phase === 'vulnerable' && <span className="worldboss-vuln-tag">⚡ TRIPLE DAMAGE!</span>}
+            <span>⏰ {t('wboss_time_left', { time: countdown })}</span>
+            <span>⚔️ {t('wboss_my_damage', { n: myDamage.toLocaleString() })}</span>
+            {phase === 'vulnerable' && <span className="worldboss-vuln-tag">{t('wboss_triple')}</span>}
           </div>
           <button
             className={`worldboss-tap-btn ${phase === 'vulnerable' ? 'worldboss-tap-btn--vuln' : ''}`}
             onClick={handleTap}
             disabled={tapping}
           >
-            {tapping ? '...' : phase === 'vulnerable' ? '⚡ STRIKE NOW! (×30)' : '⚔️ ATTACK! (×10)'}
+            {tapping ? '...' : phase === 'vulnerable' ? t('wboss_strike') : t('wboss_attack')}
           </button>
         </>
       )}
 
       {topHitters?.length > 0 && (
         <div className="worldboss-lb">
-          <div className="worldboss-lb-title">Top Attackers</div>
+          <div className="worldboss-lb-title">{t('wboss_top')}</div>
           {topHitters.map(r => (
             <div key={r.rank} className="worldboss-lb-row">
               <span className="worldboss-lb-rank">#{r.rank}</span>

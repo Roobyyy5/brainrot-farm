@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function StatsDashboard() {
+  const t = useT();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -15,36 +17,36 @@ export default function StatsDashboard() {
 
   return (
     <div className="stats-section">
-      <div className="stats-header">📊 My Stats</div>
+      <div className="stats-header">📊 {t('stats_title')}</div>
 
       <div className="stats-grid">
         <div className="stat-chip">
           <div className="stat-chip-val">{totals.totalTaps.toLocaleString()}</div>
-          <div className="stat-chip-lbl">Total Taps</div>
+          <div className="stat-chip-lbl">{t('stats_total_taps')}</div>
         </div>
         <div className="stat-chip">
           <div className="stat-chip-val">{totals.totalBp.toLocaleString()}</div>
-          <div className="stat-chip-lbl">Total BP</div>
+          <div className="stat-chip-lbl">{t('stats_total_bp')}</div>
         </div>
         <div className="stat-chip">
           <div className="stat-chip-val">✨{totals.prestige}</div>
-          <div className="stat-chip-lbl">Prestige</div>
+          <div className="stat-chip-lbl">{t('stats_prestige')}</div>
         </div>
         <div className="stat-chip">
           <div className="stat-chip-val">🔥{totals.maxStreak}d</div>
-          <div className="stat-chip-lbl">Best Streak</div>
+          <div className="stat-chip-lbl">{t('stats_best_streak')}</div>
         </div>
         <div className="stat-chip">
           <div className="stat-chip-val">×{totals.maxCombo.toFixed(1)}</div>
-          <div className="stat-chip-lbl">Best Combo</div>
+          <div className="stat-chip-lbl">{t('stats_best_combo')}</div>
         </div>
         <div className="stat-chip">
           <div className="stat-chip-val">Zone {totals.currentZone}</div>
-          <div className="stat-chip-lbl">World Zone</div>
+          <div className="stat-chip-lbl">{t('stats_zone')}</div>
         </div>
       </div>
 
-      <div className="stats-chart-header">Taps — last 7 days</div>
+      <div className="stats-chart-header">{t('stats_taps_week')}</div>
       <div className="stats-bar-chart">
         {days.map(d => (
           <div key={d.date} className="stats-bar-col">

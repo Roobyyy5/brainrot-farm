@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function TapDuel({ currentUserId }) {
+  const t = useT();
   const [duels, setDuels] = useState([]);
   const [activeDuel, setActiveDuel] = useState(null);
   const [secsLeft, setSecsLeft] = useState(0);
@@ -31,7 +33,6 @@ export default function TapDuel({ currentUserId }) {
       setSecsLeft((s) => {
         if (s <= 1) {
           clearInterval(intervalRef.current);
-          // flush pending taps then resolve
           if (tapRef.current > 0) {
             api.duels.tap(duel.id, tapRef.current).catch(() => {});
             tapRef.current = 0;
@@ -92,12 +93,12 @@ export default function TapDuel({ currentUserId }) {
     return (
       <div className="duel-active">
         <div className="duel-timer">⚔️ {secsLeft}s</div>
-        <div className="duel-score">You: {myBp} BP</div>
+        <div className="duel-score">{t('duel_score', { n: myBp })}</div>
         <div className="duel-tap-area" onClick={handleTapDuel}>
           <div className="duel-brain">🧠</div>
-          <div className="duel-tap-hint">TAP!</div>
+          <div className="duel-tap-hint">{t('duel_tap_hint')}</div>
         </div>
-        <div className="duel-stake">💎 {activeDuel.stake_gems * 2} gems pot</div>
+        <div className="duel-stake">{t('duel_pot', { n: activeDuel.stake_gems * 2 })}</div>
       </div>
     );
   }
@@ -108,17 +109,17 @@ export default function TapDuel({ currentUserId }) {
 
   return (
     <div className="duel-section">
-      <div className="duel-header">⚔️ Tap Duels</div>
+      <div className="duel-header">{t('duel_title')}</div>
 
       <form className="duel-challenge-form" onSubmit={handleChallenge}>
         <input
           className="duel-input"
-          placeholder="@username to challenge"
+          placeholder={t('duel_challenge_ph')}
           value={challengeUsername}
           onChange={(e) => setChallengeUsername(e.target.value)}
         />
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 12 }}>Stake:</span>
+          <span style={{ fontSize: 12 }}>{t('duel_stake_label')}</span>
           <input
             type="number" min={3} max={50} value={stakeGems}
             onChange={(e) => setStakeGems(Math.max(3, Math.min(50, parseInt(e.target.value) || 5)))}
@@ -126,20 +127,20 @@ export default function TapDuel({ currentUserId }) {
           />
           <span style={{ fontSize: 12 }}>💎</span>
           <button type="submit" className="duel-challenge-btn" disabled={acting || !challengeUsername}>
-            {acting ? '...' : 'Challenge'}
+            {acting ? '...' : t('duel_challenge_btn')}
           </button>
         </div>
       </form>
 
       {pendingForMe.length > 0 && (
         <div className="duel-pending-section">
-          <div className="duel-sub-title">📨 Challenges received</div>
+          <div className="duel-sub-title">{t('duel_received')}</div>
           {pendingForMe.map((d) => (
             <div key={d.id} className="duel-row">
-              <span>{d.challenger_name} challenged you · 💎{d.stake_gems}</span>
+              <span>{d.challenger_name} {t('duel_challenged_you')} · 💎{d.stake_gems}</span>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button className="duel-accept-btn" onClick={() => handleAccept(d.id)} disabled={acting}>Accept</button>
-                <button className="duel-decline-btn" onClick={() => handleDecline(d.id)} disabled={acting}>Decline</button>
+                <button className="duel-accept-btn" onClick={() => handleAccept(d.id)} disabled={acting}>{t('friends_accept')}</button>
+                <button className="duel-decline-btn" onClick={() => handleDecline(d.id)} disabled={acting}>{t('friends_decline')}</button>
               </div>
             </div>
           ))}
@@ -148,10 +149,10 @@ export default function TapDuel({ currentUserId }) {
 
       {myPending.length > 0 && (
         <div className="duel-pending-section">
-          <div className="duel-sub-title">⏳ Waiting for response</div>
+          <div className="duel-sub-title">{t('duel_waiting')}</div>
           {myPending.map((d) => (
             <div key={d.id} className="duel-row">
-              <span>Challenged {d.opponent_name} · 💎{d.stake_gems}</span>
+              <span>{t('duel_challenged')} {d.opponent_name} · 💎{d.stake_gems}</span>
             </div>
           ))}
         </div>
@@ -159,7 +160,7 @@ export default function TapDuel({ currentUserId }) {
 
       {finished.length > 0 && (
         <div className="duel-pending-section">
-          <div className="duel-sub-title">📜 Recent Results</div>
+          <div className="duel-sub-title">{t('duel_results')}</div>
           {finished.map((d) => {
             const iWon = d.winner_id === currentUserId;
             const isCh = d.challenger_id === currentUserId;
@@ -169,7 +170,7 @@ export default function TapDuel({ currentUserId }) {
                   {isCh ? `vs ${d.opponent_name}` : `vs ${d.challenger_name}`}
                 </span>
                 <span>
-                  {d.winner_id ? (iWon ? `🏆 +${d.stake_gems}💎` : `❌ -${d.stake_gems}💎`) : '🤝 Tie'}
+                  {d.winner_id ? (iWon ? `🏆 +${d.stake_gems}💎` : `❌ -${d.stake_gems}💎`) : t('duel_tie')}
                 </span>
               </div>
             );

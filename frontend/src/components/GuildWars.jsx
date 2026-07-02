@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 function msToCountdown(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -10,6 +11,7 @@ function msToCountdown(ms) {
 }
 
 export default function GuildWars() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
 
@@ -32,9 +34,9 @@ export default function GuildWars() {
 
   return (
     <div className="guildwars-section">
-      <div className="guildwars-header">⚔️ Guild Wars</div>
+      <div className="guildwars-header">{t('gwars_title')}</div>
       <div className="guildwars-meta">
-        Weekly competition · Resets in <strong>{timeLeft}</strong>
+        {t('gwars_weekly')} <strong>{timeLeft}</strong>
       </div>
 
       {data.myGuild && (
@@ -53,7 +55,7 @@ export default function GuildWars() {
 
       <div className="guildwars-list">
         {data.leaderboard.length === 0 && (
-          <div className="guildwars-empty">No guilds on the board yet — attack your guild boss!</div>
+          <div className="guildwars-empty">{t('gwars_empty')}</div>
         )}
         {data.leaderboard.map(g => (
           <div

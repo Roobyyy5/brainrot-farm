@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function WorldMap() {
+  const t = useT();
   const [zones, setZones] = useState([]);
   const [currentZone, setCurrentZone] = useState(1);
-  const [totalTaps, setTotalTaps] = useState(0);
   const [advancing, setAdvancing] = useState(false);
 
   const load = () => api.worlds.list().then(d => {
     setZones(d.zones);
     setCurrentZone(d.currentZone);
-    setTotalTaps(d.totalTaps);
   });
   useEffect(() => { load(); }, []);
 
@@ -25,10 +25,12 @@ export default function WorldMap() {
     finally { setAdvancing(false); }
   };
 
+  const advanceable = zones.find(z => z.canAdvance);
+
   return (
     <div className="worlds-section">
-      <div className="worlds-header">🗺️ World Map</div>
-      <div className="worlds-sub">Advance zones to unlock permanent tap power bonuses.</div>
+      <div className="worlds-header">{t('wmap_title')}</div>
+      <div className="worlds-sub">{t('wmap_no_bonuses')}</div>
       <div className="worlds-list">
         {zones.map(z => (
           <div
@@ -40,11 +42,11 @@ export default function WorldMap() {
               <div className="zone-name">{z.zone}. {z.name}</div>
               <div className="zone-desc">{z.desc}</div>
               {z.tapPowerBonus > 0 && (
-                <div className="zone-bonus">⚡ +{z.tapPowerBonus} Tap Power</div>
+                <div className="zone-bonus">{t('wmap_tap_bonus', { n: z.tapPowerBonus })}</div>
               )}
             </div>
             <div className="zone-status">
-              {z.current && <span className="zone-badge zone-badge--here">HERE</span>}
+              {z.current && <span className="zone-badge zone-badge--here">{t('wmap_here')}</span>}
               {z.unlocked && !z.current && <span className="zone-badge zone-badge--done">✓</span>}
               {!z.unlocked && (
                 <span className="zone-badge zone-badge--locked">
@@ -56,9 +58,9 @@ export default function WorldMap() {
         ))}
       </div>
 
-      {zones.find(z => z.canAdvance) && (
+      {advanceable && (
         <button className="worlds-advance-btn" onClick={handleAdvance} disabled={advancing}>
-          {advancing ? '...' : `⬆️ Advance to ${zones.find(z => z.canAdvance)?.name}`}
+          {advancing ? '...' : t('wmap_advance', { name: advanceable.name })}
         </button>
       )}
     </div>

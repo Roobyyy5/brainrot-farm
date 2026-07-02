@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function Friends() {
+  const t = useT();
   const [data, setData] = useState({ friends: [], incoming: [] });
   const [addId, setAddId] = useState('');
   const [viewProfile, setViewProfile] = useState(null);
@@ -30,7 +32,7 @@ export default function Friends() {
   };
 
   const handleRemove = async (friendId) => {
-    if (!window.confirm('Remove this friend?')) return;
+    if (!window.confirm(t('friends_remove_confirm'))) return;
     await api.friends.remove(friendId);
     load();
   };
@@ -47,7 +49,7 @@ export default function Friends() {
 
   return (
     <div className="friends-section">
-      <div className="friends-header">👥 Friends</div>
+      <div className="friends-header">👥 {t('friends_title')}</div>
 
       {viewProfile && (
         <div className="friends-profile-overlay" onClick={() => setViewProfile(null)}>
@@ -55,12 +57,12 @@ export default function Friends() {
             <div className="fp-name">{viewProfile.username}</div>
             <div className="fp-rank" style={{ color: viewProfile.rank?.color }}>{viewProfile.rank?.emoji} {viewProfile.rank?.name}</div>
             <div className="fp-stats">
-              <span>⚡{viewProfile.totalTaps.toLocaleString()} taps</span>
-              <span>✨{viewProfile.prestige} prestige</span>
+              <span>⚡{viewProfile.totalTaps.toLocaleString()} {t('profile_taps')}</span>
+              <span>✨{viewProfile.prestige} {t('profile_prestige')}</span>
             </div>
             <div className="fp-zone">{viewProfile.zone}</div>
             {viewProfile.guild && <div className="fp-guild">{viewProfile.guild}</div>}
-            <button className="fp-close-btn" onClick={() => setViewProfile(null)}>Close</button>
+            <button className="fp-close-btn" onClick={() => setViewProfile(null)}>{t('friends_close')}</button>
           </div>
         </div>
       )}
@@ -68,22 +70,22 @@ export default function Friends() {
       <form className="friends-add-form" onSubmit={handleAdd}>
         <input
           className="friends-add-input"
-          placeholder="Enter Telegram ID to add friend"
+          placeholder={t('friends_add_full_ph')}
           value={addId}
           onChange={e => setAddId(e.target.value)}
         />
         <button type="submit" className="friends-add-btn" disabled={acting || !addId.trim()}>
-          {acting ? '...' : '+ Add'}
+          {acting ? '...' : `+ ${t('friends_add_btn')}`}
         </button>
       </form>
 
       {data.incoming.length > 0 && (
         <div className="friends-group">
-          <div className="friends-group-title">📨 Incoming Requests</div>
+          <div className="friends-group-title">{t('friends_incoming')}</div>
           {data.incoming.map(f => (
             <div key={f.telegramId} className="friends-row">
               <span className="friends-name">{f.username || f.telegramId}</span>
-              <button className="friends-accept-btn" onClick={() => handleAccept(f.telegramId)} disabled={acting}>Accept</button>
+              <button className="friends-accept-btn" onClick={() => handleAccept(f.telegramId)} disabled={acting}>{t('friends_accept')}</button>
             </div>
           ))}
         </div>
@@ -91,11 +93,11 @@ export default function Friends() {
 
       {pending.length > 0 && (
         <div className="friends-group">
-          <div className="friends-group-title">⏳ Sent Requests</div>
+          <div className="friends-group-title">{t('friends_sent')}</div>
           {pending.map(f => (
             <div key={f.telegramId} className="friends-row">
               <span className="friends-name">{f.username || f.telegramId}</span>
-              <span className="friends-pending">Pending</span>
+              <span className="friends-pending">{t('friends_pending')}</span>
             </div>
           ))}
         </div>
@@ -103,7 +105,7 @@ export default function Friends() {
 
       {accepted.length > 0 && (
         <div className="friends-group">
-          <div className="friends-group-title">Friends ({accepted.length})</div>
+          <div className="friends-group-title">{t('friends_group', { n: accepted.length })}</div>
           {accepted.map(f => (
             <div key={f.telegramId} className="friends-row" onClick={() => openProfile(f.telegramId)} style={{ cursor: 'pointer' }}>
               <span className="friends-name">{f.username || f.telegramId}</span>
@@ -114,7 +116,7 @@ export default function Friends() {
       )}
 
       {accepted.length === 0 && pending.length === 0 && data.incoming.length === 0 && (
-        <div className="friends-empty">No friends yet. Add someone by their Telegram ID!</div>
+        <div className="friends-empty">{t('friends_none')}</div>
       )}
     </div>
   );

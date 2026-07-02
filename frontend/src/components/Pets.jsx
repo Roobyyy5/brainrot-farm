@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const RARITY_COLOR = { common: '#9ca3af', uncommon: '#34d399', rare: '#60a5fa', legendary: '#f59e0b' };
 
 export default function Pets() {
+  const t = useT();
   const [pets, setPets] = useState([]);
   const [activePet, setActivePet] = useState('');
   const [acting, setActing] = useState(false);
@@ -27,12 +29,12 @@ export default function Pets() {
 
   return (
     <div className="pets-section">
-      <div className="pets-header">🐾 Pets</div>
-      <div className="pets-sub">Pets give permanent bonuses. Obtained from Loot Boxes.</div>
+      <div className="pets-header">🐾 {t('pets_title')}</div>
+      <div className="pets-sub">{t('pets_subtitle')}</div>
 
       {owned.length > 0 && (
         <>
-          <div className="pets-group-title">Your Pets</div>
+          <div className="pets-group-title">{t('pets_your')}</div>
           <div className="pets-grid">
             {owned.map(p => (
               <div
@@ -45,7 +47,7 @@ export default function Pets() {
                 <div className="pet-name">{p.name}</div>
                 <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{p.rarity}</div>
                 <div className="pet-desc">{p.desc}</div>
-                {p.key === activePet && <div className="pet-active-badge">✓ Active</div>}
+                {p.key === activePet && <div className="pet-active-badge">{t('pets_active_badge')}</div>}
               </div>
             ))}
           </div>
@@ -54,7 +56,7 @@ export default function Pets() {
 
       {locked.length > 0 && (
         <>
-          <div className="pets-group-title" style={{ marginTop: 12 }}>Locked</div>
+          <div className="pets-group-title" style={{ marginTop: 12 }}>{t('pets_locked')}</div>
           <div className="pets-grid">
             {locked.map(p => (
               <div key={p.key} className="pet-card pet-card--locked" style={{ borderColor: '#333' }}>
@@ -62,7 +64,7 @@ export default function Pets() {
                 <div className="pet-name">{p.name}</div>
                 <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{p.rarity}</div>
                 <div className="pet-desc">{p.desc}</div>
-                <div className="pet-locked-hint">🎁 From Loot Box</div>
+                <div className="pet-locked-hint">{t('pets_lootbox')}</div>
               </div>
             ))}
           </div>

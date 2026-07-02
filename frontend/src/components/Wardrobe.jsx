@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const UNLOCK_LABEL = { default: 'Default', prestige: 'Prestige', gem_shop: 'Gem Shop' };
 
 export default function Wardrobe() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [equipping, setEquipping] = useState(null);
 
@@ -19,11 +21,11 @@ export default function Wardrobe() {
   };
 
   if (!data) return null;
-  const { skins, selected } = data;
+  const { skins } = data;
 
   return (
     <div className="wardrobe-section">
-      <div className="wardrobe-header">👗 Skin Wardrobe</div>
+      <div className="wardrobe-header">{t('ward_title')}</div>
       <div className="wardrobe-grid">
         {skins.map(skin => (
           <div
@@ -34,11 +36,11 @@ export default function Wardrobe() {
             <div className="wardrobe-emoji">{skin.emoji}</div>
             <div className="wardrobe-name">{skin.name}</div>
             <div className="wardrobe-unlock">{UNLOCK_LABEL[skin.unlock] || skin.unlock}</div>
-            {skin.active && <div className="wardrobe-active-badge">Equipped</div>}
+            {skin.active && <div className="wardrobe-active-badge">{t('ward_equipped')}</div>}
             {!skin.owned && <div className="wardrobe-locked-badge">🔒</div>}
             {skin.owned && !skin.active && (
               <button className="wardrobe-equip-btn" disabled={equipping === skin.key}>
-                {equipping === skin.key ? '...' : 'Equip'}
+                {equipping === skin.key ? '...' : t('ward_equip')}
               </button>
             )}
           </div>

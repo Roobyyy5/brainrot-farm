@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function BossRush() {
+  const t = useT();
   const [session, setSession] = useState(undefined);
   const [waves, setWaves] = useState([]);
   const [tapping, setTapping] = useState(false);
@@ -56,7 +58,7 @@ export default function BossRush() {
   };
 
   const handleAbandon = async () => {
-    if (!window.confirm('Abandon this run? Progress is lost.')) return;
+    if (!window.confirm(t('bossrush_abandon_confirm'))) return;
     await api.bossrush.abandon();
     setSession(null);
     setLastResult(null);
@@ -67,22 +69,22 @@ export default function BossRush() {
   if (!session) {
     return (
       <div className="bossrush-section">
-        <div className="bossrush-header">👾 Boss Rush</div>
-        <div className="bossrush-sub">Defeat 10 escalating bosses for massive BP and gem rewards!</div>
+        <div className="bossrush-header">👾 {t('bossrush_title')}</div>
+        <div className="bossrush-sub">{t('bossrush_defeat')}</div>
         {lastResult?.completed && (
-          <div className="bossrush-complete">🏆 Run Complete! Check your rewards!</div>
+          <div className="bossrush-complete">{t('bossrush_complete')}</div>
         )}
         <div className="bossrush-wave-preview">
           {waves.slice(0, 5).map(w => (
             <div key={w.wave} className="bossrush-wave-chip">
-              Wave {w.wave}<br />
+              {t('bossrush_wave', { n: w.wave })}<br />
               <span style={{ fontSize: 10 }}>💰{w.bpReward}{w.gemReward > 0 ? ` 💎${w.gemReward}` : ''}</span>
             </div>
           ))}
           <div className="bossrush-wave-chip" style={{ opacity: 0.5 }}>…</div>
         </div>
         <button className="bossrush-start-btn" onClick={handleStart} disabled={acting}>
-          {acting ? '...' : '⚔️ Start Boss Rush'}
+          {acting ? '...' : `⚔️ ${t('bossrush_start')}`}
         </button>
       </div>
     );
@@ -92,7 +94,7 @@ export default function BossRush() {
 
   return (
     <div className="bossrush-section bossrush-active">
-      <div className="bossrush-header">👾 Boss Rush — Wave {session.wave}/10</div>
+      <div className="bossrush-header">{t('bossrush_header_active', { n: session.wave })}</div>
       <div className="bossrush-boss-name">{session.bossName}</div>
       <div className="bossrush-hp-bar-wrap">
         <div className="bossrush-hp-bar" style={{ width: `${hpPct}%` }} />
@@ -108,9 +110,9 @@ export default function BossRush() {
       )}
       <div className={`bossrush-tap-area${tapping ? ' bossrush-tapping' : ''}`} onClick={handleTap}>
         <div className="bossrush-boss-emoji">👾</div>
-        <div className="bossrush-tap-hint">TAP TO ATTACK!</div>
+        <div className="bossrush-tap-hint">{t('bossrush_tap_hint')}</div>
       </div>
-      <button className="bossrush-abandon-btn" onClick={handleAbandon}>Abandon Run</button>
+      <button className="bossrush-abandon-btn" onClick={handleAbandon}>{t('bossrush_abandon')}</button>
     </div>
   );
 }

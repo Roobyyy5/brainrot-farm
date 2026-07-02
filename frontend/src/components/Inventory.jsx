@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const RARITY_COLOR = { common: '#9ca3af', uncommon: '#34d399', rare: '#60a5fa' };
 
 export default function Inventory() {
+  const t = useT();
   const [items, setItems] = useState([]);
   const [using, setUsing] = useState(null);
   const [effect, setEffect] = useState(null);
@@ -27,18 +29,18 @@ export default function Inventory() {
 
   return (
     <div className="inventory-section">
-      <div className="inventory-header">🎒 Inventory</div>
-      <div className="inventory-sub">Consumable items from Loot Boxes.</div>
+      <div className="inventory-header">🎒 {t('inv_title')}</div>
+      <div className="inventory-sub">{t('inv_subtitle')}</div>
       {effect && (
         <div className="inventory-effect-toast">
-          {effect.type === 'energy_refill' && '⚡ Energy refilled!'}
-          {effect.type === 'xp' && `📜 +${effect.amount} Battle Pass XP!`}
-          {effect.type === 'crit_shield' && '🛡️ 100% crit for 60s!'}
-          {effect.type === 'gems' && `💎 +${effect.amount} gems!`}
+          {effect.type === 'energy_refill' && t('inv_effect_energy')}
+          {effect.type === 'xp' && t('inv_effect_xp', { n: effect.amount })}
+          {effect.type === 'crit_shield' && t('inv_effect_crit')}
+          {effect.type === 'gems' && t('inv_effect_gems', { n: effect.amount })}
         </div>
       )}
       {owned.length === 0 ? (
-        <div className="inventory-empty">No items yet. Open Loot Boxes to get them!</div>
+        <div className="inventory-empty">{t('inv_no_items')}</div>
       ) : (
         <div className="inventory-grid">
           {owned.map(item => (
@@ -53,7 +55,7 @@ export default function Inventory() {
                 onClick={() => handleUse(item.key)}
                 disabled={using === item.key}
               >
-                {using === item.key ? '...' : 'USE'}
+                {using === item.key ? '...' : t('inv_use')}
               </button>
             </div>
           ))}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const TAPPER_ACHIEVEMENTS = [
   { key: 'tap_first', emoji: '👆' }, { key: 'tap_100', emoji: '💯' },
@@ -9,6 +10,7 @@ const TAPPER_ACHIEVEMENTS = [
 ];
 
 export default function ProfilePage({ currentUserId }) {
+  const t = useT();
   const [searchId, setSearchId] = useState('');
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,14 +37,14 @@ export default function ProfilePage({ currentUserId }) {
 
   return (
     <div className="profile-section">
-      <div className="profile-header">👤 Profile</div>
+      <div className="profile-header">👤 {t('profile_title')}</div>
 
       <div className="profile-search-row">
-        <button className="profile-me-btn" onClick={loadMyProfile}>My Profile</button>
+        <button className="profile-me-btn" onClick={loadMyProfile}>{t('profile_my')}</button>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6, flex: 1 }}>
           <input
             className="profile-search-input"
-            placeholder="Search by Telegram ID"
+            placeholder={t('profile_search_ph')}
             value={searchId}
             onChange={e => setSearchId(e.target.value)}
           />
@@ -50,7 +52,7 @@ export default function ProfilePage({ currentUserId }) {
         </form>
       </div>
 
-      {loading && <div className="tap-loading">Loading...</div>}
+      {loading && <div className="tap-loading">{t('skill_loading')}</div>}
       {err && <div className="profile-error">{err}</div>}
 
       {profile && (
@@ -72,21 +74,21 @@ export default function ProfilePage({ currentUserId }) {
           <div className="profile-stats-grid">
             <div className="profile-stat">
               <div className="profile-stat-val">{Number(profile.totalTaps).toLocaleString()}</div>
-              <div className="profile-stat-lbl">Total Taps</div>
+              <div className="profile-stat-lbl">{t('profile_taps')}</div>
             </div>
             <div className="profile-stat">
               <div className="profile-stat-val">✨{profile.prestige}</div>
-              <div className="profile-stat-lbl">Prestige</div>
+              <div className="profile-stat-lbl">{t('profile_prestige')}</div>
             </div>
             <div className="profile-stat">
               <div className="profile-stat-val">{profile.petCount}</div>
-              <div className="profile-stat-lbl">Pets</div>
+              <div className="profile-stat-lbl">{t('pets_title')}</div>
             </div>
             <div className="profile-stat">
               <div className="profile-stat-val">
                 {profile.maxCombo ? `×${profile.maxCombo.toFixed(1)}` : '—'}
               </div>
-              <div className="profile-stat-lbl">Best Combo</div>
+              <div className="profile-stat-lbl">{t('stats_best_combo')}</div>
             </div>
           </div>
 

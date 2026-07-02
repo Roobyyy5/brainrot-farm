@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 function msToCountdown(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -12,6 +13,7 @@ function msToCountdown(ms) {
 const SKIN_LABELS = { skin_fire: '🔥 Fire Brain', skin_diamond: '💎 Diamond Brain', skin_crown: '👑 Crown Brain' };
 
 export default function Tournament() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
 
@@ -33,9 +35,9 @@ export default function Tournament() {
     <div className="tourney-section">
       <div className="tourney-header">🏆 {tournament.name}</div>
       <div className="tourney-meta">
-        Ends in <strong>{timeLeft}</strong> · Prize: {SKIN_LABELS[tournament.prizeSkin] || tournament.prizeSkin}
+        {t('div_weekly')} <strong>{timeLeft}</strong> · {t('tourn_prize')}: {SKIN_LABELS[tournament.prizeSkin] || tournament.prizeSkin}
       </div>
-      {myScore > 0 && <div className="tourney-myscore">Your score: {myScore.toLocaleString()} BP</div>}
+      {myScore > 0 && <div className="tourney-myscore">{t('olym_your_score')}: {myScore.toLocaleString()} BP</div>}
       <div className="tourney-rewards-row">
         {topGems.slice(0, 5).map((g, i) => (
           <div key={i} className="tourney-reward-chip">#{i + 1} 💎{g}</div>
@@ -44,7 +46,7 @@ export default function Tournament() {
       </div>
       <div className="tourney-list">
         {leaderboard.length === 0 && (
-          <div className="tourney-empty">No participants yet — start tapping to join!</div>
+          <div className="tourney-empty">{t('tourn_no_participants')}</div>
         )}
         {leaderboard.map(e => (
           <div key={e.telegramId} className={`tourney-row${e.isMe ? ' tourney-row--me' : ''}`}>
