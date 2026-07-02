@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
+import { useT } from './context/LangContext';
 import { initTelegram, getStartParam } from './telegram';
 import Header from './components/Header';
 import Onboarding from './components/Onboarding';
@@ -82,16 +83,17 @@ import Constellation from './components/Constellation';
 import TapStreakCalendar from './components/TapStreakCalendar';
 import GuildOlympics from './components/GuildOlympics';
 
-const TABS = [
-  { id: 'home',  icon: '🏠', label: 'Home' },
-  { id: 'tap',   icon: '🧠', label: 'Tap' },
-  { id: 'cards', icon: '🃏', label: 'Cards' },
-  { id: 'boost', icon: '⚡', label: 'Boost' },
-  { id: 'club',  icon: '🏰', label: 'Club' },
-  { id: 'board', icon: '🏆', label: 'Board' },
+const TAB_IDS = [
+  { id: 'home',  icon: '🏠', key: 'tab_home'  },
+  { id: 'tap',   icon: '🧠', key: 'tab_tap'   },
+  { id: 'cards', icon: '🃏', key: 'tab_cards' },
+  { id: 'boost', icon: '⚡', key: 'tab_boost' },
+  { id: 'club',  icon: '🏰', key: 'tab_club'  },
+  { id: 'board', icon: '🏆', key: 'tab_board' },
 ];
 
 export default function App() {
+  const t = useT();
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -118,7 +120,7 @@ export default function App() {
   const handleCoinsSpent = (amount) => setUser((u) => u ? { ...u, coins: Math.max(0, u.coins - amount) } : u);
   const handleGemsChanged = (delta) => setUser((u) => u ? { ...u, gems: Math.max(0, (u.gems || 0) + delta) } : u);
 
-  if (loading) return <div className="loading-screen">Loading brainrot...</div>;
+  if (loading) return <div className="loading-screen">{t('loading')}</div>;
   if (error)   return <div className="error-screen">Error: {error}</div>;
 
   return (
@@ -129,14 +131,14 @@ export default function App() {
       <Balance user={user} />
 
       <div className="tab-bar">
-        {TABS.map((t) => (
+        {TAB_IDS.map((tb) => (
           <button
-            key={t.id}
-            className={`tab-btn${tab === t.id ? ' tab-btn--active' : ''}`}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            className={`tab-btn${tab === tb.id ? ' tab-btn--active' : ''}`}
+            onClick={() => setTab(tb.id)}
           >
-            <span className="tab-btn-icon">{t.icon}</span>
-            <span className="tab-btn-label">{t.label}</span>
+            <span className="tab-btn-icon">{tb.icon}</span>
+            <span className="tab-btn-label">{t(tb.key)}</span>
           </button>
         ))}
       </div>

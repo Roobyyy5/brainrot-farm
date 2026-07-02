@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
+import { useT } from '../context/LangContext';
 
 export default function RankUpModal({ rank, onClose }) {
+  const t = useT();
+
   useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
   }, [onClose]);
 
   if (!rank) return null;
@@ -12,9 +15,9 @@ export default function RankUpModal({ rank, onClose }) {
     <div className="rankup-overlay" onClick={onClose}>
       <div className="rankup-modal">
         <div className="rankup-emoji">{rank.emoji}</div>
-        <div className="rankup-label">RANK UP!</div>
+        <div className="rankup-label">{t('rank_up')}</div>
         <div className="rankup-name" style={{ color: rank.color }}>{rank.name}</div>
-        <div className="rankup-sub">You've reached a new rank!</div>
+        <div className="rankup-sub">{t('rank_up_sub')}</div>
       </div>
     </div>
   );

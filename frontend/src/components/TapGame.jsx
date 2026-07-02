@@ -3,6 +3,7 @@ import { api } from '../api';
 import BossCard from './BossCard';
 import OfflineModal from './OfflineModal';
 import RankUpModal from './RankUpModal';
+import { useT } from '../context/LangContext';
 
 const PARTICLE_COLORS = ['#ff4fa3', '#8b5cf6', '#00e5ff', '#f5c344', '#34d399'];
 const RANK_DATA = [
@@ -24,6 +25,7 @@ function haptic(style = 'medium') {
 }
 
 export default function TapGame({ user, onCoinsEarned, onAchievements }) {
+  const t = useT();
   const [profile, setProfile] = useState(null);
   const [energy, setEnergy] = useState(1000);
   const [energyMax, setEnergyMax] = useState(1000);
@@ -161,7 +163,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   }, []);
 
   const handlePrestige = async () => {
-    if (!window.confirm('Prestige resets all upgrades but keeps your glory. Continue?')) return;
+    if (!window.confirm(t('tap_prestige_confirm'))) return;
     setPrestiging(true);
     try {
       const res = await api.tapper.prestige();
@@ -171,7 +173,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setProfile(fresh);
       setEnergy(fresh.energy);
       setEnergyMax(fresh.energyMax);
-    } catch (err) { alert(err.message || 'Cannot prestige yet'); }
+    } catch (err) { alert(err.message || t('tap_no_prestige')); }
     finally { setPrestiging(false); }
   };
 
@@ -187,7 +189,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     finally { setChoosingTalent(null); }
   };
 
-  if (loading) return <div className="tap-loading">Loading tapper...</div>;
+  if (loading) return <div className="tap-loading">{t('loading')}</div>;
 
   const energyPct = Math.max(0, Math.min(100, (energy / energyMax) * 100));
   const noEnergy = energy < 1;
@@ -212,8 +214,8 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       {talentChoices && (
         <div className="talent-modal-overlay">
           <div className="talent-modal">
-            <div className="talent-modal-title">🌟 Choose Your Talent!</div>
-            <div className="talent-modal-sub">Pick one permanent upgrade:</div>
+            <div className="talent-modal-title">{t('tap_talent_title')}</div>
+            <div className="talent-modal-sub">{t('tap_talent_sub')}</div>
             {talentChoices.map((t) => (
               <button
                 key={t.key}
@@ -249,7 +251,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
         )}
       </div>
       {profile?.cardIncomePerHour > 0 && (
-        <div className="passive-income-hint">+{profile.cardIncomePerHour} BP/hr passive</div>
+        <div className="passive-income-hint">{t('tap_passive', { n: profile.cardIncomePerHour })}</div>
       )}
 
       {showCombo && (
@@ -309,21 +311,21 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       <div className="tap-stats">
         <div className="tap-stat">
           <span className="tap-stat-value">{(profile?.totalTaps || 0).toLocaleString()}</span>
-          <span className="tap-stat-label">Total Taps</span>
+          <span className="tap-stat-label">{t('tap_total')}</span>
         </div>
         <div className="tap-stat">
           <span className="tap-stat-value">⚡{profile?.tapPower || 1}</span>
-          <span className="tap-stat-label">Power</span>
+          <span className="tap-stat-label">{t('tap_power')}</span>
         </div>
         <div className="tap-stat">
           <span className="tap-stat-value">✨{profile?.prestige || 0}</span>
-          <span className="tap-stat-label">Prestige</span>
+          <span className="tap-stat-label">{t('tap_prestige_label')}</span>
         </div>
       </div>
 
       {canPrestige && (
         <button className="prestige-btn" onClick={handlePrestige} disabled={prestiging}>
-          ✨ PRESTIGE (reset upgrades, keep glory)
+          {t('tap_prestige_btn')}
         </button>
       )}
 

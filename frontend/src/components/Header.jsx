@@ -1,4 +1,7 @@
+import { useT } from '../context/LangContext';
+
 export default function Header() {
+  const t = useT();
   return (
     <div className="header-bar">
       <div className="header-logo">
@@ -6,7 +9,7 @@ export default function Header() {
       </div>
       <div className="header-text">
         <div className="header-title">Brainrot Farm</div>
-        <div className="header-subtitle">Farm. Flex. Recruit NPCs.</div>
+        <div className="header-subtitle">{t('header_sub')}</div>
       </div>
     </div>
   );
