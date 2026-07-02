@@ -1,42 +1,50 @@
 services:
   - type: web
-    name: brainrot-farm-backend
+    name: brainrot-farm-app
     runtime: node
     plan: free
-    buildCommand: cd figabrain-social/backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss
-    startCommand: cd figabrain-social/backend && npx tsx src/index.ts
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: JWT_ACCESS_SECRET
-        sync: false
-      - key: JWT_REFRESH_SECRET
+      - key: BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
-      - key: TELEGRAM_WEBHOOK_SECRET
+      - key: OWNER_CHAT_ID
         sync: false
-      - key: WALLET_ENCRYPTION_KEY
+      - key: FRONTEND_URL
         sync: false
-      - key: CORS_ORIGIN
+
+  - type: worker
+    name: brainrot-farm-bot
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node bot.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
         sync: false
-      - key: APP_URL
+      - key: BOT_TOKEN
         sync: false
-      - key: MINI_APP_URL
-        value: https://brainrot-farm-app.onrender.com
-      - key: CHANNEL_URL
-        value: https://t.me/figabrainnews
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: OWNER_CHAT_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
 
   - type: web
-    name: figabrain-frontend
+    name: brainrot-farm-frontend
     runtime: static
     plan: free
-    rootDir: figabrain-social/frontend
+    rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     headers:
@@ -51,7 +59,5 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      - key: VITE_API_URL
+      - key: VITE_API_BASE
         sync: false
-      - key: VITE_TELEGRAM_BOT_USERNAME
-        value: figabrain_bot
