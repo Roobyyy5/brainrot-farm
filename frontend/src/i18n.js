@@ -92,10 +92,16 @@ export const LANGS = {
 
 export function getLang() {
   try {
-    const code = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code || 'en';
-    if (LANGS[code]) return code;
-    const prefix = code.split('-')[0];
-    if (LANGS[prefix]) return prefix;
+    const sources = [
+      window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code,
+      navigator?.language,
+      navigator?.userLanguage,
+    ].filter(Boolean);
+    for (const code of sources) {
+      if (LANGS[code]) return code;
+      const prefix = code.split(/[-_]/)[0];
+      if (LANGS[prefix]) return prefix;
+    }
   } catch {}
   return 'en';
 }
