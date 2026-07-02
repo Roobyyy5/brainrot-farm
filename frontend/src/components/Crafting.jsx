@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function Crafting() {
+  const t = useT();
   const [recipes, setRecipes] = useState([]);
   const [crafting, setCrafting] = useState(null);
   const [flash, setFlash] = useState(null);
@@ -14,7 +16,7 @@ export default function Crafting() {
     setCrafting(recipeKey);
     try {
       const r = await api.crafting.craft(recipeKey);
-      setFlash(`${r.crafted.icon} ${r.crafted.name} crafted!`);
+      setFlash(t('crafting_crafted', { icon: r.crafted.icon, name: r.crafted.name }));
       setTimeout(() => setFlash(null), 2000);
       load();
     } catch (err) { alert(err.message); }
@@ -25,8 +27,8 @@ export default function Crafting() {
 
   return (
     <div className="crafting-section">
-      <div className="crafting-header">⚗️ Crafting</div>
-      <div className="crafting-sub">Combine inventory items into better ones.</div>
+      <div className="crafting-header">{t('crafting_header')}</div>
+      <div className="crafting-sub">{t('crafting_sub')}</div>
       {flash && <div className="crafting-flash">{flash}</div>}
       <div className="crafting-list">
         {recipes.map(r => (
@@ -52,7 +54,7 @@ export default function Crafting() {
               onClick={() => handleCraft(r.key)}
               disabled={!r.canCraft || crafting === r.key}
             >
-              {crafting === r.key ? '...' : 'Craft'}
+              {crafting === r.key ? '...' : t('crafting_btn')}
             </button>
           </div>
         ))}

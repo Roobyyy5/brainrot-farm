@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function BossCard({ boss, tapPower, multiTap, energy, onDamage }) {
+  const t = useT();
   const [tapping, setTapping] = useState(false);
   const [floats, setFloats] = useState([]);
   const floatId = { current: 0 };
@@ -34,7 +36,7 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
         <span className="boss-emoji">👾</span>
         <div className="boss-meta">
           <span className="boss-name">{boss.name}</span>
-          <span className="boss-timer">{hours}h {mins}m left</span>
+          <span className="boss-timer">{t('bosscard_timer', { h: hours, m: mins })}</span>
         </div>
         <div className="boss-reward">🪙 {boss.reward}</div>
       </div>
@@ -56,13 +58,13 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
           disabled={energy < 1}
         >
           <span className="boss-tap-icon">⚔️</span>
-          <span>Attack Boss</span>
+          <span>{t('bosscard_attack')}</span>
           {floats.map((fl) => (
             <span key={fl.id} className="boss-float">-{fl.dmg}</span>
           ))}
         </button>
         {boss.myDamage > 0 && (
-          <span className="boss-my-dmg">Your damage: {boss.myDamage.toLocaleString()}</span>
+          <span className="boss-my-dmg">{t('bosscard_my_dmg', { n: boss.myDamage.toLocaleString() })}</span>
         )}
       </div>
     </div>

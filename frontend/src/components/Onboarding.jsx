@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../context/LangContext';
 
 const STORAGE_KEY = 'brainrot_onboarding_seen';
 
-const STEPS = [
-  { emoji: '🧠', text: 'Tap Farm Braincells every 5 minutes to earn Brainrot Points.' },
-  { emoji: '🎁', text: 'Claim your Daily Reward — streaks earn bigger bonuses.' },
-  { emoji: '🔗', text: 'Invite friends with your link — get +100 instantly, +200 when they farm.' },
-  { emoji: '💪', text: 'Climb the ranks: NPC → Sigma → Gigachad. Top the leaderboard!' },
+const STEP_KEYS = [
+  { emoji: '🧠', key: 'onboarding_step1' },
+  { emoji: '🎁', key: 'onboarding_step2' },
+  { emoji: '🔗', key: 'onboarding_step3' },
+  { emoji: '💪', key: 'onboarding_step4' },
 ];
 
 export default function Onboarding() {
+  const t = useT();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -25,7 +27,7 @@ export default function Onboarding() {
   };
 
   const next = () => {
-    if (step < STEPS.length - 1) {
+    if (step < STEP_KEYS.length - 1) {
       setStep(step + 1);
     } else {
       dismiss();
@@ -33,24 +35,24 @@ export default function Onboarding() {
   };
 
   if (!visible) return null;
-  const current = STEPS[step];
+  const current = STEP_KEYS[step];
 
   return (
     <div className="onboarding-overlay">
       <div className="onboarding-card">
         <div className="onboarding-emoji">{current.emoji}</div>
-        <div className="onboarding-text">{current.text}</div>
+        <div className="onboarding-text">{t(current.key)}</div>
         <div className="onboarding-dots">
-          {STEPS.map((_, i) => (
+          {STEP_KEYS.map((_, i) => (
             <span key={i} className={i === step ? 'onboarding-dot active' : 'onboarding-dot'} />
           ))}
         </div>
         <div className="onboarding-actions">
           <button className="onboarding-skip" onClick={dismiss}>
-            Skip
+            {t('onboarding_skip')}
           </button>
           <button className="onboarding-next" onClick={next}>
-            {step < STEPS.length - 1 ? 'Next' : "Let's go"}
+            {step < STEP_KEYS.length - 1 ? t('onboarding_next') : t('onboarding_start')}
           </button>
         </div>
       </div>
