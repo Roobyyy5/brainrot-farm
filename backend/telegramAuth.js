@@ -47,7 +47,11 @@ function telegramAuthMiddleware(req, res, next) {
   const user = verifyInitData(initData, process.env.BOT_TOKEN);
   if (!user) return res.status(401).json({ error: 'Invalid Telegram initData' });
 
-  req.tgUser = { id: String(user.id), username: user.username || user.first_name || 'player' };
+  req.tgUser = {
+    id: String(user.id),
+    username: user.username || user.first_name || 'player',
+    language_code: user.language_code || null,
+  };
   next();
 }
 

@@ -15,7 +15,7 @@ function generateReferralCode() {
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const { id: telegramId, username } = req.tgUser;
+    const { id: telegramId, username, language_code } = req.tgUser;
     const { ref } = req.body;
 
     const existing = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
@@ -75,7 +75,7 @@ router.post(
         notifyOwner(`🔗 Referral signup: @${username || telegramId} joined via referral`);
       }
     }
-    res.json({ user: user.rows[0], alreadyRegistered: !inserted });
+    res.json({ user: user.rows[0], alreadyRegistered: !inserted, tg_lang: language_code || null });
   })
 );
 

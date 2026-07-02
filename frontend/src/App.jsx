@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
-import { useT } from './context/LangContext';
+import { useT, useSetLang } from './context/LangContext';
 import { initTelegram, getStartParam } from './telegram';
 import Header from './components/Header';
 import Onboarding from './components/Onboarding';
@@ -94,6 +94,7 @@ const TAB_IDS = [
 
 export default function App() {
   const t = useT();
+  const setLang = useSetLang();
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -105,7 +106,10 @@ export default function App() {
     initTelegram();
     const ref = getStartParam();
     api.register(ref)
-      .then((data) => setUser(data.user))
+      .then((data) => {
+        setUser(data.user);
+        if (data.tg_lang) setLang(data.tg_lang);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
