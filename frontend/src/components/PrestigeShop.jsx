@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function PrestigeShop() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [buying, setBuying] = useState(null);
 
@@ -19,13 +21,13 @@ export default function PrestigeShop() {
   };
 
   if (!data) return null;
-  if (data.prestige < 1) return null; // only show after first prestige
+  if (data.prestige < 1) return null;
 
   return (
     <div className="pshop-section">
-      <div className="pshop-header">✨ Prestige Shop</div>
-      <div className="pshop-tokens">💠 {data.prestigeTokens} prestige token{data.prestigeTokens !== 1 ? 's' : ''}</div>
-      <div className="pshop-sub">Permanent upgrades that survive prestige resets.</div>
+      <div className="pshop-header">{t('pshop_title')}</div>
+      <div className="pshop-tokens">💠 {data.prestigeTokens} {t('pshop_pp')}</div>
+      <div className="pshop-sub">{t('presets_save')}</div>
       <div className="pshop-list">
         {data.items.map(item => (
           <div key={item.key} className={`pshop-item${item.isMaxed ? ' pshop-item--maxed' : ''}`}>
@@ -39,7 +41,7 @@ export default function PrestigeShop() {
               </div>
             </div>
             {item.isMaxed ? (
-              <div className="pshop-maxed-badge">MAX</div>
+              <div className="pshop-maxed-badge">{t('upgrade_max')}</div>
             ) : (
               <button
                 className="pshop-buy-btn"

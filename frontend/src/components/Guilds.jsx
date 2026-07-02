@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function Guilds({ onGemsChanged }) {
+  const t = useT();
   const [guild, setGuild] = useState(undefined);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -29,7 +31,7 @@ export default function Guilds({ onGemsChanged }) {
       await api.guilds.create(name, tag, description);
       loadGuild();
       setView('main');
-    } catch (err) { alert(err.message || 'Cannot create'); }
+    } catch (err) { alert(err.message || t('upgrade_err')); }
     finally { setActing(false); }
   };
 
@@ -40,12 +42,12 @@ export default function Guilds({ onGemsChanged }) {
       await api.guilds.join(guildId);
       loadGuild();
       setView('main');
-    } catch (err) { alert(err.message || 'Cannot join'); }
+    } catch (err) { alert(err.message || t('upgrade_err')); }
     finally { setActing(false); }
   };
 
   const handleLeave = async () => {
-    if (!window.confirm('Leave guild?')) return;
+    if (!window.confirm(t('guild_leave') + '?')) return;
     setActing(true);
     try { await api.guilds.leave(); loadGuild(); } catch (err) { alert(err.message); }
     finally { setActing(false); }
@@ -62,33 +64,33 @@ export default function Guilds({ onGemsChanged }) {
     finally { setActing(false); }
   };
 
-  if (loading) return <div className="tap-loading">Loading Guild...</div>;
+  if (loading) return <div className="tap-loading">{t('guild_loading')}</div>;
 
   if (!guild) {
     return (
       <div className="guild-section">
         <div className="guild-header">
-          <span className="guild-title">🏰 Guild</span>
+          <span className="guild-title">{t('guild_title')}</span>
         </div>
         <div className="guild-no-guild">
-          <p>You are not in a guild yet.</p>
+          <p>{t('guild_not_in')}</p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="guild-action-btn" onClick={() => setView(view === 'create' ? 'main' : 'create')}>
-              ➕ Create Guild
+              ➕ {t('guild_create')}
             </button>
             <button className="guild-action-btn" onClick={() => setView(view === 'search' ? 'main' : 'search')}>
-              🔍 Find Guild
+              🔍 {t('guild_join')}
             </button>
           </div>
         </div>
 
         {view === 'create' && (
           <form className="guild-create-form" onSubmit={handleCreate}>
-            <input name="name" placeholder="Guild Name (max 30)" maxLength={30} required className="guild-input" />
-            <input name="tag" placeholder="Tag (max 6)" maxLength={6} required className="guild-input" />
-            <input name="description" placeholder="Description (optional)" className="guild-input" />
+            <input name="name" placeholder={t('guild_name_ph')} maxLength={30} required className="guild-input" />
+            <input name="tag" placeholder={t('guild_tag_ph')} maxLength={6} required className="guild-input" />
+            <input name="description" placeholder="..." className="guild-input" />
             <button type="submit" className="guild-submit-btn" disabled={acting}>
-              {acting ? '...' : 'Create'}
+              {acting ? '...' : t('guild_create')}
             </button>
           </form>
         )}
@@ -98,20 +100,20 @@ export default function Guilds({ onGemsChanged }) {
             <div style={{ display: 'flex', gap: 6 }}>
               <input
                 className="guild-input"
-                placeholder="Search by name or tag"
+                placeholder={t('guild_search_ph')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <button className="guild-action-btn" onClick={handleSearch}>Go</button>
+              <button className="guild-action-btn" onClick={handleSearch}>{t('guild_search_btn')}</button>
             </div>
             {searchResults.map((g) => (
               <div key={g.id} className="guild-search-row">
                 <div>
                   <strong>[{g.tag}] {g.name}</strong>
-                  <div style={{ fontSize: 11, opacity: 0.6 }}>{g.member_count}/10 members · Lv.{g.level}</div>
+                  <div style={{ fontSize: 11, opacity: 0.6 }}>{g.member_count}/10 · Lv.{g.level}</div>
                 </div>
                 <button className="guild-join-btn" onClick={() => handleJoin(g.id)} disabled={acting}>
-                  Join
+                  {t('guild_join')}
                 </button>
               </div>
             ))}
@@ -135,7 +137,7 @@ export default function Guilds({ onGemsChanged }) {
             <div className="guild-boss-hp-fill" style={{ width: `${(guild.boss.hp / guild.boss.maxHp) * 100}%` }} />
           </div>
           <div className="guild-boss-hp-text">
-            {guild.boss.hp.toLocaleString()} / {guild.boss.maxHp.toLocaleString()} HP · 💎{guild.boss.rewardGems} total
+            {guild.boss.hp.toLocaleString()} / {guild.boss.maxHp.toLocaleString()} HP · 💎{guild.boss.rewardGems}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
             <input
@@ -144,15 +146,15 @@ export default function Guilds({ onGemsChanged }) {
               className="guild-tap-input"
             />
             <button className="guild-boss-tap-btn" onClick={handleBossTap} disabled={acting}>
-              {acting ? '...' : `⚔️ Attack`}
+              {acting ? '...' : `⚔️ ${t('guild_attack')}`}
             </button>
           </div>
         </div>
       ) : (
-        <div className="guild-boss-waiting">⏳ No active guild boss — check back soon!</div>
+        <div className="guild-boss-waiting">⏳ {t('guild_no_boss')}</div>
       )}
 
-      <div className="guild-members-title">👥 Members ({guild.members.length}/10)</div>
+      <div className="guild-members-title">👥 {t('guild_members')} ({guild.members.length}/10)</div>
       <div className="guild-members">
         {guild.members.map((m) => (
           <div key={m.telegram_id} className="guild-member-row">
@@ -164,7 +166,7 @@ export default function Guilds({ onGemsChanged }) {
       </div>
 
       {guild.role !== 'owner' && (
-        <button className="guild-leave-btn" onClick={handleLeave} disabled={acting}>Leave Guild</button>
+        <button className="guild-leave-btn" onClick={handleLeave} disabled={acting}>{t('guild_leave')}</button>
       )}
     </div>
   );

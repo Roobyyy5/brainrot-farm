@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function DailyShop({ onGemsChanged }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [buying, setBuying] = useState(null);
   const [lootResult, setLootResult] = useState(null);
@@ -17,7 +19,7 @@ export default function DailyShop({ onGemsChanged }) {
       onGemsChanged?.(-cost);
       if (res.lootResult) setLootResult(res.lootResult);
       load();
-    } catch (err) { alert(err.message || 'Cannot buy'); }
+    } catch (err) { alert(err.message || t('upgrade_err')); }
     finally { setBuying(null); }
   };
 
@@ -25,21 +27,20 @@ export default function DailyShop({ onGemsChanged }) {
   const hoursLeft = Math.max(0, Math.floor(msLeft / 3_600_000));
   const minsLeft = Math.max(0, Math.floor((msLeft % 3_600_000) / 60_000));
 
-  if (!data) return <div className="tap-loading">Loading Daily Shop...</div>;
+  if (!data) return <div className="tap-loading">{t('dshop_loading')}</div>;
 
   return (
     <div className="daily-shop-section">
       <div className="daily-shop-header">
-        <span className="daily-shop-title">🏪 Daily Shop</span>
+        <span className="daily-shop-title">{t('dshop_title')}</span>
         <span className="daily-shop-timer">🕐 {hoursLeft}h {minsLeft}m</span>
       </div>
-      <div className="daily-shop-gems">💎 {data.gems} gems</div>
+      <div className="daily-shop-gems">{t('gems_balance', { n: data.gems })}</div>
 
       {lootResult && (
         <div className="loot-result" onClick={() => setLootResult(null)}>
-          <div className="loot-result-label">🎁 You got:</div>
+          <div className="loot-result-label">🎁</div>
           <div className="loot-result-prize">{lootResult.label}</div>
-          <div className="loot-result-tap">tap to close</div>
         </div>
       )}
 
