@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function SeasonLeaderboard() {
+  const t = useT();
   const [data, setData] = useState(null);
 
   useEffect(() => { api.season.status().then(setData).catch(() => {}); }, []);
@@ -17,21 +19,24 @@ export default function SeasonLeaderboard() {
 
   return (
     <div className="season-section">
-      <div className="season-header">🏅 Season {data.seasonNum} Leaderboard</div>
-      <div className="season-meta">Season ends in {countdown()}</div>
+      <div className="season-header">{t('season_lb_header', { n: data.seasonNum })}</div>
+      <div className="season-meta">{t('season_ends', { time: countdown() })}</div>
 
       {data.myRank && (
         <div className="season-my-rank">
-          <span>Your rank: <b>#{data.myRank}</b></span>
-          <span>Season BP: <b>{data.mySeasonBp.toLocaleString()}</b></span>
-          {data.prizes[data.myRank - 1] && <span>Prize: 💎{data.prizes[data.myRank - 1]}</span>}
+          <span>{t('season_your_rank', { n: data.myRank })}</span>
+          <span>{t('season_your_bp', { n: data.mySeasonBp.toLocaleString() })}</span>
+          {data.prizes[data.myRank - 1] && <span>{t('season_prize', { n: data.prizes[data.myRank - 1] })}</span>}
         </div>
       )}
 
       <table className="season-table">
         <thead>
           <tr>
-            <th>#</th><th>Player</th><th>Season BP</th><th>Prize</th>
+            <th>{t('season_col_rank')}</th>
+            <th>{t('season_col_player')}</th>
+            <th>{t('season_col_bp')}</th>
+            <th>{t('season_col_prize')}</th>
           </tr>
         </thead>
         <tbody>
@@ -50,12 +55,12 @@ export default function SeasonLeaderboard() {
 
       {data.trophies?.length > 0 && (
         <div className="season-trophies">
-          <div className="season-trophies-title">Your Past Trophies</div>
-          {data.trophies.map((t, i) => (
+          <div className="season-trophies-title">{t('season_past_trophies')}</div>
+          {data.trophies.map((tr, i) => (
             <div key={i} className="season-trophy-row">
-              <span>{t.trophy_icon}</span>
-              <span>Season {t.season_num} — Rank #{t.rank}</span>
-              <span>{Number(t.bpEarned).toLocaleString()} BP</span>
+              <span>{tr.trophy_icon}</span>
+              <span>{t('season_trophy_row', { n: tr.season_num, rank: tr.rank })}</span>
+              <span>{Number(tr.bpEarned).toLocaleString()} BP</span>
             </div>
           ))}
         </div>

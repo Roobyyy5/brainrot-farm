@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const RUSH_DURATION = 30;
 
 export default function TapRush() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [rushSecondsLeft, setRushSecondsLeft] = useState(0);
   const [starting, setStarting] = useState(false);
   const [cooldownStr, setCooldownStr] = useState('');
   const timerRef = useRef(null);
+  const loadedAt = useRef(Date.now());
 
   const load = () => api.taprush.status().then(setData).catch(() => {});
   useEffect(() => { load(); }, []);
+  useEffect(() => { loadedAt.current = Date.now(); }, [data]);
 
   useEffect(() => {
     if (!data) return;
@@ -40,9 +44,6 @@ export default function TapRush() {
     return () => clearInterval(timerRef.current);
   }, [data]);
 
-  const loadedAt = useRef(Date.now());
-  useEffect(() => { loadedAt.current = Date.now(); }, [data]);
-
   const handleStart = async () => {
     setStarting(true);
     try { await api.taprush.start(); load(); }
@@ -50,27 +51,17 @@ export default function TapRush() {
     finally { setStarting(false); }
   };
 
-  const fmtCooldown = () => {
-    if (!data || data.cooldownMs <= 0) return '';
-    const elapsed = Date.now() - loadedAt.current;
-    const remaining = Math.max(0, data.cooldownMs - elapsed);
-    const h = Math.floor(remaining / 3600000);
-    const m = Math.floor((remaining % 3600000) / 60000);
-    const s = Math.floor((remaining % 60000) / 1000);
-    return `${h}h ${m}m ${s}s`;
-  };
-
   if (!data) return null;
 
   return (
     <div className="taprush-section">
-      <div className="taprush-header">⚡ Tap Rush</div>
-      <div className="taprush-sub">30 seconds of ×{data.multiplier} tap power!</div>
+      <div className="taprush-header">{t('tap_rush_title')}</div>
+      <div className="taprush-sub">{t('tap_rush_sub', { n: data.multiplier })}</div>
 
       {data.active ? (
         <div className="taprush-active">
           <div className="taprush-timer">{rushSecondsLeft}s</div>
-          <div className="taprush-active-label">🔥 RUSH ACTIVE — Tap like crazy!</div>
+          <div className="taprush-active-label">{t('tap_rush_active')}</div>
           <div className="taprush-bar-wrap">
             <div className="taprush-bar" style={{ width: `${(rushSecondsLeft / RUSH_DURATION) * 100}%` }} />
           </div>
@@ -81,17 +72,17 @@ export default function TapRush() {
           onClick={handleStart}
           disabled={starting || data.cooldownMs > 0}
         >
-          {starting ? '...' : data.cooldownMs > 0 ? `Cooldown: ${fmtCooldown()}` : '⚡ START RUSH!'}
+          {starting ? '...' : data.cooldownMs > 0 ? t('tap_rush_cooldown', { time: cooldownStr }) : t('tap_rush_btn')}
         </button>
       )}
 
       <div className="taprush-stats">
-        <span>📅 Week Score: <b>{data.weekScore.toLocaleString()} BP</b></span>
+        <span>{t('tap_rush_week', { n: data.weekScore.toLocaleString() })}</span>
       </div>
 
       {data.leaderboard?.length > 0 && (
         <div className="taprush-lb">
-          <div className="taprush-lb-title">🏆 Weekly Rush Leaderboard</div>
+          <div className="taprush-lb-title">{t('tap_rush_lb')}</div>
           {data.leaderboard.map(r => (
             <div key={r.rank} className="taprush-lb-row">
               <span className="taprush-lb-rank">#{r.rank}</span>

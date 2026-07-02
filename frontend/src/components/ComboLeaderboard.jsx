@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function ComboLeaderboard() {
+  const t = useT();
   const [entries, setEntries] = useState([]);
   const [myBest, setMyBest] = useState(null);
 
@@ -14,14 +16,14 @@ export default function ComboLeaderboard() {
 
   return (
     <div className="comboboard-section">
-      <div className="comboboard-header">🌪️ Combo Leaderboard</div>
-      <div className="comboboard-sub">Best combo multiplier this month</div>
+      <div className="comboboard-header">{t('combo_lb_title')}</div>
+      <div className="comboboard-sub">{t('combo_best')}</div>
       {myBest && (
-        <div className="comboboard-mybest">Your best: ×{myBest.toFixed(1)}</div>
+        <div className="comboboard-mybest">{t('combo_my_best', { n: myBest.toFixed(1) })}</div>
       )}
       <div className="comboboard-list">
         {entries.length === 0 && (
-          <div className="comboboard-empty">No combos yet this month. Tap fast!</div>
+          <div className="comboboard-empty">{t('combo_no_combos')}</div>
         )}
         {entries.map(e => (
           <div key={e.telegramId} className={`comboboard-row${e.isMe ? ' comboboard-row--me' : ''}`}>

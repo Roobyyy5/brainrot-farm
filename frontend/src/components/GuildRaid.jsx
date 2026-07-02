@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function GuildRaid() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [acting, setActing] = useState(false);
 
@@ -28,30 +30,30 @@ export default function GuildRaid() {
 
   return (
     <div className="guildraid-section">
-      <div className="guildraid-header">⚔️ Guild Raid</div>
+      <div className="guildraid-header">{t('graid_title')}</div>
 
       {message === 'Not in a guild' ? (
-        <div className="guildraid-empty">Join a guild to participate in raids!</div>
+        <div className="guildraid-empty">{t('graid_no_guild')}</div>
       ) : !raid ? (
         <>
           <div className="guildraid-idle">
-            <div>No active raid. Start one to fight through 5 waves together!</div>
+            <div>{t('graid_idle')}</div>
             <div className="guildraid-waves-preview">
               {(waves || []).map(w => (
                 <div key={w.wave} className="guildraid-wave-chip">
-                  Wave {w.wave}: {w.name} · 💎{w.gemReward}
+                  {t('graid_wave_chip', { n: w.wave, name: w.name, gems: w.gemReward })}
                 </div>
               ))}
             </div>
           </div>
           <button className="guildraid-start-btn" onClick={handleStart} disabled={acting}>
-            {acting ? '...' : '⚔️ Start Guild Raid'}
+            {acting ? '...' : t('graid_start')}
           </button>
         </>
       ) : (
         <div className="guildraid-active">
           <div className="guildraid-wave-info">
-            <span>Wave {raid.wave} / {waves?.length || 5}</span>
+            <span>{t('graid_wave_info', { n: raid.wave, total: waves?.length || 5 })}</span>
             <span>{raid.bossName}</span>
           </div>
           <div className="guildraid-hp-wrap">
@@ -68,7 +70,7 @@ export default function GuildRaid() {
           </div>
 
           <button className="guildraid-tap-btn" onClick={handleTap} disabled={acting}>
-            {acting ? '...' : '⚔️ ATTACK! (×20)'}
+            {acting ? '...' : t('graid_attack')}
           </button>
 
           {participants?.length > 0 && (
@@ -76,7 +78,7 @@ export default function GuildRaid() {
               {participants.map((p, i) => (
                 <div key={i} className="guildraid-participant">
                   <span>{p.username}</span>
-                  <span>{p.damage.toLocaleString()} dmg</span>
+                  <span>{p.damage.toLocaleString()} {t('graid_dmg')}</span>
                 </div>
               ))}
             </div>
