@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 const TIER_COLOR = { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', diamond: '#00e5ff' };
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'diamond'];
 
 export default function AchievementGallery() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,7 @@ export default function AchievementGallery() {
     try {
       const r = await api.gallery.claim(achKey);
       await load();
-      alert(`🏆 Achievement claimed! +${r.gems} 💎`);
+      alert(t('gallery_claim_alert', { n: r.gems }));
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
   };
@@ -32,18 +34,18 @@ export default function AchievementGallery() {
 
   return (
     <div className="gallery-panel">
-      <div className="gallery-header">🏆 Achievement Gallery</div>
+      <div className="gallery-header">🏆 {t('ach_gallery_title')}</div>
       <div className="gallery-progress">
         <div className="gallery-progress-bar">
           <div className="gallery-progress-fill" style={{ width: `${(completed / total) * 100}%` }} />
         </div>
-        <div className="gallery-progress-text">{completed}/{total} achievements • {data.totalGems} 💎 earned</div>
+        <div className="gallery-progress-text">{t('gallery_progress_text', { done: completed, total, gems: data.totalGems })}</div>
       </div>
 
       <div className="gallery-filters">
         {categories.map(c => (
           <button key={c} className={`gallery-filter ${filter === c ? 'active' : ''}`} onClick={() => setFilter(c)}>
-            {c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1)}
+            {c === 'all' ? t('gallery_filter_all') : c.charAt(0).toUpperCase() + c.slice(1)}
           </button>
         ))}
       </div>
@@ -67,10 +69,10 @@ export default function AchievementGallery() {
               </div>
               {a.completed && !a.claimed && (
                 <button className="gallery-claim-btn" onClick={() => claim(a.key)} disabled={loading}>
-                  Claim
+                  {t('gallery_claim')}
                 </button>
               )}
-              {a.claimed && <span className="gallery-claimed">✅</span>}
+              {a.claimed && <span className="gallery-claimed">{t('gallery_claimed')}</span>}
               {!a.completed && (
                 <div className="gallery-ach-progress">
                   <div className="gallery-ach-prog-bar">

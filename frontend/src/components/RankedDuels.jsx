@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 export default function RankedDuels() {
+  const t = useT();
   const [data, setData] = useState(null);
   const [lb, setLb] = useState([]);
   const [tab, setTab] = useState('me');
@@ -68,11 +70,11 @@ export default function RankedDuels() {
 
   return (
     <div className="ranked-panel">
-      <div className="ranked-header">⚔️ Ranked Duels</div>
+      <div className="ranked-header">{t('duels_title')}</div>
 
       <div className="ranked-tabs">
-        <button className={tab === 'me' ? 'active' : ''} onClick={() => setTab('me')}>My Rank</button>
-        <button className={tab === 'lb' ? 'active' : ''} onClick={() => { setTab('lb'); loadLb(); }}>Leaderboard</button>
+        <button className={tab === 'me' ? 'active' : ''} onClick={() => setTab('me')}>{t('ranked_my_rank')}</button>
+        <button className={tab === 'lb' ? 'active' : ''} onClick={() => { setTab('lb'); loadLb(); }}>{t('ranked_leaderboard')}</button>
       </div>
 
       {tab === 'me' && (
@@ -98,16 +100,16 @@ export default function RankedDuels() {
 
           {!duel && (
             <button className="ranked-find-btn" onClick={findMatch} disabled={loading}>
-              {loading ? 'Searching...' : '⚔️ Find Match'}
+              {loading ? t('ranked_searching') : t('ranked_find')}
             </button>
           )}
 
           {duel?.status === 'pending' && (
             <div className="ranked-waiting">
               <div className="ranked-wait-spinner">⏳</div>
-              <div>Looking for opponent...</div>
+              <div>{t('ranked_waiting')}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-faint)', marginTop: 4 }}>
-                Matching ±{data.matchmakingRange || 150} ELO
+                {t('ranked_matching', { n: data.matchmakingRange || 150 })}
               </div>
             </div>
           )}
@@ -115,21 +117,21 @@ export default function RankedDuels() {
           {duel?.status === 'active' && (
             <div className="ranked-duel-active">
               <div className="ranked-duel-timer">{timeLeft}s</div>
-              <div className="ranked-duel-label">🔴 RANKED BATTLE</div>
+              <div className="ranked-duel-label">{t('ranked_battle')}</div>
               <div className="ranked-live-scores">
                 <div className="ranked-live-score ranked-live-score--me">
-                  <span>YOU</span>
+                  <span>{t('ranked_you')}</span>
                   <span className="ranked-live-bp">{myBP.toLocaleString()}</span>
                 </div>
                 <span className="ranked-vs">VS</span>
                 <div className="ranked-live-score ranked-live-score--op">
-                  <span>OPPONENT</span>
+                  <span>{t('ranked_opponent')}</span>
                   <span className="ranked-live-bp">{opBP.toLocaleString()}</span>
                 </div>
               </div>
-              <button className="ranked-tap-btn" onClick={tapDuel}>💥 TAP!</button>
+              <button className="ranked-tap-btn" onClick={tapDuel}>{t('ranked_tap')}</button>
               <div className={`ranked-lead-indicator ${myBP >= opBP ? 'winning' : 'losing'}`}>
-                {myBP > opBP ? '🏆 Winning!' : myBP === opBP ? '🤝 Tied' : '💀 Behind!'}
+                {myBP > opBP ? t('ranked_winning') : myBP === opBP ? t('ranked_tied') : t('ranked_behind')}
               </div>
             </div>
           )}
@@ -137,10 +139,10 @@ export default function RankedDuels() {
           {duel?.status === 'completed' && (
             <div className="ranked-result">
               <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>
-                {duel.winner_id ? '🏆 Victory!' : '💀 Defeat'}
+                {duel.winner_id ? t('ranked_victory') : t('ranked_defeat')}
               </div>
               <button className="ranked-find-btn" onClick={() => { setMyBP(0); setOpBP(0); load(); }}>
-                Play Again
+                {t('ranked_play_again')}
               </button>
             </div>
           )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
+import { useT } from '../context/LangContext';
 
 const TIER_COLOR = {
   Iron: '#9ca3af', Bronze: '#cd7f32', Silver: '#c0c5ce',
@@ -8,6 +9,7 @@ const TIER_COLOR = {
 };
 
 export default function DivisionLeague() {
+  const t = useT();
   const [data, setData] = useState(null);
 
   const load = () => api.divisionleague.status().then(setData).catch(() => {});
@@ -29,24 +31,24 @@ export default function DivisionLeague() {
 
   return (
     <div className="divleague-panel">
-      <div className="divleague-header">🏟️ Division League</div>
+      <div className="divleague-header">{t('div_header')}</div>
 
       <div className="divleague-my-tier" style={{ borderColor: color }}>
         <span className="divleague-tier-icon">{tierDef?.icon}</span>
         <div className="divleague-tier-info">
           <div className="divleague-tier-name" style={{ color }}>{me.tier} Division</div>
-          <div className="divleague-tier-sub">Rank #{me.rank} of {division.length} • Score: {me.tapScore.toLocaleString()}</div>
+          <div className="divleague-tier-sub">{t('div_tier_sub', { rank: me.rank, total: division.length, score: me.tapScore.toLocaleString() })}</div>
         </div>
         <div className="divleague-timer">
-          <div className="divleague-timer-label">Resets in</div>
+          <div className="divleague-timer-label">{t('div_resets')}</div>
           <div className="divleague-timer-val">{daysLeft}d {hoursLeft}h</div>
         </div>
       </div>
 
       <div className="divleague-rules">
-        <span className="divleague-rule promote">⬆ Top {tierDef?.promote} → {tiers?.find((_, i, a) => a[tiers.indexOf(tierDef) + 1])?.name || '+'}</span>
+        <span className="divleague-rule promote">⬆ {t('div_promote', { n: tierDef?.promote })}</span>
         <span className="divleague-reward">💎 {tierDef?.gemReward} gems</span>
-        {tierDef?.relegate > 0 && <span className="divleague-rule relegate">⬇ Bottom {tierDef?.relegate} relegated</span>}
+        {tierDef?.relegate > 0 && <span className="divleague-rule relegate">{t('div_relegate', { n: tierDef?.relegate })}</span>}
       </div>
 
       <div className="divleague-table">

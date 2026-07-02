@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useT } from '../context/LangContext';
 
 export default function GhostRace({ challengeKey, totalTaps, timelineRef, onClose }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [racing, setRacing] = useState(false);
   const [ghostPos, setGhostPos] = useState(0);
@@ -21,7 +23,6 @@ export default function GhostRace({ challengeKey, totalTaps, timelineRef, onClos
 
     animRef.current = setInterval(() => {
       const elapsed = Date.now() - startRef.current;
-      // Ghost position: interpolate through their timeline (array of [timestamp_ms, cumulative_taps])
       const ghostTaps = interpolateTimeline(timeline, elapsed);
       const maxGhostTaps = timeline[timeline.length - 1]?.[1] || 1;
       setGhostPos(Math.min(100, ghostTaps / maxGhostTaps * 100));
@@ -39,16 +40,16 @@ export default function GhostRace({ challengeKey, totalTaps, timelineRef, onClos
   return (
     <div className="ghostrace-panel">
       <div className="ghostrace-header">
-        👻 Ghost Race
+        {t('ghost_title')}
         {onClose && <button className="ghostrace-close" onClick={onClose}>✕</button>}
       </div>
 
       {!ghost ? (
-        <div className="ghostrace-noghost">No ghost yet for this challenge — complete it to set the first record!</div>
+        <div className="ghostrace-noghost">{t('ghost_no_ghost')}</div>
       ) : (
         <>
           <div className="ghostrace-ghost-info">
-            Racing vs <b>{ghost.username}</b> — {ghost.totalTaps.toLocaleString()} taps
+            {t('ghost_racing_vs', { name: ghost.username, n: ghost.totalTaps.toLocaleString() })}
           </div>
 
           {racing && (
@@ -61,26 +62,26 @@ export default function GhostRace({ challengeKey, totalTaps, timelineRef, onClos
                 <span className="ghostrace-pct">{ghostPos.toFixed(0)}%</span>
               </div>
               <div className="ghostrace-track">
-                <span className="ghostrace-label">⭐ You</span>
+                <span className="ghostrace-label">{t('ghost_you')}</span>
                 <div className="ghostrace-bar">
                   <div className="ghostrace-fill you" style={{ width: `${myPos}%` }} />
                 </div>
                 <span className="ghostrace-pct">{myPos.toFixed(0)}%</span>
               </div>
               <div className={`ghostrace-status ${myPos > ghostPos ? 'winning' : 'losing'}`}>
-                {myPos > ghostPos ? '🏆 AHEAD!' : '💨 Behind...'}
+                {myPos > ghostPos ? t('ghost_ahead') : t('ghost_behind')}
               </div>
             </div>
           )}
 
           {!racing && (
             <button className="ghostrace-start-btn" onClick={startRace}>
-              👻 Race Ghost
+              {t('ghost_race_btn')}
             </button>
           )}
 
           <div className="ghostrace-lb">
-            <div className="ghostrace-lb-title">🏆 Ghost Leaderboard</div>
+            <div className="ghostrace-lb-title">{t('ghost_lb_title')}</div>
             {(data.leaderboard || []).map(r => (
               <div key={r.rank} className="ghostrace-lb-row">
                 <span className="ghostrace-lb-rank">#{r.rank}</span>
