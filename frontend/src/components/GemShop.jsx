@@ -86,8 +86,8 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
             <div key={item.key} className={`gemshop-item${item.owned ? ' gemshop-item--owned' : ''}`}>
               <span className="gemshop-item-icon">{item.icon}</span>
               <div className="gemshop-item-info">
-                <div className="gemshop-item-name">{item.name}</div>
-                <div className="gemshop-item-desc">{item.description}</div>
+                <div className="gemshop-item-name">{t('gemshop_' + item.key + '_name')}</div>
+                <div className="gemshop-item-desc">{t('gemshop_' + item.key + '_desc')}</div>
               </div>
               {item.owned ? (
                 <span className="gemshop-item-owned">{t('gems_owned')}</span>

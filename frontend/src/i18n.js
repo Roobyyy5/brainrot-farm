@@ -1068,6 +1068,15 @@ export const LANGS = {
     dshop_ds_lootbox_name:    'Mystery Brain',
     // Daily shop timer
     dshop_timer: '{h}h {m}m',
+    // Gem shop item names & descriptions
+    gemshop_energy_refill_name: 'Energy Refill',     gemshop_energy_refill_desc: 'Instantly fill energy to max',
+    gemshop_2x_tap_name:        '2× Tap Boost',      gemshop_2x_tap_desc:        '2× tap power for 5 minutes',
+    gemshop_auto_income_name:   '8h Passive Claim',  gemshop_auto_income_desc:   'Instantly collect 8h passive income',
+    gemshop_loot_box_name:      'Mystery Brain',     gemshop_loot_box_desc:      'Random prize: gems, boost or rare skin',
+    gemshop_auto_tapper_name:   'Auto-Tapper 1h',   gemshop_auto_tapper_desc:   'Auto-taps 3/sec for 1 hour',
+    gemshop_skin_fire_name:     'Fire Brain 🔥',     gemshop_skin_fire_desc:     '🔥🧠 blazing brain skin',
+    gemshop_skin_diamond_name:  'Diamond Brain 💎',  gemshop_skin_diamond_desc:  '💎🧠 crystalline prestige skin',
+    gemshop_skin_crown_name:    'Crown Brain 👑',    gemshop_skin_crown_desc:    '👑🧠 royal skin for true legends',
   },
 
   uk: {
@@ -2028,6 +2037,15 @@ export const LANGS = {
     dshop_ds_energy_x2_name:  '2× Поповнення Енергії',
     dshop_ds_lootbox_name:    'Таємний Мозок',
     dshop_timer: '{h}г {m}хв',
+    // Gem shop item names & descriptions
+    gemshop_energy_refill_name: 'Поповнення Енергії', gemshop_energy_refill_desc: 'Миттєво заповнює енергію до максимуму',
+    gemshop_2x_tap_name:        '2× Буст Тапу',       gemshop_2x_tap_desc:        '2× сила тапу на 5 хвилин',
+    gemshop_auto_income_name:   'Пасив за 8год',      gemshop_auto_income_desc:   'Миттєво отримати пасив за 8 годин',
+    gemshop_loot_box_name:      'Таємний Мозок',      gemshop_loot_box_desc:      'Рандомний приз: геми, буст або скін',
+    gemshop_auto_tapper_name:   'Авто-Тапер 1год',   gemshop_auto_tapper_desc:   'Автотапає 3/сек протягом 1 години',
+    gemshop_skin_fire_name:     'Вогняний Мозок 🔥',  gemshop_skin_fire_desc:     '🔥🧠 палаючий скін мозку',
+    gemshop_skin_diamond_name:  'Діамантовий Мозок 💎',gemshop_skin_diamond_desc: '💎🧠 кристалічний скін престижу',
+    gemshop_skin_crown_name:    'Королівський Мозок 👑',gemshop_skin_crown_desc:  '👑🧠 королівський скін для легенд',
   },
 
   ru: {
@@ -2988,6 +3006,15 @@ export const LANGS = {
     dshop_ds_energy_x2_name:  '2× Восполнение энергии',
     dshop_ds_lootbox_name:    'Тайный Мозг',
     dshop_timer: '{h}ч {m}м',
+    // Gem shop item names & descriptions
+    gemshop_energy_refill_name: 'Восполнение Энергии', gemshop_energy_refill_desc: 'Мгновенно заполняет энергию до максимума',
+    gemshop_2x_tap_name:        '2× Буст Тапа',        gemshop_2x_tap_desc:        '2× сила тапа на 5 минут',
+    gemshop_auto_income_name:   'Пассив за 8ч',        gemshop_auto_income_desc:   'Мгновенно получить пассив за 8 часов',
+    gemshop_loot_box_name:      'Тайный Мозг',         gemshop_loot_box_desc:      'Случайный приз: кристаллы, буст или скин',
+    gemshop_auto_tapper_name:   'Авто-Тапер 1ч',      gemshop_auto_tapper_desc:   'Автотапает 3/сек в течение 1 часа',
+    gemshop_skin_fire_name:     'Огненный Мозг 🔥',   gemshop_skin_fire_desc:     '🔥🧠 пылающий скин мозга',
+    gemshop_skin_diamond_name:  'Алмазный Мозг 💎',   gemshop_skin_diamond_desc:  '💎🧠 кристаллический скин престижа',
+    gemshop_skin_crown_name:    'Королевский Мозг 👑', gemshop_skin_crown_desc:    '👑🧠 королевский скин для легенд',
   },
 };
 
