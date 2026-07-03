@@ -78,6 +78,13 @@ export default function TapGauntlet() {
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
+  const translateTitle = (title) => {
+    if (!title) return title;
+    const key = 'gauntlet_title_' + title.toLowerCase().replace(/\s+/g, '_');
+    const v = t(key);
+    return v === key ? title : v;
+  };
+
   if (!data) return null;
 
   const hpPct = bossMaxHp > 0 ? (bossHp / bossMaxHp) * 100 : 0;
@@ -95,13 +102,13 @@ export default function TapGauntlet() {
             <div className="gauntlet-best">{t('gauntlet_best', { w: data.best.waves, dmg: (data.best.totalDamage / 1000).toFixed(0) })}</div>
           )}
           {data.titles?.length > 0 && (
-            <div className="gauntlet-titles">{data.titles.map(title => <span key={title} className="gauntlet-title-badge">{title}</span>)}</div>
+            <div className="gauntlet-titles">{data.titles.map(title => <span key={title} className="gauntlet-title-badge">{translateTitle(title)}</span>)}</div>
           )}
           <div className="gauntlet-milestones">
             {data.config?.milestones?.map(m => (
               <div key={m.wave} className={`gauntlet-ms ${(data.best?.waves || 0) >= m.wave ? 'reached' : ''}`}>
                 <span>{t('gauntlet_wave', { n: m.wave })}</span>
-                <span>💎 {m.reward.gems}{m.reward.title ? ` + "${m.reward.title}"` : ''}</span>
+                <span>💎 {m.reward.gems}{m.reward.title ? ` + "${translateTitle(m.reward.title)}"` : ''}</span>
               </div>
             ))}
           </div>

@@ -63,7 +63,7 @@ export default function Balance({ user }) {
       <div className="balance-label">{t('balance_label')}</div>
       <div className="balance-value">{displayedCoins.toLocaleString()}</div>
       <div className="balance-level">
-        <span className="balance-level-emoji">{current.emoji}</span> {current.name}
+        <span className="balance-level-emoji">{current.emoji}</span> {t('level_' + current.name.toLowerCase().replace(/\s+/g, '_'))}
       </div>
       {next && (
         <div className="balance-progress">
@@ -71,7 +71,7 @@ export default function Balance({ user }) {
             <div className="balance-progress-fill" style={{ width: `${pct}%` }} />
           </div>
           <div className="balance-progress-label">
-            {next.emoji} {next.minCoins - user.coins > 0 ? next.minCoins - user.coins : 0} {t('balance_to')} {next.name}
+            {next.emoji} {next.minCoins - user.coins > 0 ? next.minCoins - user.coins : 0} {t('balance_to')} {t('level_' + next.name.toLowerCase().replace(/\s+/g, '_'))}
           </div>
         </div>
       )}

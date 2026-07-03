@@ -54,12 +54,14 @@ export default function AchievementGallery() {
         {filtered.map(a => {
           const color = TIER_COLOR[a.tier] || '#888';
           const tierIdx = TIER_ORDER.indexOf(a.tier);
+          const achName = (key, fallback) => { const k = 'ach_' + key + '_name'; const v = t(k); return v === k ? fallback : v; };
+          const achDesc = (key, fallback) => { const k = 'ach_' + key + '_desc'; const v = t(k); return v === k ? fallback : v; };
           return (
             <div key={a.key} className={`gallery-ach ${a.completed ? 'completed' : ''} ${a.claimed ? 'claimed' : ''}`}>
               <div className="gallery-ach-icon" style={{ borderColor: color }}>{a.icon}</div>
               <div className="gallery-ach-body">
-                <div className="gallery-ach-name">{a.name}</div>
-                <div className="gallery-ach-desc">{a.description}</div>
+                <div className="gallery-ach-name">{achName(a.key, a.name)}</div>
+                <div className="gallery-ach-desc">{achDesc(a.key, a.description)}</div>
                 <div className="gallery-ach-meta">
                   <span className="gallery-tier-badge" style={{ color }}>
                     {'◆'.repeat(tierIdx + 1)} {a.tier.toUpperCase()}

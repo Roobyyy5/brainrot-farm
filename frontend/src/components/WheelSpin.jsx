@@ -2,19 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
 
-const PRIZES = [
-  { label: '50 BP',      color: '#f5c344', emoji: '🪙' },
-  { label: '100 BP',     color: '#f5c344', emoji: '🪙' },
-  { label: '250 BP',     color: '#f5c344', emoji: '🪙' },
-  { label: '500 BP',     color: '#ff8c00', emoji: '💰' },
-  { label: 'Full ⚡',    color: '#00e5ff', emoji: '⚡' },
-  { label: '1K BP',      color: '#ff4fa3', emoji: '🔥' },
-  { label: '2.5K BP',    color: '#8b5cf6', emoji: '💎' },
-  { label: '5 Gems',     color: '#00ffaa', emoji: '✨' },
+const PRIZES_BASE = [
+  { labelKey: null, label: '50 BP',   color: '#f5c344', emoji: '🪙' },
+  { labelKey: null, label: '100 BP',  color: '#f5c344', emoji: '🪙' },
+  { labelKey: null, label: '250 BP',  color: '#f5c344', emoji: '🪙' },
+  { labelKey: null, label: '500 BP',  color: '#ff8c00', emoji: '💰' },
+  { labelKey: 'wheel_prize_full_energy', label: 'Full ⚡', color: '#00e5ff', emoji: '⚡' },
+  { labelKey: null, label: '1K BP',   color: '#ff4fa3', emoji: '🔥' },
+  { labelKey: null, label: '2.5K BP', color: '#8b5cf6', emoji: '💎' },
+  { labelKey: null, label: '5 Gems',  color: '#00ffaa', emoji: '✨' },
 ];
 
 export default function WheelSpin({ onEarned }) {
   const t = useT();
+  const PRIZES = PRIZES_BASE.map(p => ({ ...p, label: p.labelKey ? t(p.labelKey) : p.label }));
   const [canSpin, setCanSpin] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);

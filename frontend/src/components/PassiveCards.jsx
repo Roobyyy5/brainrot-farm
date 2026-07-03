@@ -18,6 +18,9 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
   const load = () => api.cards.list().then(setData).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
+  const cardName = (card) => { const k = 'card_' + card.key + '_name'; const v = t(k); return v === k ? card.name : v; };
+  const cardDesc = (card) => { const k = 'card_' + card.key + '_desc'; const v = t(k); return v === k ? card.description : v; };
+
   const handleBuy = async (key, cost) => {
     if (buying) return;
     setBuying(key);
@@ -72,8 +75,8 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
               className={`card-item${card.isOwned ? ' card-item--owned' : ''}${card.isMaxed ? ' card-item--maxed' : ''}`}
             >
               <div className="card-icon">{card.icon}</div>
-              <div className="card-name">{card.name}</div>
-              <div className="card-desc">{card.description}</div>
+              <div className="card-name">{cardName(card)}</div>
+              <div className="card-desc">{cardDesc(card)}</div>
 
               {card.isOwned && (
                 <div className="card-level-dots">
