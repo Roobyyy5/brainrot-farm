@@ -85,8 +85,8 @@ export default function GuildSkillTree() {
                 <div className="gskilltree-skill-top">
                   <span className="gskilltree-skill-icon">{s.icon}</span>
                   <div className="gskilltree-skill-info">
-                    <div className="gskilltree-skill-name">{s.name}</div>
-                    <div className="gskilltree-skill-desc">{s.desc}</div>
+                    <div className="gskilltree-skill-name">{(() => { const k = 'gskill_' + s.key + '_name'; const v = t(k); return v === k ? s.name : v; })()}</div>
+                    <div className="gskilltree-skill-desc">{(() => { const k = 'gskill_' + s.key + '_desc'; const v = t(k); return v === k ? s.desc : v; })()}</div>
                   </div>
                   <div className="gskilltree-skill-level">
                     {isMaxed ? <span className="gskilltree-maxed">{t('common_max')}</span> : `${s.currentLevel}/${s.maxLevel}`}

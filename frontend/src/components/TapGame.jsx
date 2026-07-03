@@ -225,8 +225,8 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
               >
                 <span className="talent-choice-icon">{t.icon}</span>
                 <div>
-                  <div className="talent-choice-name">{t.name}</div>
-                  <div className="talent-choice-desc">{t.desc}</div>
+                  <div className="talent-choice-name">{(() => { const k = 'talent_' + t.key + '_name'; const v2 = t(k); return v2 === k ? t.name : v2; })()}</div>
+                  <div className="talent-choice-desc">{(() => { const k = 'talent_' + t.key + '_desc'; const v2 = t(k); return v2 === k ? t.desc : v2; })()}</div>
                 </div>
               </button>
             ))}
@@ -237,7 +237,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       {/* Top row: rank + streak + boost */}
       <div className="tap-top-row">
         <div className="rank-badge" style={{ borderColor: rank.color, color: rank.color }}>
-          {rank.emoji} {rank.name}
+          {rank.emoji} {(() => { const k = 'trank_' + (rank.name || '').toLowerCase(); const v = t(k); return v === k ? rank.name : v; })()}
         </div>
         {streak > 0 && (
           <div className="streak-badge">

@@ -39,9 +39,9 @@ export default function RelicsPanel() {
               <div className="relic-card-top">
                 <span className="relic-icon">{r.icon}</span>
                 <div className="relic-info">
-                  <div className="relic-name">{r.name}</div>
-                  <div className="relic-passive">{r.passiveDesc}</div>
-                  <div className="relic-active">⚡ {r.activeDesc}</div>
+                  <div className="relic-name">{(() => { const k = 'relic_' + r.key + '_name'; const v = t(k); return v === k ? r.name : v; })()}</div>
+                  <div className="relic-passive">{(() => { const k = 'relic_' + r.key + '_passive'; const v = t(k); return v === k ? r.passiveDesc : v; })()}</div>
+                  <div className="relic-active">⚡ {(() => { const k = 'relic_' + r.key + '_active'; const v = t(k); return v === k ? r.activeDesc : v; })()}</div>
                   <div className="relic-cd-info">{t('relics_cd_info', { n: Math.round(r.activeCooldownMs / 60000) })}</div>
                 </div>
                 {!r.unlockable && (

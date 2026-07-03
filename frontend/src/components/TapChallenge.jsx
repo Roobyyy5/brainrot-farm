@@ -106,8 +106,8 @@ export default function TapChallenge() {
               <div className="tapchallenge-card-top">
                 <span className="tapchallenge-icon">{c.icon}</span>
                 <div className="tapchallenge-info">
-                  <div className="tapchallenge-name">{c.name}</div>
-                  <div className="tapchallenge-desc">{c.desc}</div>
+                  <div className="tapchallenge-name">{(() => { const k = 'challenge_' + c.key + '_name'; const v = t(k); return v === k ? c.name : v; })()}</div>
+                  <div className="tapchallenge-desc">{(() => { const k = 'challenge_' + c.key + '_desc'; const v = t(k); return v === k ? c.desc : v; })()}</div>
                   {c.myRecord && (
                     <div className="tapchallenge-record">
                       {t('challenge_best', { n: c.myRecord.bestTaps.toLocaleString() })}
@@ -135,7 +135,7 @@ export default function TapChallenge() {
 
       {tab === 'active' && activeRun && cfg && (
         <div className="tapchallenge-active">
-          <div className="tapchallenge-active-name">{cfg.icon} {cfg.name}</div>
+          <div className="tapchallenge-active-name">{cfg.icon} {(() => { const k = 'challenge_' + (activeRun?.challengeKey || '') + '_name'; const v = t(k); return v === k ? cfg.name : v; })()}</div>
           <div className={`tapchallenge-timer ${timeLeft <= 5 ? 'danger' : ''}`}>{timeLeft}s</div>
           <div className="tapchallenge-taps">{t('challenge_taps', { n: tapsDone.toLocaleString() })}{cfg.tapTarget ? ` / ${cfg.tapTarget.toLocaleString()}` : ''}</div>
           {cfg.tapTarget && (

@@ -18,7 +18,7 @@ export default function AchievementToast({ achievement, onDone }) {
       <div>
         <div className="achievement-toast-title">{t('ach_toast_title')}</div>
         <div className="achievement-toast-name">
-          {achievement.name} · +{achievement.reward}
+          {(() => { const k = 'ach_' + (achievement.key || '') + '_name'; const v = t(k); return v === k ? achievement.name : v; })()} · +{achievement.reward}
         </div>
       </div>
     </div>

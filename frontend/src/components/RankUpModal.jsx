@@ -16,7 +16,7 @@ export default function RankUpModal({ rank, onClose }) {
       <div className="rankup-modal">
         <div className="rankup-emoji">{rank.emoji}</div>
         <div className="rankup-label">{t('rank_up')}</div>
-        <div className="rankup-name" style={{ color: rank.color }}>{rank.name}</div>
+        <div className="rankup-name" style={{ color: rank.color }}>{(() => { const k = 'trank_' + (rank.name || '').toLowerCase(); const v = t(k); return v === k ? rank.name : v; })()}</div>
         <div className="rankup-sub">{t('rank_up_sub')}</div>
       </div>
     </div>

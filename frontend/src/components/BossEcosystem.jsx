@@ -79,7 +79,7 @@ export default function BossEcosystem() {
               <div className="bosseco-card-top">
                 <span className="bosseco-icon" style={{ filter: boss.alive ? 'none' : 'grayscale(1)' }}>{boss.icon}</span>
                 <div className="bosseco-info">
-                  <div className="bosseco-name">{boss.name}</div>
+                  <div className="bosseco-name">{(() => { const k = 'beco_boss_' + boss.key + '_name'; const v = t(k); return v === k ? boss.name : v; })()}</div>
                   <div className="bosseco-type" style={{ color }}>
                     {t('boss_type_' + boss.type)} • {t('beco_weak', { n: t('boss_weak_' + boss.weakness) })}
                   </div>

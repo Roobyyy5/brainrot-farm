@@ -1204,6 +1204,42 @@ export const LANGS = {
     story_mech_shields:'Boss has 3 shield layers, each needs 1000 taps to break',
     story_mech_enrage:'Boss gets faster and stronger every 30s',
     story_mech_final_boss:'All mechanics combined — ultimate test',
+    // Boss Ecosystem boss names
+    beco_boss_inferno_titan_name:'Inferno Titan',   beco_boss_void_leviathan_name:'Void Leviathan',
+    beco_boss_crystal_colossus_name:'Crystal Colossus', beco_boss_thunder_deity_name:'Thunder Deity',
+    beco_boss_arcane_overlord_name:'Arcane Overlord',
+    // Tapper ranks
+    trank_bronze:'Bronze', trank_silver:'Silver', trank_gold:'Gold',
+    trank_diamond:'Diamond', trank_legend:'Legend',
+    // Guild skills
+    gskill_tap_sync_name:'Tap Sync',       gskill_tap_sync_desc:'+2% tap power for all members per level',
+    gskill_energy_grid_name:'Energy Grid', gskill_energy_grid_desc:'+200 max energy for all members per level',
+    gskill_loot_protocol_name:'Loot Protocol', gskill_loot_protocol_desc:'+1% gem drop chance per level',
+    gskill_boss_cracker_name:'Boss Cracker', gskill_boss_cracker_desc:'+5% boss damage per level',
+    gskill_passive_matrix_name:'Passive Matrix', gskill_passive_matrix_desc:'+10% offline income per level',
+    gskill_war_drums_name:'War Drums',     gskill_war_drums_desc:'+5% damage in bracket wars per level',
+    // Relics
+    relic_time_crystal_name:'Time Crystal',     relic_time_crystal_passive:'+15 tap power always',     relic_time_crystal_active:'Freeze combo decay for 60 seconds',
+    relic_neural_core_name:'Neural Core',       relic_neural_core_passive:'+10% gem drop chance always', relic_neural_core_active:'Auto-tap 10/sec for 2 minutes',
+    relic_void_prism_name:'Void Prism',         relic_void_prism_passive:'×1.5 offline income always',  relic_void_prism_active:'×3 gem drops for 30 seconds',
+    relic_soul_anchor_name:'Soul Anchor',       relic_soul_anchor_passive:'+500 energy cap, +5 regen/sec', relic_soul_anchor_active:'Infinite energy for 45 seconds',
+    relic_chaos_core_name:'Chaos Core',         relic_chaos_core_passive:'+25% crit chance, ×2 crit mult', relic_chaos_core_active:'100% crit + ×5 crit mult for 20 seconds',
+    // TapChallenge names
+    challenge_sprint_1000_name:'Sprint 1K',     challenge_sprint_1000_desc:'Tap 1000 times in 60 seconds',
+    challenge_burst_500_name:'Burst 500',       challenge_burst_500_desc:'Tap 500 times in 20 seconds',
+    challenge_no_boost_500_name:'Clean 500',    challenge_no_boost_500_desc:'500 taps — no active abilities',
+    challenge_marathon_5k_name:'Marathon 5K',   challenge_marathon_5k_desc:'Tap 5000 times in 5 minutes',
+    challenge_ultra_10k_name:'Ultra 10K',       challenge_ultra_10k_desc:'Tap 10000 times in 10 minutes',
+    challenge_godlike_30s_name:'Godlike 30s',   challenge_godlike_30s_desc:'Maximum taps possible in 30s',
+    // Talents
+    talent_double_glory_name:'Double Glory',    talent_double_glory_desc:'Prestige gives +2 tap power instead of +1',
+    talent_energy_god_name:'Energy God',        talent_energy_god_desc:'Max energy permanently +1000',
+    talent_passive_lord_name:'Passive Lord',    talent_passive_lord_desc:'Card income ×1.5 permanently',
+    talent_crit_storm_name:'Crit Storm',        talent_crit_storm_desc:'+10% crit chance permanently',
+    talent_gem_magnet_name:'Gem Magnet',        talent_gem_magnet_desc:'+5% gem drop chance permanently',
+    talent_boss_slayer_name:'Boss Slayer',      talent_boss_slayer_desc:'Double damage to bosses',
+    talent_eternal_streak_name:'Eternal Streak', talent_eternal_streak_desc:'Tap streak never resets on missed day',
+    talent_auto_master_name:'Auto Master',      talent_auto_master_desc:'Auto-income rate ×2',
     // Ascension
     asc_prestige_prefix:'P',
     // Guild level prefix
@@ -2311,6 +2347,42 @@ export const LANGS = {
     story_mech_shields:'3 щити, кожен потребує 1000 тапів',
     story_mech_enrage:'Бос стає швидшим та сильнішим кожні 30с',
     story_mech_final_boss:'Всі механіки разом — фінальне випробування',
+    // Boss Ecosystem UK
+    beco_boss_inferno_titan_name:'Інферно Титан',    beco_boss_void_leviathan_name:'Левіафан Пустоти',
+    beco_boss_crystal_colossus_name:'Кристальний Колос', beco_boss_thunder_deity_name:'Громовержець',
+    beco_boss_arcane_overlord_name:'Аркан Оверлорд',
+    // Tapper ranks UK
+    trank_bronze:'Бронза', trank_silver:'Срібло', trank_gold:'Золото',
+    trank_diamond:'Діамант', trank_legend:'Легенда',
+    // Guild skills UK
+    gskill_tap_sync_name:'Синхро Тап',          gskill_tap_sync_desc:'+2% сила тапу для всіх учасників за рівень',
+    gskill_energy_grid_name:'Енергосітка',       gskill_energy_grid_desc:'+200 макс. енергії для всіх за рівень',
+    gskill_loot_protocol_name:'Протокол Лута',   gskill_loot_protocol_desc:'+1% шанс гемів за рівень',
+    gskill_boss_cracker_name:'Дробарка Босів',   gskill_boss_cracker_desc:'+5% урон по босах за рівень',
+    gskill_passive_matrix_name:'Пасивна Матриця', gskill_passive_matrix_desc:'+10% офлайн дохід за рівень',
+    gskill_war_drums_name:'Барабани Війни',      gskill_war_drums_desc:'+5% урон у війнах кланів за рівень',
+    // Relics UK
+    relic_time_crystal_name:'Кристал Часу',      relic_time_crystal_passive:'+15 сила тапу завжди',           relic_time_crystal_active:'Зупинити розпад комбо на 60с',
+    relic_neural_core_name:'Нейронне Ядро',      relic_neural_core_passive:'+10% шанс гемів завжди',           relic_neural_core_active:'Авто-тап 10/с на 2 хвилини',
+    relic_void_prism_name:'Призма Пустоти',      relic_void_prism_passive:'×1.5 офлайн дохід завжди',         relic_void_prism_active:'×3 геми на 30 секунд',
+    relic_soul_anchor_name:'Якір Душі',          relic_soul_anchor_passive:'+500 енергії, +5 реген/с',         relic_soul_anchor_active:'Безкінечна енергія на 45с',
+    relic_chaos_core_name:'Ядро Хаосу',          relic_chaos_core_passive:'+25% крит шанс, ×2 крит множник',  relic_chaos_core_active:'100% крит + ×5 крит на 20с',
+    // TapChallenge UK
+    challenge_sprint_1000_name:'Спринт 1K',      challenge_sprint_1000_desc:'1000 тапів за 60 секунд',
+    challenge_burst_500_name:'Вибух 500',         challenge_burst_500_desc:'500 тапів за 20 секунд',
+    challenge_no_boost_500_name:'Чисті 500',      challenge_no_boost_500_desc:'500 тапів — без активних здібностей',
+    challenge_marathon_5k_name:'Марафон 5K',      challenge_marathon_5k_desc:'5000 тапів за 5 хвилин',
+    challenge_ultra_10k_name:'Ультра 10K',        challenge_ultra_10k_desc:'10000 тапів за 10 хвилин',
+    challenge_godlike_30s_name:'Богоподібний 30с', challenge_godlike_30s_desc:'Максимум тапів за 30 секунд',
+    // Talents UK
+    talent_double_glory_name:'Подвійна Слава',    talent_double_glory_desc:'Престиж дає +2 тап замість +1',
+    talent_energy_god_name:'Бог Енергії',         talent_energy_god_desc:'Макс. енергія постійно +1000',
+    talent_passive_lord_name:'Лорд Пасиву',       talent_passive_lord_desc:'Дохід з карток ×1.5 постійно',
+    talent_crit_storm_name:'Критичний Шторм',     talent_crit_storm_desc:'+10% шанс крита постійно',
+    talent_gem_magnet_name:'Магніт Гемів',        talent_gem_magnet_desc:'+5% шанс гемів постійно',
+    talent_boss_slayer_name:'Вбивця Босів',       talent_boss_slayer_desc:'Подвійний урон по босах',
+    talent_eternal_streak_name:'Вічний Стрік',    talent_eternal_streak_desc:'Стрік не скидається при пропуску',
+    talent_auto_master_name:'Майстер Авто',       talent_auto_master_desc:'Авто-дохід ×2',
     // Ascension UK
     asc_prestige_prefix:'P',
     // Guild level prefix UK
@@ -3418,6 +3490,42 @@ export const LANGS = {
     story_mech_shields:'3 щита, каждый требует 1000 тапов',
     story_mech_enrage:'Босс становится быстрее и сильнее каждые 30с',
     story_mech_final_boss:'Все механики вместе — финальное испытание',
+    // Boss Ecosystem RU
+    beco_boss_inferno_titan_name:'Инферно Титан',    beco_boss_void_leviathan_name:'Левиафан Пустоты',
+    beco_boss_crystal_colossus_name:'Хрустальный Колосс', beco_boss_thunder_deity_name:'Громовержец',
+    beco_boss_arcane_overlord_name:'Аркан Оверлорд',
+    // Tapper ranks RU
+    trank_bronze:'Бронза', trank_silver:'Серебро', trank_gold:'Золото',
+    trank_diamond:'Алмаз', trank_legend:'Легенда',
+    // Guild skills RU
+    gskill_tap_sync_name:'Синхро Тап',           gskill_tap_sync_desc:'+2% сила тапа для всех участников за уровень',
+    gskill_energy_grid_name:'Энергосеть',         gskill_energy_grid_desc:'+200 макс. энергии для всех за уровень',
+    gskill_loot_protocol_name:'Протокол Лута',    gskill_loot_protocol_desc:'+1% шанс самоцветов за уровень',
+    gskill_boss_cracker_name:'Дробитель Боссов',  gskill_boss_cracker_desc:'+5% урон по боссам за уровень',
+    gskill_passive_matrix_name:'Пассивная Матрица', gskill_passive_matrix_desc:'+10% оффлайн доход за уровень',
+    gskill_war_drums_name:'Барабаны Войны',       gskill_war_drums_desc:'+5% урон в войнах кланов за уровень',
+    // Relics RU
+    relic_time_crystal_name:'Кристалл Времени',   relic_time_crystal_passive:'+15 сила тапа всегда',            relic_time_crystal_active:'Заморозить распад комбо на 60с',
+    relic_neural_core_name:'Нейронное Ядро',       relic_neural_core_passive:'+10% шанс самоцветов всегда',       relic_neural_core_active:'Авто-тап 10/с на 2 минуты',
+    relic_void_prism_name:'Призма Пустоты',        relic_void_prism_passive:'×1.5 оффлайн доход всегда',          relic_void_prism_active:'×3 самоцветы на 30 секунд',
+    relic_soul_anchor_name:'Якорь Души',           relic_soul_anchor_passive:'+500 энергии, +5 реген/с',           relic_soul_anchor_active:'Бесконечная энергия на 45с',
+    relic_chaos_core_name:'Ядро Хаоса',           relic_chaos_core_passive:'+25% шанс крита, ×2 крит множитель', relic_chaos_core_active:'100% крит + ×5 крит на 20с',
+    // TapChallenge RU
+    challenge_sprint_1000_name:'Спринт 1K',       challenge_sprint_1000_desc:'1000 тапов за 60 секунд',
+    challenge_burst_500_name:'Взрыв 500',          challenge_burst_500_desc:'500 тапов за 20 секунд',
+    challenge_no_boost_500_name:'Чистые 500',      challenge_no_boost_500_desc:'500 тапов — без активных способностей',
+    challenge_marathon_5k_name:'Марафон 5K',       challenge_marathon_5k_desc:'5000 тапов за 5 минут',
+    challenge_ultra_10k_name:'Ультра 10K',         challenge_ultra_10k_desc:'10000 тапов за 10 минут',
+    challenge_godlike_30s_name:'Богоподобный 30с', challenge_godlike_30s_desc:'Максимум тапов за 30 секунд',
+    // Talents RU
+    talent_double_glory_name:'Двойная Слава',      talent_double_glory_desc:'Престиж даёт +2 тапа вместо +1',
+    talent_energy_god_name:'Бог Энергии',          talent_energy_god_desc:'Макс. энергия постоянно +1000',
+    talent_passive_lord_name:'Лорд Пассива',       talent_passive_lord_desc:'Доход с карточек ×1.5 постоянно',
+    talent_crit_storm_name:'Критический Шторм',    talent_crit_storm_desc:'+10% шанс крита постоянно',
+    talent_gem_magnet_name:'Магнит Самоцветов',    talent_gem_magnet_desc:'+5% шанс самоцветов постоянно',
+    talent_boss_slayer_name:'Убийца Боссов',       talent_boss_slayer_desc:'Двойной урон по боссам',
+    talent_eternal_streak_name:'Вечный Стрик',     talent_eternal_streak_desc:'Стрик не сбрасывается при пропуске',
+    talent_auto_master_name:'Мастер Авто',         talent_auto_master_desc:'Авто-доход ×2',
     // Ascension RU
     asc_prestige_prefix:'P',
     // Guild level prefix RU

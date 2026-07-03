@@ -99,7 +99,7 @@ export default function WorldBoss() {
         <div className="worldboss-dead">{t('wboss_dead')}</div>
       ) : (
         <>
-          <div className="worldboss-name">{boss.name}</div>
+          <div className="worldboss-name">{(() => { const k = 'wboss_' + (boss.name || '').toLowerCase().replace(/ /g, '_'); const v = t(k); return v === k ? boss.name : v; })()}</div>
 
           <div className="worldboss-phase-badge" style={{ background: phaseCfg.color + '22', color: phaseCfg.color, border: `1px solid ${phaseCfg.color}` }}>
             {t(phaseCfg.labelKey)}
