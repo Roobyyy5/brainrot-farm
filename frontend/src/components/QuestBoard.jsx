@@ -32,6 +32,7 @@ export default function QuestBoard() {
 
   if (!data) return null;
   const quests = tab === 'daily' ? data.daily : data.weekly;
+  const qName = (q) => { const k = 'quest_' + q.key + '_name'; const v = t(k); return v === k ? q.name : v; };
 
   return (
     <div className="questboard-panel">
@@ -69,7 +70,7 @@ export default function QuestBoard() {
             <div key={q.key} className={`questboard-quest ${q.completed ? 'completed' : ''} ${q.claimed ? 'claimed' : ''}`}>
               <span className="questboard-quest-icon">{q.icon}</span>
               <div className="questboard-quest-body">
-                <div className="questboard-quest-name">{q.name}</div>
+                <div className="questboard-quest-name">{qName(q)}</div>
                 <div className="questboard-progress-bar">
                   <div className="questboard-progress-fill" style={{ width: `${pct}%` }} />
                 </div>

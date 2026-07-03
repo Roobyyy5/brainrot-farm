@@ -14,7 +14,7 @@ export default function SeasonLeaderboard() {
     const ms = Math.max(0, data.endsAt - Date.now());
     const d  = Math.floor(ms / 86400000);
     const h  = Math.floor((ms % 86400000) / 3600000);
-    return `${d}d ${h}h`;
+    return `${d}${t('time_d')} ${h}${t('time_h')}`;
   };
 
   return (

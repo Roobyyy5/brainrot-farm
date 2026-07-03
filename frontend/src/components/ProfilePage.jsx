@@ -93,14 +93,20 @@ export default function ProfilePage({ currentUserId }) {
           </div>
 
           <div className="profile-zone">
-            {profile.currentZone?.icon} {profile.currentZone?.name}
+            {profile.currentZone?.icon} {(() => {
+              const zone = profile.currentZone;
+              if (!zone) return null;
+              const k = 'zone_name_' + zone.zone;
+              const v = t(k);
+              return v === k ? zone.name : v;
+            })()}
           </div>
 
           {profile.activePet && (
             <div className="profile-pet-row">
               <span>{profile.activePet.icon}</span>
-              <span>{profile.activePet.name}</span>
-              <span style={{ opacity: 0.6 }}>{profile.activePet.desc}</span>
+              <span>{(() => { const k = 'pet_' + profile.activePet.key + '_name'; const v = t(k); return v === k ? profile.activePet.name : v; })()}</span>
+              <span style={{ opacity: 0.6 }}>{(() => { const k = 'pet_' + profile.activePet.key + '_desc'; const v = t(k); return v === k ? profile.activePet.desc : v; })()}</span>
             </div>
           )}
 

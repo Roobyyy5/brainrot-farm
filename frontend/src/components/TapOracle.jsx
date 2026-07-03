@@ -56,10 +56,10 @@ export default function TapOracle() {
             <div className="oracle-challenge">
               <div className="oracle-ch-header">
                 <span className="oracle-ch-icon">{ch.icon}</span>
-                <span className="oracle-ch-name">{ch.name}</span>
+                <span className="oracle-ch-name">{(() => { const k = 'oracle_ch_' + (ch.key||'') + '_name'; const v = t(k); return v === k ? ch.name : v; })()}</span>
                 <span className="oracle-ch-timer">⏳ {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2,'0')}</span>
               </div>
-              <div className="oracle-ch-desc">{ch.desc}</div>
+              <div className="oracle-ch-desc">{(() => { const k = 'oracle_ch_' + (ch.key||'') + '_desc'; const v = t(k); return v === k ? ch.desc : v; })()}</div>
               <div className="oracle-ch-progress-bar">
                 <div className="oracle-ch-progress-fill" style={{ width: `${progPct}%` }} />
               </div>
@@ -103,7 +103,7 @@ export default function TapOracle() {
             <div key={item.key} className={`oracle-shop-item ${item.owned ? 'owned' : ''}`}>
               <span className="oracle-shop-icon">{item.icon}</span>
               <div className="oracle-shop-info">
-                <div className="oracle-shop-name">{item.name}</div>
+                <div className="oracle-shop-name">{(() => { const k = 'oracle_' + item.key + '_name'; const v = t(k); return v === k ? item.name : v; })()}</div>
                 <div className="oracle-shop-cost">{t('oracle_coins', { n: item.cost })}</div>
               </div>
               {item.owned

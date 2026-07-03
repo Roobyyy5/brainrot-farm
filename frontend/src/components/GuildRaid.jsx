@@ -27,6 +27,7 @@ export default function GuildRaid() {
 
   if (!data) return null;
   const { raid, participants, waves, message } = data;
+  const raidWaveName = (name) => { const k = 'guildraid_' + (name||'').toLowerCase().replace(/\s+/g,'_'); const v = t(k); return v === k ? name : v; };
 
   return (
     <div className="guildraid-section">
@@ -41,7 +42,7 @@ export default function GuildRaid() {
             <div className="guildraid-waves-preview">
               {(waves || []).map(w => (
                 <div key={w.wave} className="guildraid-wave-chip">
-                  {t('graid_wave_chip', { n: w.wave, name: w.name, gems: w.gemReward })}
+                  {t('graid_wave_chip', { n: w.wave, name: raidWaveName(w.name), gems: w.gemReward })}
                 </div>
               ))}
             </div>
@@ -54,7 +55,7 @@ export default function GuildRaid() {
         <div className="guildraid-active">
           <div className="guildraid-wave-info">
             <span>{t('graid_wave_info', { n: raid.wave, total: waves?.length || 5 })}</span>
-            <span>{raid.bossName}</span>
+            <span>{raidWaveName(raid.bossName)}</span>
           </div>
           <div className="guildraid-hp-wrap">
             <div className="guildraid-hp-bar" style={{ width: `${Math.round(raid.bossHp / raid.bossMaxHp * 100)}%` }} />

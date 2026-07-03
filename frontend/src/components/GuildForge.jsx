@@ -56,7 +56,7 @@ export default function GuildForge() {
             const left = Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 60000));
             return (
               <div key={b.recipeKey} className="forge-active-item">
-                <span>{recipe?.icon} {recipe?.name}</span>
+                <span>{recipe?.icon} {recipe ? (() => { const k = 'forge_' + recipe.key + '_name'; const v = t(k); return v === k ? recipe.name : v; })() : ''}</span>
                 <span className="forge-active-time">{t('forge_time_left', { n: left })}</span>
               </div>
             );
@@ -73,8 +73,8 @@ export default function GuildForge() {
               <div className="forge-recipe-top">
                 <span className="forge-recipe-icon">{recipe.icon}</span>
                 <div>
-                  <div className="forge-recipe-name" style={{ color }}>{recipe.name}</div>
-                  <div className="forge-recipe-desc">{recipe.desc}</div>
+                  <div className="forge-recipe-name" style={{ color }}>{(() => { const k = 'forge_' + recipe.key + '_name'; const v = t(k); return v === k ? recipe.name : v; })()}</div>
+                  <div className="forge-recipe-desc">{(() => { const k = 'forge_' + recipe.key + '_desc'; const v = t(k); return v === k ? recipe.desc : v; })()}</div>
                 </div>
               </div>
               <div className="forge-recipe-cost">

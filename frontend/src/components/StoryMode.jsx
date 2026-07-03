@@ -66,9 +66,9 @@ export default function StoryMode() {
             <>
               <div className="campaign-boss-card">
                 <div className="campaign-boss-icon">{ch?.icon}</div>
-                <div className="campaign-boss-name">{ch?.name}</div>
+                <div className="campaign-boss-name">{(() => { const k = 'story_ch_' + (ch?.id||'') + '_name'; const v = t(k); return v === k ? ch?.name : v; })()}</div>
                 <div className="campaign-boss-mechanic">
-                  {MECHANIC_ICON[ch?.mechanic]} {ch?.mechanicDesc}
+                  {MECHANIC_ICON[ch?.mechanic]} {(() => { const k = 'story_mech_' + ch?.mechanic; const v = t(k); return v === k ? ch?.mechanicDesc : v; })()}
                 </div>
                 <div className="campaign-boss-reward">
                   {t('story_reward', { rewards: Object.entries(ch?.reward || {}).filter(([k]) => k !== 'gems').map(([k, v]) => `${k}: +${v}`).join(' • ') + (ch?.reward?.gems ? ` • 💎 ${ch.reward.gems}` : '') })}
@@ -82,9 +82,9 @@ export default function StoryMode() {
             <>
               <div className="campaign-active-boss">
                 <div className="campaign-boss-icon-big">{ch?.icon}</div>
-                <div className="campaign-boss-name">{ch?.name}</div>
+                <div className="campaign-boss-name">{(() => { const k = 'story_ch_' + (ch?.id||'') + '_name'; const v = t(k); return v === k ? ch?.name : v; })()}</div>
                 <div className="campaign-mechanic-badge">
-                  {MECHANIC_ICON[ch?.mechanic]} {ch?.mechanicDesc}
+                  {MECHANIC_ICON[ch?.mechanic]} {(() => { const k = 'story_mech_' + ch?.mechanic; const v = t(k); return v === k ? ch?.mechanicDesc : v; })()}
                 </div>
               </div>
               <div className="campaign-hp-wrap">
@@ -115,8 +115,8 @@ export default function StoryMode() {
             <div key={c.id} className={`campaign-ch-row ${c.completed ? 'done' : ''} ${!c.unlocked ? 'locked' : ''}`}>
               <span className="campaign-ch-icon">{c.icon}</span>
               <div className="campaign-ch-info">
-                <div className="campaign-ch-name">{c.id}. {c.name}</div>
-                <div className="campaign-ch-mech">{MECHANIC_ICON[c.mechanic]} {c.mechanicDesc}</div>
+                <div className="campaign-ch-name">{c.id}. {(() => { const k = 'story_ch_' + c.id + '_name'; const v = t(k); return v === k ? c.name : v; })()}</div>
+                <div className="campaign-ch-mech">{MECHANIC_ICON[c.mechanic]} {(() => { const k = 'story_mech_' + c.mechanic; const v = t(k); return v === k ? c.mechanicDesc : v; })()}</div>
               </div>
               <div className="campaign-ch-status">
                 {c.completed ? '✅' : c.unlocked ? '🔓' : '🔒'}

@@ -46,7 +46,7 @@ export default function Crafting() {
             <div className="crafting-arrow">→</div>
             <div className="crafting-output">
               <span className="crafting-out-icon">{r.output.icon}</span>
-              <span className="crafting-out-name">{r.output.name}</span>
+              <span className="crafting-out-name">{(() => { const k = 'item_' + r.output.key + '_name'; const v = t(k); return v === k ? r.output.name : v; })()}</span>
               {r.output.qty > 1 && <span className="crafting-out-qty">×{r.output.qty}</span>}
             </div>
             <button

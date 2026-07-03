@@ -3,6 +3,18 @@ import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
 
+function effectLabel(effect, value, t) {
+  switch (effect) {
+    case 'tapMult':     return t('we_effect_tap', { n: value });
+    case 'noComboDecay': return t('we_effect_combo');
+    case 'gemFreq':     return t('we_effect_gems', { n: value });
+    case 'autoCrit':    return t('we_effect_crit');
+    case 'regenMult':   return t('we_effect_regen', { n: value });
+    case 'masteryMult': return t('we_effect_xp', { n: value });
+    default:            return `×${value}`;
+  }
+}
+
 export default function WorldEvents() {
   const t = useT();
   const [events, setEvents] = useState([]);
@@ -65,10 +77,10 @@ export default function WorldEvents() {
             <div key={ev.id} className="worldevent-card">
               <span className="worldevent-icon">{ev.icon}</span>
               <div className="worldevent-info">
-                <div className="worldevent-name">{ev.name}</div>
+                <div className="worldevent-name">{(() => { const k = 'we_' + ev.key + '_name'; const v = t(k); return v === k ? ev.name : v; })()}</div>
                 <div className="worldevent-timer">⏳ {fmt(ev.remainingMs)}</div>
               </div>
-              <div className="worldevent-effect">{effectLabel(ev.effect, ev.value)}</div>
+              <div className="worldevent-effect">{effectLabel(ev.effect, ev.value, t)}</div>
             </div>
           ))}
         </div>
@@ -77,14 +89,3 @@ export default function WorldEvents() {
   );
 }
 
-function effectLabel(effect, value) {
-  switch (effect) {
-    case 'tapMult':     return `×${value} Tap`;
-    case 'noComboDecay': return '♾ Combo';
-    case 'gemFreq':     return `1/${value} Gems`;
-    case 'autoCrit':    return '100% Crit';
-    case 'regenMult':   return `×${value} Regen`;
-    case 'masteryMult': return `×${value} XP`;
-    default:            return `×${value}`;
-  }
-}

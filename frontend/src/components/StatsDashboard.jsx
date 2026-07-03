@@ -41,7 +41,7 @@ export default function StatsDashboard() {
           <div className="stat-chip-lbl">{t('stats_best_combo')}</div>
         </div>
         <div className="stat-chip">
-          <div className="stat-chip-val">Zone {totals.currentZone}</div>
+          <div className="stat-chip-val">{t('stats_zone_prefix')} {totals.currentZone}</div>
           <div className="stat-chip-lbl">{t('stats_zone')}</div>
         </div>
       </div>

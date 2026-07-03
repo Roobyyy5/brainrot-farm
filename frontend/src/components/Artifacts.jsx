@@ -63,16 +63,16 @@ export default function Artifacts() {
         <div className="artifacts-sets">
           <div className="artifacts-sets-title">{t('art_sets_title')}</div>
           {Object.entries({
-            iron_warrior:   { name: 'Iron Warrior',    pieces: ['iron_fist','leather_skull'],      bonus: '+5 TP +500 E',       icon: '⚔️' },
-            crystal_mage:   { name: 'Crystal Mage',    pieces: ['steel_brain','iron_helmet'],       bonus: '+5% crit ×1.3 tap',  icon: '🔮' },
-            golden_legend:  { name: 'Golden Legend',   pieces: ['golden_mind','crystal_core'],      bonus: '+15 TP +5% gems',    icon: '✨' },
-            void_reaper:    { name: 'Void Reaper',     pieces: ['omega_tap','void_shell'],          bonus: '×2 tap +15% crit',   icon: '🌑' },
-            nature_spirit:  { name: 'Nature Spirit',   pieces: ['lucky_coin','bronze_relic'],       bonus: '+3% gems +15% cards',icon: '🌿' },
-            chaos_master:   { name: 'Chaos Master',    pieces: ['chaos_stone','eternal_relic'],     bonus: '×3 tap +75% offline',icon: '🌀' },
-            full_legendary: { name: 'FULL LEGEND SET', pieces: ['omega_tap','void_shell','eternal_relic','chaos_stone'], bonus: '×5 tap +25% crit',icon: '💥' },
+            iron_warrior:   { tKey: 'art_set_iron_warrior',   pieces: ['iron_fist','leather_skull'],      bonus: '+5 TP +500 E',       icon: '⚔️' },
+            crystal_mage:   { tKey: 'art_set_crystal_mage',   pieces: ['steel_brain','iron_helmet'],       bonus: '+5% crit ×1.3 tap',  icon: '🔮' },
+            golden_legend:  { tKey: 'art_set_golden_legend',  pieces: ['golden_mind','crystal_core'],      bonus: '+15 TP +5% gems',    icon: '✨' },
+            void_reaper:    { tKey: 'art_set_void_reaper',    pieces: ['omega_tap','void_shell'],          bonus: '×2 tap +15% crit',   icon: '🌑' },
+            nature_spirit:  { tKey: 'art_set_nature_spirit',  pieces: ['lucky_coin','bronze_relic'],       bonus: '+3% gems +15% cards',icon: '🌿' },
+            chaos_master:   { tKey: 'art_set_chaos_master',   pieces: ['chaos_stone','eternal_relic'],     bonus: '×3 tap +75% offline',icon: '🌀' },
+            full_legendary: { tKey: 'art_set_full_legendary', pieces: ['omega_tap','void_shell','eternal_relic','chaos_stone'], bonus: '×5 tap +25% crit',icon: '💥' },
           }).filter(([, s]) => s.pieces.every(p => equippedKeys.includes(p))).map(([key, s]) => (
             <div key={key} className="artifact-set-badge">
-              {s.icon} <b>{s.name}</b> — {s.bonus}
+              {s.icon} <b>{t(s.tKey)}</b> — {s.bonus}
             </div>
           ))}
         </div>
@@ -89,12 +89,12 @@ export default function Artifacts() {
             const art = data.equipped?.[slot];
             return (
               <div key={slot} className="artifact-slot">
-                <div className="artifact-slot-label">{SLOT_ICON[slot]} {slot}</div>
+                <div className="artifact-slot-label">{SLOT_ICON[slot]} {t('artifact_slot_' + slot)}</div>
                 {art ? (
                   <div className="artifact-card" style={{ borderColor: RARITY_COLOR[art.rarity] }}>
                     <span className="artifact-icon">{art.icon}</span>
-                    <span className="artifact-name">{art.name}</span>
-                    <span className="artifact-rarity" style={{ color: RARITY_COLOR[art.rarity] }}>{art.rarity}</span>
+                    <span className="artifact-name">{(() => { const k = 'art_' + art.key + '_name'; const v = t(k); return v === k ? art.name : v; })()}</span>
+                    <span className="artifact-rarity" style={{ color: RARITY_COLOR[art.rarity] }}>{t('rarity_' + art.rarity)}</span>
                     <div className="artifact-stats">
                       {Object.entries(art.stats || {}).map(([k, v]) => (
                         <span key={k} className="artifact-stat">+{typeof v === 'number' && v < 1 ? `${(v*100).toFixed(0)}%` : v} {k}</span>
@@ -120,9 +120,9 @@ export default function Artifacts() {
             <div key={`${g.key}:${g.rarity}`} className="artifact-inv-card" style={{ borderColor: RARITY_COLOR[g.rarity] }}>
               <span className="artifact-icon">{g.icon}</span>
               <div className="artifact-inv-info">
-                <div className="artifact-name">{g.name} ×{g.count}</div>
-                <div className="artifact-rarity" style={{ color: RARITY_COLOR[g.rarity] }}>{g.rarity}</div>
-                <div className="artifact-slot-tag">{g.slot}</div>
+                <div className="artifact-name">{(() => { const k = 'art_' + g.key + '_name'; const v = t(k); return v === k ? g.name : v; })()} ×{g.count}</div>
+                <div className="artifact-rarity" style={{ color: RARITY_COLOR[g.rarity] }}>{t('rarity_' + g.rarity)}</div>
+                <div className="artifact-slot-tag">{t('artifact_slot_' + g.slot)}</div>
               </div>
               <div className="artifact-inv-actions">
                 {!data.equipped?.[g.slot] && (

@@ -19,7 +19,7 @@ export default function Achievements({ refreshKey }) {
         {list.map((a) => (
           <div key={a.key} className={a.unlocked ? 'achievement-badge unlocked' : 'achievement-badge'}>
             <div className="achievement-badge-emoji">{a.emoji}</div>
-            <div className="achievement-badge-name">{a.name}</div>
+            <div className="achievement-badge-name">{(() => { const k = 'ach_' + a.key + '_name'; const v = t(k); return v === k ? a.name : v; })()}</div>
             <div className="achievement-badge-reward">+{a.reward}</div>
           </div>
         ))}

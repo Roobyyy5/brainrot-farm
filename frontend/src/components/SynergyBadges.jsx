@@ -25,8 +25,8 @@ export default function SynergyBadges() {
       <div className="synergy-list">
         {data.synergies.map(s => (
           <div key={s.key} className="synergy-badge" style={{ borderColor: SYNERGY_COLOR[s.key] || '#888' }}>
-            <div className="synergy-badge-name" style={{ color: SYNERGY_COLOR[s.key] || '#888' }}>{s.name}</div>
-            <div className="synergy-badge-desc">{s.description}</div>
+            <div className="synergy-badge-name" style={{ color: SYNERGY_COLOR[s.key] || '#888' }}>{(() => { const k = 'synergy_' + s.key + '_name'; const v = t(k); return v === k ? s.name : v; })()}</div>
+            <div className="synergy-badge-desc">{(() => { const k = 'synergy_' + s.key + '_desc'; const v = t(k); return v === k ? s.description : v; })()}</div>
             <div className="synergy-badge-bonus">
               {Object.entries(s.bonus).map(([k, v]) => (
                 <span key={k} className="synergy-bonus-tag">

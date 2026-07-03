@@ -51,7 +51,7 @@ export default function TapAlchemy() {
             const left = b.expiresAt ? Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 1000)) : null;
             return (
               <div key={b.recipeKey} className="alchemy-active-item">
-                <span>{recipe?.icon} {recipe?.name}</span>
+                <span>{recipe?.icon} {recipe ? (() => { const k = 'alch_' + recipe.key + '_name'; const v = t(k); return v === k ? recipe.name : v; })() : ''}</span>
                 {left !== null && <span className="alchemy-active-timer">{Math.floor(left / 60)}:{String(left % 60).padStart(2,'0')}</span>}
               </div>
             );
@@ -62,7 +62,7 @@ export default function TapAlchemy() {
       <div className="alchemy-tabs">
         {['common', 'rare', 'legendary'].map(r => (
           <button key={r} className={`alchemy-tab ${tab === r ? 'active' : ''}`} onClick={() => setTab(r)}>
-            <span style={{ color: RARITY_COLOR[r] }}>{r.charAt(0).toUpperCase() + r.slice(1)}</span>
+            <span style={{ color: RARITY_COLOR[r] }}>{t('rarity_' + r)}</span>
           </button>
         ))}
       </div>
@@ -77,8 +77,8 @@ export default function TapAlchemy() {
               <div className="alchemy-recipe-top">
                 <span className="alchemy-recipe-icon">{recipe.icon}</span>
                 <div className="alchemy-recipe-info">
-                  <div className="alchemy-recipe-name">{recipe.name}</div>
-                  <div className="alchemy-recipe-desc">{recipe.desc}</div>
+                  <div className="alchemy-recipe-name">{(() => { const k = 'alch_' + recipe.key + '_name'; const v = t(k); return v === k ? recipe.name : v; })()}</div>
+                  <div className="alchemy-recipe-desc">{(() => { const k = 'alch_' + recipe.key + '_desc'; const v = t(k); return v === k ? recipe.desc : v; })()}</div>
                 </div>
               </div>
               <div className="alchemy-cost">

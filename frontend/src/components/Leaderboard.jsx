@@ -57,7 +57,7 @@ export default function Leaderboard({ currentUserId }) {
           >
             <span className="leaderboard-rank">#{i + 4}</span>
             <span className="leaderboard-name">{row.username || t('lb_anon')}</span>
-            <span className="leaderboard-level-badge">{LEVEL_EMOJI[row.level] || ''} {row.level}</span>
+            <span className="leaderboard-level-badge">{LEVEL_EMOJI[row.level] || ''} {(() => { const k = 'level_' + (row.level||'').toLowerCase().replace(/\s+/g,'_'); const v = t(k); return v === k ? row.level : v; })()}</span>
             <span className="leaderboard-coins">{row.score.toLocaleString()}</span>
           </li>
         ))}

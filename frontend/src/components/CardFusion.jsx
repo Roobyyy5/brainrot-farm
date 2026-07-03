@@ -61,7 +61,7 @@ export default function CardFusion() {
             {s.card ? (
               <div className="fusion-slot-card">
                 <div className="fusion-slot-icon">✨</div>
-                <div className="fusion-slot-name">{s.card.card_key}</div>
+                <div className="fusion-slot-name">{(() => { const k = 'card_' + s.card.card_key + '_name'; const v = t(k); return v === k ? s.card.card_key : v; })()}</div>
                 <div className="fusion-slot-mult">×{data.config?.fusionMultiplier}</div>
                 <button className="fusion-destroy-btn" onClick={(e) => { e.stopPropagation(); destroy(s.slot); }} disabled={loading}>🗑</button>
               </div>
@@ -84,7 +84,7 @@ export default function CardFusion() {
                 className={`fusion-card-item ${selected?.cardKey === c.key ? 'selected' : ''}`}
                 onClick={() => setSelected(selected?.cardKey === c.key ? null : { cardKey: c.key })}
               >
-                <span className="fusion-card-key">{c.key}</span>
+                <span className="fusion-card-key">{(() => { const k = 'card_' + c.key + '_name'; const v = t(k); return v === k ? c.key : v; })()}</span>
                 <span className="fusion-card-count">{t('fusion_copies', { n: c.count })}</span>
               </div>
             ))}
