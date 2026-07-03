@@ -55,7 +55,7 @@ export default function ActiveAbilities({ onActivate }) {
               title={ab.desc}
             >
               <span className="ability-icon">{ab.icon}</span>
-              <span className="ability-name">{ab.name}</span>
+              <span className="ability-name">{t('ability_' + ab.key + '_name')}</span>
               <span className="ability-cd">
                 {ab.active ? t('abilities_active') : fmtCd(ab.cooldownMs)}
               </span>

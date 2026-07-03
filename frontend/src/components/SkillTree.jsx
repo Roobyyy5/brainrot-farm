@@ -42,7 +42,7 @@ export default function SkillTree() {
             className={`skill-tree-tab${activeTree === tr.key ? ' skill-tree-tab--active' : ''}`}
             onClick={() => setActiveTree(tr.key)}
           >
-            {tr.icon} {tr.label}
+            {tr.icon} {t('skill_tree_' + tr.key)}
           </button>
         ))}
       </div>
@@ -52,8 +52,8 @@ export default function SkillTree() {
           {tree.skills.map((skill) => (
             <div key={skill.key} className={`skill-card${skill.isMaxed ? ' skill-card--maxed' : ''}`}>
               <div className="skill-card-info">
-                <div className="skill-card-name">{skill.name}</div>
-                <div className="skill-card-desc">{skill.desc}</div>
+                <div className="skill-card-name">{t('skill_' + skill.key + '_name')}</div>
+                <div className="skill-card-desc">{t('skill_' + skill.key + '_desc')}</div>
                 <div className="skill-card-level">
                   {Array.from({ length: skill.maxLevel }, (_, i) => (
                     <span key={i} className={`skill-pip${i < skill.level ? ' skill-pip--filled' : ''}`} />

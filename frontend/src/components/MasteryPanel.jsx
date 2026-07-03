@@ -23,7 +23,7 @@ export default function MasteryPanel() {
             <div key={u.key} className="mastery-item">
               <div className="mastery-item-header">
                 <span className="mastery-icon">{u.icon}</span>
-                <span className="mastery-label">{u.label}</span>
+                <span className="mastery-label">{t('upg_' + u.key + '_label')}</span>
                 <span className="mastery-level">{t('mastery_lv', { n: u.masteryLevel })}</span>
                 {u.bonusPct > 0 && <span className="mastery-bonus">+{u.bonusPct}%</span>}
               </div>

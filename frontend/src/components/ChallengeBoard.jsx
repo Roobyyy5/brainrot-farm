@@ -35,7 +35,7 @@ export default function ChallengeBoard() {
         <div key={c.key} className={`challenge-row${c.claimed ? ' challenge-row--done' : ''}`}>
           <span className="challenge-icon">{c.icon}</span>
           <div className="challenge-info">
-            <div className="challenge-label">{c.label}</div>
+            <div className="challenge-label">{t('cb_label_' + c.key)}</div>
             <div className="challenge-reward">
               {c.reward.gems && t('cb_reward_gems', { n: c.reward.gems })}
               {c.reward.bp && t('cb_reward_bp', { n: c.reward.bp })}
@@ -56,7 +56,7 @@ export default function ChallengeBoard() {
         <div key={c.key} className={`challenge-row${c.claimed ? ' challenge-row--done' : ''}`}>
           <span className="challenge-icon">{c.icon}</span>
           <div className="challenge-info">
-            <div className="challenge-label">{c.label}</div>
+            <div className="challenge-label">{t('cb_label_' + c.key)}</div>
             <div className="challenge-reward">
               {c.reward.gems && t('cb_reward_gems', { n: c.reward.gems })}
               {c.reward.bp && t('cb_reward_bp', { n: c.reward.bp })}

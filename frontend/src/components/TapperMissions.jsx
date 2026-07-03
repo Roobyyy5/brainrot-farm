@@ -40,7 +40,7 @@ export default function TapperMissions({ onEarned }) {
             >
               <span className="mission-emoji">{m.emoji}</span>
               <div className="mission-info">
-                <div className="mission-name">{m.name}</div>
+                <div className="mission-name">{t('mission_' + m.key + '_name')}</div>
                 <div className="mission-progress-wrap">
                   <div className="mission-bar-track">
                     <div className="mission-bar-fill" style={{ width: `${pct}%` }} />

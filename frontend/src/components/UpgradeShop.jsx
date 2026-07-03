@@ -38,8 +38,8 @@ export default function UpgradeShop({ userCoins, onCoinsSpent }) {
           <div key={upg.type} className={`upgrade-card${upg.isMaxed ? ' upgrade-card--maxed' : ''}`}>
             <div className="upgrade-icon">{upg.icon}</div>
             <div className="upgrade-info">
-              <div className="upgrade-name">{upg.label}</div>
-              <div className="upgrade-desc">{upg.description}</div>
+              <div className="upgrade-name">{t('upg_' + upg.type.toLowerCase() + '_label')}</div>
+              <div className="upgrade-desc">{t('upg_' + upg.type.toLowerCase() + '_desc')}</div>
               <div className="upgrade-effect">
                 {upg.currentEffect} {upg.unit}
                 {!upg.isMaxed && (
