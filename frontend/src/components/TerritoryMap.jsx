@@ -26,6 +26,8 @@ export default function TerritoryMap() {
 
   if (!data) return null;
 
+  const terName = (ter) => { const k = `ter_name_${ter.id}`; const v = t(k); return v === k ? ter.name : v; }
+
   const sel = data.territories.find(ter => ter.id === selected);
 
   return (
@@ -52,7 +54,7 @@ export default function TerritoryMap() {
               onClick={() => setSelected(selected === ter.id ? null : ter.id)}
             >
               <div className="territory-icon" style={{ color: ter.color }}>{ter.icon}</div>
-              <div className="territory-name">{ter.name}</div>
+              <div className="territory-name">{terName(ter)}</div>
               {controlled && (
                 <div className="territory-owner" style={{ color: isMyGuild ? '#34d399' : '#f87171' }}>
                   {isMyGuild ? t('ter_mine') : `[${controlled.tag}]`}
@@ -70,7 +72,7 @@ export default function TerritoryMap() {
 
       {sel && (
         <div className="territory-detail">
-          <div className="territory-detail-name">{sel.icon} {sel.name}</div>
+          <div className="territory-detail-name">{sel.icon} {terName(sel)}</div>
           <div className="territory-detail-bonus">
             {t('ter_bonus', { n: formatBonus(sel.bonus) })}
           </div>

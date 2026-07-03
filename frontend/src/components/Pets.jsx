@@ -24,6 +24,10 @@ export default function Pets() {
     finally { setActing(false); }
   };
 
+  const petName = (p) => { const k = `pet_${p.key}_name`; const v = t(k); return v === k ? p.name : v; }
+  const petRarity = (p) => { const k = `rarity_${p.rarity}`; const v = t(k); return v === k ? p.rarity : v; }
+  const petDesc = (p) => { const k = `pet_${p.key}_desc`; const v = t(k); return v === k ? p.desc : v; }
+
   const owned = pets.filter(p => p.owned);
   const locked = pets.filter(p => !p.owned);
 
@@ -44,9 +48,9 @@ export default function Pets() {
                 onClick={() => handleEquip(p.key)}
               >
                 <div className="pet-icon">{p.icon}</div>
-                <div className="pet-name">{p.name}</div>
-                <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{p.rarity}</div>
-                <div className="pet-desc">{p.desc}</div>
+                <div className="pet-name">{petName(p)}</div>
+                <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{petRarity(p)}</div>
+                <div className="pet-desc">{petDesc(p)}</div>
                 {p.key === activePet && <div className="pet-active-badge">{t('pets_active_badge')}</div>}
               </div>
             ))}
@@ -61,9 +65,9 @@ export default function Pets() {
             {locked.map(p => (
               <div key={p.key} className="pet-card pet-card--locked" style={{ borderColor: '#333' }}>
                 <div className="pet-icon" style={{ filter: 'grayscale(1)' }}>{p.icon}</div>
-                <div className="pet-name">{p.name}</div>
-                <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{p.rarity}</div>
-                <div className="pet-desc">{p.desc}</div>
+                <div className="pet-name">{petName(p)}</div>
+                <div className="pet-rarity" style={{ color: RARITY_COLOR[p.rarity] }}>{petRarity(p)}</div>
+                <div className="pet-desc">{petDesc(p)}</div>
                 <div className="pet-locked-hint">{t('pets_lootbox')}</div>
               </div>
             ))}

@@ -76,7 +76,7 @@ export default function BossEcosystem() {
                 <div className="bosseco-info">
                   <div className="bosseco-name">{boss.name}</div>
                   <div className="bosseco-type" style={{ color }}>
-                    {boss.type.toUpperCase()} • {t('beco_weak', { n: boss.weakness })}
+                    {t('boss_type_' + boss.type)} • {t('beco_weak', { n: t('boss_weak_' + boss.weakness) })}
                   </div>
                 </div>
                 <div className="bosseco-status">

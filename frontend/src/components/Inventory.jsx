@@ -25,6 +25,10 @@ export default function Inventory() {
     finally { setUsing(null); }
   };
 
+  const itemName = (item) => { const k = `item_${item.key}_name`; const v = t(k); return v === k ? item.name : v; }
+  const itemRarity = (item) => { const k = `rarity_${item.rarity}`; const v = t(k); return v === k ? item.rarity : v; }
+  const itemDesc = (item) => { const k = `item_${item.key}_desc`; const v = t(k); return v === k ? item.desc : v; }
+
   const owned = items.filter(i => i.quantity > 0);
 
   return (
@@ -46,9 +50,9 @@ export default function Inventory() {
           {owned.map(item => (
             <div key={item.key} className="inventory-item">
               <div className="inv-icon">{item.icon}</div>
-              <div className="inv-name">{item.name}</div>
-              <div className="inv-rarity" style={{ color: RARITY_COLOR[item.rarity] }}>{item.rarity}</div>
-              <div className="inv-desc">{item.desc}</div>
+              <div className="inv-name">{itemName(item)}</div>
+              <div className="inv-rarity" style={{ color: RARITY_COLOR[item.rarity] }}>{itemRarity(item)}</div>
+              <div className="inv-desc">{itemDesc(item)}</div>
               <div className="inv-qty">×{item.quantity}</div>
               <button
                 className="inv-use-btn"
@@ -65,7 +69,7 @@ export default function Inventory() {
         <div className="inventory-locked-row">
           {items.filter(i => i.quantity === 0).map(item => (
             <div key={item.key} className="inv-locked-chip">
-              {item.icon} {item.name}
+              {item.icon} {itemName(item)}
             </div>
           ))}
         </div>

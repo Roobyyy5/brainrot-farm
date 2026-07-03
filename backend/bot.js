@@ -1,5 +1,28 @@
 const { Bot, InlineKeyboard } = require('grammy');
 
+const BOT_MSGS = {
+  en: {
+    welcome: (name) => `🧠 Welcome to Brainrot Farm, ${name}!\n\nTap, farm, and flex your brain power!\n\n🏆 Earn Brainrot Points and climb the leaderboard.`,
+    open_app: '🧠 Open Brainrot Farm',
+    join_channel: '📢 Join Channel',
+  },
+  uk: {
+    welcome: (name) => `🧠 Ласкаво просимо до Brainrot Farm, ${name}!\n\nТапай, фармай та демонструй силу свого мозку!\n\n🏆 Збирай Brainrot Points та підкорюй лідерборд.`,
+    open_app: '🧠 Відкрити Brainrot Farm',
+    join_channel: '📢 Приєднатись до каналу',
+  },
+  ru: {
+    welcome: (name) => `🧠 Добро пожаловать в Brainrot Farm, ${name}!\n\nТапай, фармь и демонстрируй силу своего мозга!\n\n🏆 Зарабатывай Brainrot Points и покоряй таблицу лидеров.`,
+    open_app: '🧠 Открыть Brainrot Farm',
+    join_channel: '📢 Присоединиться к каналу',
+  },
+};
+
+function getBotMsg(langCode) {
+  const l = langCode?.split(/[-_]/)[0];
+  return BOT_MSGS[l] || BOT_MSGS.en;
+}
+
 async function startBot() {
   if (!process.env.BOT_TOKEN) {
     throw new Error('BOT_TOKEN is missing in .env');
@@ -22,18 +45,14 @@ async function startBot() {
     const appUrl = refPayload ? `${process.env.MINI_APP_URL}?ref=${encodeURIComponent(refPayload)}` : process.env.MINI_APP_URL;
 
     const channelUrl = process.env.CHANNEL_URL || 'https://t.me/figabrainnews';
+    const msgs = getBotMsg(ctx.from?.language_code);
+    const username = ctx.from?.first_name || ctx.from?.username || 'Brain';
     const keyboard = new InlineKeyboard()
-      .webApp('🧠 Open Brainrot Farm', appUrl)
+      .webApp(msgs.open_app, appUrl)
       .row()
-      .url('📢 Join Channel', channelUrl);
+      .url(msgs.join_channel, channelUrl);
 
-    // Awaiting (rather than fire-and-forget) means a rejection — e.g. Telegram
-    // rejecting a non-HTTPS web_app URL — surfaces through bot.catch() instead
-    // of becoming an unhandled rejection that crashes the whole process.
-    await ctx.reply(
-      'Welcome to Brainrot Farm! Farm braincells, climb from NPC to Gigachad, and invite friends for bonus points.',
-      { reply_markup: keyboard }
-    );
+    await ctx.reply(msgs.welcome(username), { reply_markup: keyboard });
   });
 
   bot.catch((err) => {

@@ -52,6 +52,7 @@ export default function CoopRaid() {
   }, [activeLobby?.endsAt]);
 
   const act = async (fn) => { setLoading(true); try { await fn(); await load(); } catch (err) { alert(err.message); } finally { setLoading(false); } };
+  const bossName = (key) => { const k = 'coop_boss_' + key; const v = t(k); return v === k ? key?.replace(/_/g, ' ').toUpperCase() : v; };
 
   const create = async (bossKey) => {
     setLoading(true);
@@ -84,7 +85,7 @@ export default function CoopRaid() {
       {view === 'raid' && activeLobby ? (
         <div className="coopraid-active">
           <div className="coopraid-boss-name">
-            {data.bossDefs?.find(b => b.key === activeLobby.bossKey)?.icon} {activeLobby.bossKey?.replace(/_/g, ' ').toUpperCase()}
+            {data.bossDefs?.find(b => b.key === activeLobby.bossKey)?.icon} {bossName(activeLobby.bossKey)}
           </div>
           <div className="coopraid-hp-bar">
             <div className="coopraid-hp-fill" style={{ width: `${hpPct}%` }} />
@@ -121,7 +122,7 @@ export default function CoopRaid() {
               <div key={boss.key} className="coopraid-boss-card">
                 <span className="coopraid-boss-icon">{boss.icon}</span>
                 <div className="coopraid-boss-info">
-                  <div className="coopraid-boss-name-sm">{boss.name}</div>
+                  <div className="coopraid-boss-name-sm">{bossName(boss.key)}</div>
                   <div className="coopraid-boss-stats">{(boss.hp / 1_000_000).toFixed(0)}M HP • {boss.maxPlayers}p • {boss.durationMs / 60000}min</div>
                   <div className="coopraid-boss-loot">💎 {boss.loot.gems} + {boss.loot.topBonus} top bonus</div>
                 </div>
@@ -140,7 +141,7 @@ export default function CoopRaid() {
                 return (
                   <div key={l.id} className="coopraid-lobby-row">
                     <span>{def?.icon} {l.creatorName}</span>
-                    <span className="coopraid-lobby-boss">{def?.name}</span>
+                    <span className="coopraid-lobby-boss">{bossName(def?.key)}</span>
                     <span className="coopraid-lobby-members">{l.memberCount}/{def?.maxPlayers}</span>
                     <button className="coopraid-join-btn" onClick={() => act(() => api.coopraid.join(l.id))} disabled={loading}>
                       {t('coop_join')}

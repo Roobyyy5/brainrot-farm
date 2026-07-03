@@ -26,6 +26,8 @@ export default function WorldMap() {
   };
 
   const advanceable = zones.find(z => z.canAdvance);
+  const zoneName = (z) => { const k = `zone_name_${z.zone}`; const v = t(k); return v === k ? z.name : v; }
+  const zoneDesc = (z) => { const k = `zone_desc_${z.zone}`; const v = t(k); return v === k ? z.desc : v; }
 
   return (
     <div className="worlds-section">
@@ -39,8 +41,8 @@ export default function WorldMap() {
           >
             <div className="zone-icon">{z.icon}</div>
             <div className="zone-info">
-              <div className="zone-name">{z.zone}. {z.name}</div>
-              <div className="zone-desc">{z.desc}</div>
+              <div className="zone-name">{z.zone}. {zoneName(z)}</div>
+              <div className="zone-desc">{zoneDesc(z)}</div>
               {z.tapPowerBonus > 0 && (
                 <div className="zone-bonus">{t('wmap_tap_bonus', { n: z.tapPowerBonus })}</div>
               )}
@@ -60,7 +62,7 @@ export default function WorldMap() {
 
       {advanceable && (
         <button className="worlds-advance-btn" onClick={handleAdvance} disabled={advancing}>
-          {advancing ? '...' : t('wmap_advance', { name: advanceable.name })}
+          {advancing ? '...' : t('wmap_advance', { name: zoneName(advanceable) })}
         </button>
       )}
     </div>

@@ -940,7 +940,21 @@ export const LANGS = {
     // AuctionHouse
     auction_expired: 'Expired',
     // RankedDuels
-    ranked_wl:       'W {w} / L {l}',
+    ranked_wl:       '✅ {w} / ❌ {l}',
+    league_rookie:   'Rookie',
+    league_bronze:   'Bronze',
+    league_silver:   'Silver',
+    league_gold:     'Gold',
+    league_legend:   'Legend',
+    // WorldBoss phases
+    wboss_phase_normal:     'Normal',
+    wboss_phase_rage:       '⚠️ RAGE',
+    wboss_phase_vulnerable: '✨ VULNERABLE ×3!',
+    // Time units
+    time_d: 'd',
+    time_h: 'h',
+    time_m: 'm',
+    time_s: 's',
     common_season:   'season',
     div_division_label:    'Division',
     common_gems_label:     'gems',
@@ -1005,6 +1019,37 @@ export const LANGS = {
     cb_label_win_duel_week:    'Win a Duel this week',
     cb_label_guild_boss_week:  'Hit the Guild Boss this week',
     cb_label_world_boss_week:  'Hit the World Boss this week',
+    // Territory zones
+    ter_name_1:'Crystal Caves', ter_name_2:'Neon District', ter_name_3:'Neural Nexus',
+    ter_name_4:'Quantum Fields', ter_name_5:'Void Rift', ter_name_6:'Storm Peaks',
+    ter_name_7:'Mech Foundry', ter_name_8:'Bio Gardens', ter_name_9:'Phantom Coast', ter_name_10:'Solar Citadel',
+    // World map zones
+    zone_name_1:'Neuron Valley', zone_name_2:'Synapse City', zone_name_3:'Cortex Canyon',
+    zone_name_4:'Axon Abyss', zone_name_5:'Brain Singularity',
+    // Pets
+    pet_brain_cat_name:'Brain Cat', pet_brain_cat_desc:'+5% tap power',
+    pet_energy_fox_name:'Energy Fox', pet_energy_fox_desc:'+200 max energy',
+    pet_gem_dragon_name:'Gem Dragon', pet_gem_dragon_desc:'+2% gem drop chance',
+    pet_crit_wolf_name:'Crit Wolf', pet_crit_wolf_desc:'+5% crit chance',
+    pet_lucky_rabbit_name:'Lucky Rabbit', pet_lucky_rabbit_desc:'Wheel prizes ×1.2',
+    pet_prestige_phoenix_name:'Prestige Phoenix', pet_prestige_phoenix_desc:'+20% offline income',
+    rarity_common:'Common', rarity_uncommon:'Uncommon', rarity_rare:'Rare',
+    rarity_legendary:'Legendary', rarity_epic:'Epic',
+    // Inventory items
+    item_energy_potion_name:'Energy Potion', item_energy_potion_desc:'Instantly refill energy to max',
+    item_xp_scroll_name:'XP Scroll', item_xp_scroll_desc:'+500 Battle Pass XP',
+    item_crit_shield_name:'Crit Shield', item_crit_shield_desc:'100% crit rate for 60 seconds',
+    item_gem_bomb_name:'Gem Bomb', item_gem_bomb_desc:'+5 gems instantly',
+    // Card categories & hr suffix
+    card_cat_tech:'Tech', card_cat_finance:'Finance', card_cat_social:'Social',
+    hr_suffix:'/hr',
+    // Coop raid boss names
+    coop_boss_mega_brain:'Mega Brain', coop_boss_omega_void:'Omega Void', coop_boss_titan_forge:'Titan Forge',
+    // Boss ecosystem types/weaknesses
+    boss_type_fire:'FIRE', boss_type_void:'VOID', boss_type_ice:'ICE',
+    boss_type_lightning:'LIGHTNING', boss_type_arcane:'ARCANE',
+    boss_weak_water:'water', boss_weak_light:'light', boss_weak_fire:'fire',
+    boss_weak_earth:'earth', boss_weak_void:'void',
   },
 
   uk: {
@@ -1840,7 +1885,19 @@ export const LANGS = {
     guild_war_damage_label:    'Пошкодження у війні',
     mentor_teaching_xp: 'XP навчання: {n}',
     auction_expired: 'Прострочено',
-    ranked_wl:       'П {w} / П {l}',
+    ranked_wl:       '✅ {w} / ❌ {l}',
+    league_rookie:   'Новачок',
+    league_bronze:   'Бронза',
+    league_silver:   'Срібло',
+    league_gold:     'Золото',
+    league_legend:   'Легенда',
+    wboss_phase_normal:     'Нормальна',
+    wboss_phase_rage:       '⚠️ ЛЮТЬ',
+    wboss_phase_vulnerable: '✨ ВРАЗЛИВИЙ ×3!',
+    time_d: 'д',
+    time_h: 'г',
+    time_m: 'хв',
+    time_s: 'с',
     common_season:   'сезон',
     div_division_label:    'Дивізіон',
     common_gems_label:     'кристалів',
@@ -1905,6 +1962,37 @@ export const LANGS = {
     cb_label_win_duel_week:    'Виграй дуель цього тижня',
     cb_label_guild_boss_week:  'Вдар по Босу гільдії цього тижня',
     cb_label_world_boss_week:  'Вдар по Світовому Босу цього тижня',
+    // Territory zones
+    ter_name_1:'Кришталеві Печери', ter_name_2:'Неоновий Район', ter_name_3:'Нейронний Нексус',
+    ter_name_4:'Квантові Поля', ter_name_5:'Пустота', ter_name_6:'Штормові Вершини',
+    ter_name_7:'Механічна Кузня', ter_name_8:'Біо Сади', ter_name_9:'Примарне Узбережжя', ter_name_10:'Сонячна Цитадель',
+    // World map zones
+    zone_name_1:'Долина Нейронів', zone_name_2:'Місто Синапсів', zone_name_3:'Каньйон Кори',
+    zone_name_4:'Прірва Аксонів', zone_name_5:'Сингулярність Мозку',
+    // Pets
+    pet_brain_cat_name:'Мозковий Кіт', pet_brain_cat_desc:'+5% сила тапу',
+    pet_energy_fox_name:'Енергетична Лисиця', pet_energy_fox_desc:'+200 макс. енергія',
+    pet_gem_dragon_name:'Гемовий Дракон', pet_gem_dragon_desc:'+2% шанс дропу гемів',
+    pet_crit_wolf_name:'Крит Вовк', pet_crit_wolf_desc:'+5% шанс крита',
+    pet_lucky_rabbit_name:'Щасливий Кролик', pet_lucky_rabbit_desc:'Призи колеса ×1.2',
+    pet_prestige_phoenix_name:'Фенікс Престижу', pet_prestige_phoenix_desc:'+20% офлайн дохід',
+    rarity_common:'Звичайний', rarity_uncommon:'Незвичайний', rarity_rare:'Рідкісний',
+    rarity_legendary:'Легендарний', rarity_epic:'Епічний',
+    // Inventory items
+    item_energy_potion_name:'Зілля Енергії', item_energy_potion_desc:'Миттєво відновлює енергію',
+    item_xp_scroll_name:'Сувій XP', item_xp_scroll_desc:'+500 XP Бойового Пропуску',
+    item_crit_shield_name:'Крит Щит', item_crit_shield_desc:'100% крит на 60 секунд',
+    item_gem_bomb_name:'Гем Бомба', item_gem_bomb_desc:'+5 гемів миттєво',
+    // Card categories & hr suffix
+    card_cat_tech:'Техно', card_cat_finance:'Фінанси', card_cat_social:'Соціальне',
+    hr_suffix:'/год',
+    // Coop raid boss names
+    coop_boss_mega_brain:'Мега Мозок', coop_boss_omega_void:'Омега Пустота', coop_boss_titan_forge:'Кузня Титанів',
+    // Boss ecosystem types/weaknesses
+    boss_type_fire:'ВОГОНЬ', boss_type_void:'ПУСТОТА', boss_type_ice:'ЛІД',
+    boss_type_lightning:'БЛИСКАВКА', boss_type_arcane:'АРКАН',
+    boss_weak_water:'вода', boss_weak_light:'світло', boss_weak_fire:'вогонь',
+    boss_weak_earth:'земля', boss_weak_void:'пустота',
   },
 
   ru: {
@@ -2740,7 +2828,19 @@ export const LANGS = {
     guild_war_damage_label:    'Урон в войне',
     mentor_teaching_xp: 'XP обучения: {n}',
     auction_expired: 'Истёк',
-    ranked_wl:       'П {w} / П {l}',
+    ranked_wl:       '✅ {w} / ❌ {l}',
+    league_rookie:   'Новичок',
+    league_bronze:   'Бронза',
+    league_silver:   'Серебро',
+    league_gold:     'Золото',
+    league_legend:   'Легенда',
+    wboss_phase_normal:     'Нормальная',
+    wboss_phase_rage:       '⚠️ ЯРОСТЬ',
+    wboss_phase_vulnerable: '✨ УЯЗВИМЫЙ ×3!',
+    time_d: 'д',
+    time_h: 'ч',
+    time_m: 'м',
+    time_s: 'с',
     common_season:   'сезон',
     div_division_label:    'Дивизион',
     common_gems_label:     'кристаллов',
@@ -2805,6 +2905,37 @@ export const LANGS = {
     cb_label_win_duel_week:    'Выиграй дуэль на этой неделе',
     cb_label_guild_boss_week:  'Ударь по Боссу гильдии на этой неделе',
     cb_label_world_boss_week:  'Ударь по Мировому Боссу на этой неделе',
+    // Territory zones
+    ter_name_1:'Кристальные Пещеры', ter_name_2:'Неоновый Район', ter_name_3:'Нейронный Нексус',
+    ter_name_4:'Квантовые Поля', ter_name_5:'Пустота', ter_name_6:'Штормовые Вершины',
+    ter_name_7:'Механическая Кузня', ter_name_8:'Биосады', ter_name_9:'Призрачное Побережье', ter_name_10:'Солнечная Цитадель',
+    // World map zones
+    zone_name_1:'Долина Нейронов', zone_name_2:'Город Синапсов', zone_name_3:'Каньон Коры',
+    zone_name_4:'Бездна Аксонов', zone_name_5:'Сингулярность Мозга',
+    // Pets
+    pet_brain_cat_name:'Мозговой Кот', pet_brain_cat_desc:'+5% сила тапа',
+    pet_energy_fox_name:'Энергетическая Лиса', pet_energy_fox_desc:'+200 макс. энергия',
+    pet_gem_dragon_name:'Гемовый Дракон', pet_gem_dragon_desc:'+2% шанс дропа гемов',
+    pet_crit_wolf_name:'Крит Волк', pet_crit_wolf_desc:'+5% шанс крита',
+    pet_lucky_rabbit_name:'Удачливый Кролик', pet_lucky_rabbit_desc:'Призы колеса ×1.2',
+    pet_prestige_phoenix_name:'Феникс Престижа', pet_prestige_phoenix_desc:'+20% оффлайн доход',
+    rarity_common:'Обычный', rarity_uncommon:'Необычный', rarity_rare:'Редкий',
+    rarity_legendary:'Легендарный', rarity_epic:'Эпический',
+    // Inventory items
+    item_energy_potion_name:'Зелье Энергии', item_energy_potion_desc:'Мгновенно восстанавливает энергию',
+    item_xp_scroll_name:'Свиток XP', item_xp_scroll_desc:'+500 XP Боевого пропуска',
+    item_crit_shield_name:'Крит Щит', item_crit_shield_desc:'100% крит на 60 секунд',
+    item_gem_bomb_name:'Гем Бомба', item_gem_bomb_desc:'+5 гемов мгновенно',
+    // Card categories & hr suffix
+    card_cat_tech:'Технологии', card_cat_finance:'Финансы', card_cat_social:'Социальное',
+    hr_suffix:'/ч',
+    // Coop raid boss names
+    coop_boss_mega_brain:'Мега Мозг', coop_boss_omega_void:'Омега Пустота', coop_boss_titan_forge:'Кузня Титанов',
+    // Boss ecosystem types/weaknesses
+    boss_type_fire:'ОГОНЬ', boss_type_void:'ПУСТОТА', boss_type_ice:'ЛЁД',
+    boss_type_lightning:'МОЛНИЯ', boss_type_arcane:'АРКАН',
+    boss_weak_water:'вода', boss_weak_light:'свет', boss_weak_fire:'огонь',
+    boss_weak_earth:'земля', boss_weak_void:'пустота',
   },
 };
 

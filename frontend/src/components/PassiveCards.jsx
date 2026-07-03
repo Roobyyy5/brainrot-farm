@@ -3,9 +3,9 @@ import { api } from '../api';
 import { useT } from '../context/LangContext';
 
 const CATEGORY_META = {
-  tech:    { label: '🔬 Tech',    color: '#00e5ff' },
-  finance: { label: '💰 Finance', color: '#f5c344' },
-  social:  { label: '🌐 Social',  color: '#ff4fa3' },
+  tech:    { icon: '🔬', color: '#00e5ff' },
+  finance: { icon: '💰', color: '#f5c344' },
+  social:  { icon: '🌐', color: '#ff4fa3' },
 };
 
 export default function PassiveCards({ userCoins, onCoinsSpent }) {
@@ -58,7 +58,7 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
             style={activeTab === cat ? { borderColor: CATEGORY_META[cat].color, color: CATEGORY_META[cat].color } : {}}
             onClick={() => setActiveTab(cat)}
           >
-            {CATEGORY_META[cat].label}
+            {CATEGORY_META[cat].icon} {t('card_cat_' + cat)}
           </button>
         ))}
       </div>
@@ -87,13 +87,13 @@ export default function PassiveCards({ userCoins, onCoinsSpent }) {
               <div className="card-income">
                 {card.isOwned ? (
                   <>
-                    <span className="card-income-now">+{card.incomePerHour}/hr</span>
+                    <span className="card-income-now">+{card.incomePerHour}{t('hr_suffix')}</span>
                     {!card.isMaxed && (
-                      <span className="card-income-next"> → +{card.nextIncomePerHour}/hr</span>
+                      <span className="card-income-next"> → +{card.nextIncomePerHour}{t('hr_suffix')}</span>
                     )}
                   </>
                 ) : (
-                  <span className="card-income-none">+{card.nextIncomePerHour}/hr</span>
+                  <span className="card-income-none">+{card.nextIncomePerHour}{t('hr_suffix')}</span>
                 )}
               </div>
 
