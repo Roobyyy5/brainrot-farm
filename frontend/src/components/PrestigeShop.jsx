@@ -33,8 +33,8 @@ export default function PrestigeShop() {
           <div key={item.key} className={`pshop-item${item.isMaxed ? ' pshop-item--maxed' : ''}`}>
             <div className="pshop-item-icon">{item.icon}</div>
             <div className="pshop-item-info">
-              <div className="pshop-item-name">{item.name}</div>
-              <div className="pshop-item-desc">{item.desc}</div>
+              <div className="pshop-item-name">{t('pshop_' + item.key + '_name') || item.name}</div>
+              <div className="pshop-item-desc">{t('pshop_' + item.key + '_desc') || item.desc}</div>
               <div className="pshop-item-level">
                 {'◆'.repeat(item.currentLevel)}{'◇'.repeat(item.maxLevel - item.currentLevel)}
                 {' '}Lv.{item.currentLevel}/{item.maxLevel}

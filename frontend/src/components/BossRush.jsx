@@ -95,7 +95,7 @@ export default function BossRush() {
   return (
     <div className="bossrush-section bossrush-active">
       <div className="bossrush-header">{t('bossrush_header_active', { n: session.wave })}</div>
-      <div className="bossrush-boss-name">{session.bossName}</div>
+      <div className="bossrush-boss-name">{(() => { const k = 'bossrush_' + (session.bossName || '').toLowerCase().replace(/[^a-z ]/g,'').trim().replace(/ /g,'_'); const v = t(k); return v === k ? session.bossName : v; })()}</div>
       <div className="bossrush-hp-bar-wrap">
         <div className="bossrush-hp-bar" style={{ width: `${hpPct}%` }} />
       </div>

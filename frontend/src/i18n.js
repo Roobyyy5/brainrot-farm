@@ -1112,6 +1112,26 @@ export const LANGS = {
     card_dao_vote_name:'DAO Governance',       card_dao_vote_desc:'Governance participation rewards',
     // Wheel prize
     wheel_prize_full_energy:'Full ⚡',
+    // Weather types
+    weather_clear_name:'Clear Sky',         weather_clear_desc:'+10% all rewards today',
+    weather_energy_storm_name:'Energy Storm', weather_energy_storm_desc:'+50% energy regen, −20% tap power',
+    weather_fire_day_name:'Fire Day',       weather_fire_day_desc:'×2 combo multiplier all day',
+    weather_ice_age_name:'Ice Age',         weather_ice_age_desc:'+80% manual tap, auto-tap paused',
+    weather_gem_rain_name:'Gem Rain',       weather_gem_rain_desc:'×3 gem drop rate today',
+    weather_void_mist_name:'Void Mist',     weather_void_mist_desc:'×2 boss damage all day',
+    weather_golden_hour_name:'Golden Hour', weather_golden_hour_desc:'×2 coins per tap today',
+    // Boss Rush waves
+    bossrush_nano_brain:'Nano Brain',       bossrush_micro_neuron:'Micro Neuron',
+    bossrush_mini_cortex:'Mini Cortex',     bossrush_data_ghost:'Data Ghost',
+    bossrush_memory_titan:'Memory Titan',   bossrush_synapse_storm:'Synapse Storm',
+    bossrush_logic_leviathan:'Logic Leviathan', bossrush_axon_avenger:'Axon Avenger',
+    bossrush_cortex_colossus:'Cortex Colossus', bossrush_omega_brain:'⚠️ OMEGA BRAIN',
+    // Prestige Shop
+    pshop_eternal_tap_name:'Eternal Tap',   pshop_eternal_tap_desc:'+1 tap power per level (permanent)',
+    pshop_vast_energy_name:'Vast Energy',   pshop_vast_energy_desc:'+500 max energy per level (permanent)',
+    pshop_gem_vault_name:'Gem Vault',       pshop_gem_vault_desc:'+1% gem drop per level (permanent)',
+    pshop_prestige_aura_name:'Prestige Aura', pshop_prestige_aura_desc:'+10% all income per level (permanent)',
+    pshop_boss_crusher_name:'Boss Crusher', pshop_boss_crusher_desc:'+20% boss damage per level (permanent)',
   },
 
   uk: {
@@ -2116,6 +2136,26 @@ export const LANGS = {
     card_dao_vote_name:'DAO Управління',         card_dao_vote_desc:'Нагороди за участь в управлінні',
     // Wheel prize UK
     wheel_prize_full_energy:'Повна ⚡',
+    // Weather types UK
+    weather_clear_name:'Ясне Небо',          weather_clear_desc:'+10% до всіх нагород сьогодні',
+    weather_energy_storm_name:'Енергетичний Шторм', weather_energy_storm_desc:'+50% регенерація енергії, −20% сила тапу',
+    weather_fire_day_name:'День Вогню',      weather_fire_day_desc:'×2 множник комбо весь день',
+    weather_ice_age_name:'Льодовиковий Вік', weather_ice_age_desc:'+80% ручний тап, авто-тап зупинено',
+    weather_gem_rain_name:'Дощ Гемів',       weather_gem_rain_desc:'×3 шанс дропу гемів сьогодні',
+    weather_void_mist_name:'Туман Пустоти',  weather_void_mist_desc:'×2 урон по босах весь день',
+    weather_golden_hour_name:'Золота Година', weather_golden_hour_desc:'×2 монет за тап сьогодні',
+    // Boss Rush waves UK
+    bossrush_nano_brain:'Нано Мозок',        bossrush_micro_neuron:'Мікро Нейрон',
+    bossrush_mini_cortex:'Міні Кора',        bossrush_data_ghost:'Привид Даних',
+    bossrush_memory_titan:'Титан Пам\'яті',  bossrush_synapse_storm:'Синаптичний Шторм',
+    bossrush_logic_leviathan:'Логічний Левіафан', bossrush_axon_avenger:'Месник Аксонів',
+    bossrush_cortex_colossus:'Колос Кори',   bossrush_omega_brain:'⚠️ ОМЕГА МОЗОК',
+    // Prestige Shop UK
+    pshop_eternal_tap_name:'Вічний Тап',     pshop_eternal_tap_desc:'+1 сила тапу за рівень (назавжди)',
+    pshop_vast_energy_name:'Велика Енергія', pshop_vast_energy_desc:'+500 макс. енергії за рівень (назавжди)',
+    pshop_gem_vault_name:'Гем Сховище',      pshop_gem_vault_desc:'+1% шанс гемів за рівень (назавжди)',
+    pshop_prestige_aura_name:'Аура Престижу', pshop_prestige_aura_desc:'+10% весь дохід за рівень (назавжди)',
+    pshop_boss_crusher_name:'Дробарка Босів', pshop_boss_crusher_desc:'+20% урон по босах за рівень (назавжди)',
   },
 
   ru: {
@@ -3120,6 +3160,26 @@ export const LANGS = {
     card_dao_vote_name:'DAO Управление',           card_dao_vote_desc:'Награды за участие в управлении',
     // Wheel prize RU
     wheel_prize_full_energy:'Полная ⚡',
+    // Weather types RU
+    weather_clear_name:'Ясное Небо',         weather_clear_desc:'+10% ко всем наградам сегодня',
+    weather_energy_storm_name:'Энергетический Шторм', weather_energy_storm_desc:'+50% регенерация энергии, −20% сила тапа',
+    weather_fire_day_name:'День Огня',       weather_fire_day_desc:'×2 множитель комбо весь день',
+    weather_ice_age_name:'Ледниковый Период', weather_ice_age_desc:'+80% ручной тап, авто-тап остановлен',
+    weather_gem_rain_name:'Дождь Самоцветов', weather_gem_rain_desc:'×3 шанс дропа самоцветов сегодня',
+    weather_void_mist_name:'Туман Пустоты',  weather_void_mist_desc:'×2 урон по боссам весь день',
+    weather_golden_hour_name:'Золотой Час',  weather_golden_hour_desc:'×2 монет за тап сегодня',
+    // Boss Rush waves RU
+    bossrush_nano_brain:'Нано Мозг',         bossrush_micro_neuron:'Микро Нейрон',
+    bossrush_mini_cortex:'Мини Кора',        bossrush_data_ghost:'Призрак Данных',
+    bossrush_memory_titan:'Титан Памяти',    bossrush_synapse_storm:'Синаптический Шторм',
+    bossrush_logic_leviathan:'Логический Левиафан', bossrush_axon_avenger:'Мститель Аксонов',
+    bossrush_cortex_colossus:'Колосс Коры',  bossrush_omega_brain:'⚠️ ОМЕГА МОЗГ',
+    // Prestige Shop RU
+    pshop_eternal_tap_name:'Вечный Тап',     pshop_eternal_tap_desc:'+1 сила тапа за уровень (навсегда)',
+    pshop_vast_energy_name:'Огромная Энергия', pshop_vast_energy_desc:'+500 макс. энергии за уровень (навсегда)',
+    pshop_gem_vault_name:'Хранилище Самоцветов', pshop_gem_vault_desc:'+1% шанс самоцветов за уровень (навсегда)',
+    pshop_prestige_aura_name:'Аура Престижа', pshop_prestige_aura_desc:'+10% весь доход за уровень (навсегда)',
+    pshop_boss_crusher_name:'Дробитель Боссов', pshop_boss_crusher_desc:'+20% урон по боссам за уровень (навсегда)',
   },
 };
 

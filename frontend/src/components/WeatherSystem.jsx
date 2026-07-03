@@ -36,8 +36,8 @@ export default function WeatherSystem() {
       <div className="weather-top">
         <span className="weather-icon">{data.icon}</span>
         <div className="weather-info">
-          <div className="weather-name">{data.name}</div>
-          <div className="weather-desc">{data.desc}</div>
+          <div className="weather-name">{t('weather_' + data.key + '_name') || data.name}</div>
+          <div className="weather-desc">{t('weather_' + data.key + '_desc') || data.desc}</div>
         </div>
         <div className="weather-timer">
           {hrs > 0 && `${hrs}${t('weather_hr')} `}{String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
