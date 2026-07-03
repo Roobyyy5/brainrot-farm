@@ -3,10 +3,9 @@ import { api } from '../api';
 import { haptic, shareLink } from '../telegram';
 import { useT } from '../context/LangContext';
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || 'YourBotUsername';
 const MINI_APP_SHORT_NAME = import.meta.env.VITE_MINI_APP_SHORT_NAME || '';
 
-export default function Referral({ user }) {
+export default function Referral({ user, botUsername = '' }) {
   const t = useT();
   const [info, setInfo] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -18,7 +17,7 @@ export default function Referral({ user }) {
   if (!info) return null;
 
   const appPath = MINI_APP_SHORT_NAME ? `/${MINI_APP_SHORT_NAME}` : '';
-  const link = `https://t.me/${BOT_USERNAME}${appPath}?startapp=${info.referralCode}`;
+  const link = `https://t.me/${botUsername || 'YourBotUsername'}${appPath}?startapp=${info.referralCode}`;
 
   const handleCopy = () => {
     haptic('light');

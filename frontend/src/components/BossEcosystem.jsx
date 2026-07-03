@@ -15,10 +15,14 @@ export default function BossEcosystem() {
   const t = useT();
   const [bosses, setBosses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
   const load = useCallback(() => {
-    api.bossecosystem.list().then(d => setBosses(d.bosses || [])).catch(() => {});
+    api.bossecosystem.list()
+      .then(d => setBosses(d.bosses || []))
+      .catch(() => {})
+      .finally(() => setInitLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -61,6 +65,7 @@ export default function BossEcosystem() {
       <div className="bosseco-sub">{t('beco_sub')}</div>
 
       <div className="bosseco-list">
+        {initLoading && <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-faint)' }}>{t('loading')}</div>}
         {bosses.map(boss => {
           const color = TYPE_COLOR[boss.type] || '#888';
           const isSelected = selected === boss.key;

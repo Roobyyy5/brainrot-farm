@@ -96,6 +96,7 @@ export default function App() {
   const t = useT();
   const setLang = useSetLang();
   const [user, setUser] = useState(null);
+  const [botUsername, setBotUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('home');
@@ -109,6 +110,7 @@ export default function App() {
       .then((data) => {
         setUser(data.user);
         if (data.tg_lang) setLang(data.tg_lang);
+        if (data.bot_username) setBotUsername(data.bot_username);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -154,7 +156,7 @@ export default function App() {
           <WeeklyEvent event={user?._weeklyEvent} />
           <FarmButton user={user} onFarmed={setUser} onAchievements={handleAchievements} />
           <DailyReward user={user} onClaimed={setUser} onAchievements={handleAchievements} />
-          <Referral user={user} />
+          <Referral user={user} botUsername={botUsername} />
           <Achievements refreshKey={achievementsRefreshKey} />
           <Leaderboard currentUserId={user?.telegram_id} />
         </>

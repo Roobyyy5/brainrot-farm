@@ -41,7 +41,7 @@ export default function DivisionLeague() {
         </div>
         <div className="divleague-timer">
           <div className="divleague-timer-label">{t('div_resets')}</div>
-          <div className="divleague-timer-val">{daysLeft}d {hoursLeft}h</div>
+          <div className="divleague-timer-val">{daysLeft}{t('time_d')} {hoursLeft}{t('time_h')}</div>
         </div>
       </div>
 

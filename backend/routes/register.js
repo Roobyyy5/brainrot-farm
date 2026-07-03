@@ -20,7 +20,7 @@ router.post(
 
     const existing = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
     if (existing.rows[0]) {
-      return res.json({ user: existing.rows[0], alreadyRegistered: true });
+      return res.json({ user: existing.rows[0], alreadyRegistered: true, bot_username: process.env.BOT_USERNAME || '' });
     }
 
     let referredBy = null;
@@ -75,7 +75,7 @@ router.post(
         notifyOwner(`🔗 Referral signup: @${username || telegramId} joined via referral`);
       }
     }
-    res.json({ user: user.rows[0], alreadyRegistered: !inserted, tg_lang: language_code || null });
+    res.json({ user: user.rows[0], alreadyRegistered: !inserted, tg_lang: language_code || null, bot_username: process.env.BOT_USERNAME || '' });
   })
 );
 

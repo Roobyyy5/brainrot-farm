@@ -3,14 +3,14 @@ import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
 
-const PHASE_CONFIG = {
-  normal:     { key: 'Normal',      color: '#34d399', icon: '🟢' },
-  rage:       { key: '⚠️ RAGE',     color: '#ef4444', icon: '🔴' },
-  vulnerable: { key: '✨ VULNERABLE ×3!', color: '#f59e0b', icon: '⭐' },
-};
-
 export default function WorldBoss() {
   const t = useT();
+
+  const PHASE_CONFIG = {
+    normal:     { labelKey: 'wboss_phase_normal',     color: '#34d399', icon: '🟢' },
+    rage:       { labelKey: 'wboss_phase_rage',       color: '#ef4444', icon: '🔴' },
+    vulnerable: { labelKey: 'wboss_phase_vulnerable', color: '#f59e0b', icon: '⭐' },
+  };
   const [data, setData] = useState(null);
   const [liveHp, setLiveHp] = useState(null);
   const [livePct, setLivePct] = useState(null);
@@ -55,7 +55,7 @@ export default function WorldBoss() {
       const d  = Math.floor(ms / 86400000);
       const h  = Math.floor((ms % 86400000) / 3600000);
       const m  = Math.floor((ms % 3600000) / 60000);
-      setCountdown(d > 0 ? `${d}d ${h}h` : `${h}h ${m}m`);
+      setCountdown(d > 0 ? `${d}${t('time_d')} ${h}${t('time_h')}` : `${h}${t('time_h')} ${m}${t('time_m')}`);
       if (ms <= 0) { load(); clearInterval(timerRef.current); }
     };
     tick();
@@ -102,8 +102,8 @@ export default function WorldBoss() {
           <div className="worldboss-name">{boss.name}</div>
 
           <div className="worldboss-phase-badge" style={{ background: phaseCfg.color + '22', color: phaseCfg.color, border: `1px solid ${phaseCfg.color}` }}>
-            {phaseCfg.icon} {phaseCfg.key}
-            {phase === 'vulnerable' && vulnLeft > 0 && <span> — {vulnLeft}s</span>}
+            {t(phaseCfg.labelKey)}
+            {phase === 'vulnerable' && vulnLeft > 0 && <span> — {vulnLeft}{t('time_s')}</span>}
           </div>
 
           <div className="worldboss-hp-bar-wrap" style={{ borderColor: phaseCfg.color }}>
