@@ -1,47 +1,6 @@
 services:
   - type: web
     name: brainrot-farm-app
-    runtime: node
-    plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: BOT_TOKEN
-        sync: false
-      - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: OWNER_CHAT_ID
-        sync: false
-      - key: FRONTEND_URL
-        sync: false
-
-  - type: worker
-    name: brainrot-farm-bot
-    runtime: node
-    plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node bot.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: BOT_TOKEN
-        sync: false
-      - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: OWNER_CHAT_ID
-        sync: false
-      - key: FRONTEND_URL
-        sync: false
-
-  - type: web
-    name: brainrot-farm-frontend
     runtime: static
     plan: free
     rootDir: frontend
@@ -60,4 +19,27 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE
+        sync: false
+
+  - type: web
+    name: brainrot-farm-bot
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: OWNER_CHAT_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: MINI_APP_URL
         sync: false
