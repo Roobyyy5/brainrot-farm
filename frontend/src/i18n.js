@@ -1050,6 +1050,20 @@ export const LANGS = {
     boss_type_lightning:'LIGHTNING', boss_type_arcane:'ARCANE',
     boss_weak_water:'water', boss_weak_light:'light', boss_weak_fire:'fire',
     boss_weak_earth:'earth', boss_weak_void:'void',
+    // Guild Olympics event names/descriptions
+    olympics_ev_tap_marathon_name: 'Tap Marathon',   olympics_ev_tap_marathon_desc: 'Lifetime total taps',
+    olympics_ev_combo_peak_name:   'Combo Peak',     olympics_ev_combo_peak_desc:   'Best gauntlet waves reached',
+    olympics_ev_gauntlet_run_name: 'Gauntlet Run',   olympics_ev_gauntlet_run_desc: 'Best Gauntlet wave',
+    olympics_ev_boss_slayer_name:  'Boss Slayer',    olympics_ev_boss_slayer_desc:  'Total boss damage dealt',
+    olympics_ev_alchemist_name:    'Alchemist',      olympics_ev_alchemist_desc:    'Total potions brewed',
+    // Daily shop item names
+    dshop_ds_boost_15m_name:  '2× Boost 15min',
+    dshop_ds_boost_30m_name:  '2× Boost 30min',
+    dshop_ds_boost_1h_name:   '2× Boost 1h',
+    dshop_ds_energy_x2_name:  '2× Energy Refill',
+    dshop_ds_lootbox_name:    'Mystery Brain',
+    // Daily shop timer
+    dshop_timer: '{h}h {m}m',
   },
 
   uk: {
@@ -1993,6 +2007,19 @@ export const LANGS = {
     boss_type_lightning:'БЛИСКАВКА', boss_type_arcane:'АРКАН',
     boss_weak_water:'вода', boss_weak_light:'світло', boss_weak_fire:'вогонь',
     boss_weak_earth:'земля', boss_weak_void:'пустота',
+    // Guild Olympics
+    olympics_ev_tap_marathon_name: 'Тап Марафон',   olympics_ev_tap_marathon_desc: 'Загальна кількість тапів',
+    olympics_ev_combo_peak_name:   'Пік Комбо',     olympics_ev_combo_peak_desc:   'Найкращі хвилі Гонтлету',
+    olympics_ev_gauntlet_run_name: 'Забіг Гонтлет', olympics_ev_gauntlet_run_desc: 'Найкраща хвиля Гонтлету',
+    olympics_ev_boss_slayer_name:  'Убивця Босів',  olympics_ev_boss_slayer_desc:  'Загальний урон босам',
+    olympics_ev_alchemist_name:    'Алхімік',        olympics_ev_alchemist_desc:    'Зварено зілля загалом',
+    // Daily shop
+    dshop_ds_boost_15m_name:  '2× Буст 15хв',
+    dshop_ds_boost_30m_name:  '2× Буст 30хв',
+    dshop_ds_boost_1h_name:   '2× Буст 1год',
+    dshop_ds_energy_x2_name:  '2× Поповнення Енергії',
+    dshop_ds_lootbox_name:    'Таємний Мозок',
+    dshop_timer: '{h}г {m}хв',
   },
 
   ru: {
@@ -2936,6 +2963,19 @@ export const LANGS = {
     boss_type_lightning:'МОЛНИЯ', boss_type_arcane:'АРКАН',
     boss_weak_water:'вода', boss_weak_light:'свет', boss_weak_fire:'огонь',
     boss_weak_earth:'земля', boss_weak_void:'пустота',
+    // Guild Olympics
+    olympics_ev_tap_marathon_name: 'Тап Марафон',  olympics_ev_tap_marathon_desc: 'Всего тапов за всё время',
+    olympics_ev_combo_peak_name:   'Пик Комбо',    olympics_ev_combo_peak_desc:   'Лучшие волны Гонтлета',
+    olympics_ev_gauntlet_run_name: 'Забег Гонтлет',olympics_ev_gauntlet_run_desc: 'Лучшая волна Гонтлета',
+    olympics_ev_boss_slayer_name:  'Убийца Боссов',olympics_ev_boss_slayer_desc:  'Общий урон боссам',
+    olympics_ev_alchemist_name:    'Алхимик',       olympics_ev_alchemist_desc:    'Зварено зелий всего',
+    // Daily shop
+    dshop_ds_boost_15m_name:  '2× Буст 15мин',
+    dshop_ds_boost_30m_name:  '2× Буст 30мин',
+    dshop_ds_boost_1h_name:   '2× Буст 1ч',
+    dshop_ds_energy_x2_name:  '2× Восполнение энергии',
+    dshop_ds_lootbox_name:    'Тайный Мозг',
+    dshop_timer: '{h}ч {m}м',
   },
 };
 

@@ -53,8 +53,8 @@ export default function GuildOlympics() {
                 <div className="olympics-event-top">
                   <span className="olympics-event-icon">{ev.icon}</span>
                   <div className="olympics-event-info">
-                    <div className="olympics-event-name">{ev.name}</div>
-                    <div className="olympics-event-desc">{ev.desc}</div>
+                    <div className="olympics-event-name">{t('olympics_ev_' + ev.key + '_name')}</div>
+                    <div className="olympics-event-desc">{t('olympics_ev_' + ev.key + '_desc')}</div>
                   </div>
                   <div className="olympics-event-right">
                     {myScore !== undefined && (

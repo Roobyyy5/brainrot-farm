@@ -33,7 +33,7 @@ export default function DailyShop({ onGemsChanged }) {
     <div className="daily-shop-section">
       <div className="daily-shop-header">
         <span className="daily-shop-title">{t('dshop_title')}</span>
-        <span className="daily-shop-timer">🕐 {hoursLeft}h {minsLeft}m</span>
+        <span className="daily-shop-timer">🕐 {hoursLeft}{t('time_h')} {minsLeft}{t('time_m')}</span>
       </div>
       <div className="daily-shop-gems">{t('gems_balance', { n: data.gems })}</div>
 
@@ -49,7 +49,7 @@ export default function DailyShop({ onGemsChanged }) {
           <div key={item.key} className={`ds-item${item.purchased ? ' ds-item--bought' : ''}`}>
             <span className="ds-item-icon">{item.icon}</span>
             <div className="ds-item-info">
-              <div className="ds-item-name">{item.name}</div>
+              <div className="ds-item-name">{t('dshop_' + item.key + '_name')}</div>
             </div>
             {item.purchased ? (
               <span className="ds-item-bought">✓</span>
