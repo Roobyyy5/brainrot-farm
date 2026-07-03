@@ -1204,6 +1204,17 @@ export const LANGS = {
     story_mech_shields:'Boss has 3 shield layers, each needs 1000 taps to break',
     story_mech_enrage:'Boss gets faster and stronger every 30s',
     story_mech_final_boss:'All mechanics combined — ultimate test',
+    // Ascension
+    asc_prestige_prefix:'P',
+    // Guild level prefix
+    guild_lv_prefix:'Lv.',
+    // Territory bonus labels
+    ter_bonus_tap:'tap', ter_bonus_energy:'energy', ter_bonus_passive:'passive',
+    ter_bonus_gems:'gems', ter_bonus_xp:'XP', ter_bonus_regen:'regen',
+    // BattlePass reward types
+    bp_reward_skin:'Skin', bp_reward_type_coins:'Coins', bp_reward_type_gems:'Gems',
+    bp_reward_type_energy_refill:'Energy', bp_reward_type_skill_points:'Skill Pts',
+    bp_reward_type_2x_boost:'×2 Boost',
   },
 
   uk: {
@@ -2300,6 +2311,17 @@ export const LANGS = {
     story_mech_shields:'3 щити, кожен потребує 1000 тапів',
     story_mech_enrage:'Бос стає швидшим та сильнішим кожні 30с',
     story_mech_final_boss:'Всі механіки разом — фінальне випробування',
+    // Ascension UK
+    asc_prestige_prefix:'P',
+    // Guild level prefix UK
+    guild_lv_prefix:'Рів.',
+    // Territory bonus labels UK
+    ter_bonus_tap:'тап', ter_bonus_energy:'енергія', ter_bonus_passive:'пасив',
+    ter_bonus_gems:'геми', ter_bonus_xp:'XP', ter_bonus_regen:'реген',
+    // BattlePass reward types UK
+    bp_reward_skin:'Скін', bp_reward_type_coins:'Монети', bp_reward_type_gems:'Геми',
+    bp_reward_type_energy_refill:'Енергія', bp_reward_type_skill_points:'Очки Навичок',
+    bp_reward_type_2x_boost:'×2 Буст',
   },
 
   ru: {
@@ -3396,6 +3418,17 @@ export const LANGS = {
     story_mech_shields:'3 щита, каждый требует 1000 тапов',
     story_mech_enrage:'Босс становится быстрее и сильнее каждые 30с',
     story_mech_final_boss:'Все механики вместе — финальное испытание',
+    // Ascension RU
+    asc_prestige_prefix:'P',
+    // Guild level prefix RU
+    guild_lv_prefix:'Ур.',
+    // Territory bonus labels RU
+    ter_bonus_tap:'тап', ter_bonus_energy:'энергия', ter_bonus_passive:'пассив',
+    ter_bonus_gems:'самоцветы', ter_bonus_xp:'XP', ter_bonus_regen:'реген',
+    // BattlePass reward types RU
+    bp_reward_skin:'Скин', bp_reward_type_coins:'Монеты', bp_reward_type_gems:'Самоцветы',
+    bp_reward_type_energy_refill:'Энергия', bp_reward_type_skill_points:'Очки Навыков',
+    bp_reward_type_2x_boost:'×2 Буст',
   },
 };
 

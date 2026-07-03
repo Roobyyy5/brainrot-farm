@@ -64,8 +64,8 @@ export default function Ascension() {
               return (
                 <div key={node.key} className={`ascension-node ${maxed ? 'maxed' : ''}`}>
                   <div className="asc-node-icon">{node.icon}</div>
-                  <div className="asc-node-name">{node.name}</div>
-                  <div className="asc-node-desc">{node.desc}</div>
+                  <div className="asc-node-name">{(() => { const k = 'asc_node_' + node.key + '_name'; const v = t(k); return v === k ? node.name : v; })()}</div>
+                  <div className="asc-node-desc">{(() => { const k = 'asc_node_' + node.key + '_desc'; const v = t(k); return v === k ? node.desc : v; })()}</div>
                   <div className="asc-node-level">{node.currentLevel}/{node.maxLevel}</div>
                   {!maxed && (
                     <button
@@ -91,7 +91,7 @@ export default function Ascension() {
             <div key={r.rank} className="asc-lb-row">
               <span className="asc-lb-rank">#{r.rank}</span>
               <span className="asc-lb-name">{r.username}</span>
-              <span className="asc-lb-p">P{r.prestige}</span>
+              <span className="asc-lb-p">{t('asc_prestige_prefix')}{r.prestige}</span>
               {r.ascensionCount > 0 && <span className="asc-lb-asc">🌟×{r.ascensionCount}</span>}
               <span className="asc-lb-score">{Number(r.prestigeScore).toLocaleString()}</span>
             </div>

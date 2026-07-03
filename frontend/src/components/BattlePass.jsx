@@ -66,7 +66,7 @@ export default function BattlePass({ onGemsChanged }) {
               <div className={`bp-reward${lvl.free.claimed ? ' bp-reward--claimed' : ''}`}>
                 <span>{REWARD_ICON[lvl.free.type] || '🎁'}</span>
                 <span className="bp-reward-label">
-                  {lvl.free.amount ? `${lvl.free.amount}` : lvl.free.skin || lvl.free.type}
+                  {lvl.free.amount ? `${lvl.free.amount}` : lvl.free.skin ? (t('bp_reward_skin') || lvl.free.skin) : (t('bp_reward_type_' + lvl.free.type) || lvl.free.type)}
                 </span>
                 {lvl.free.canClaim && (
                   <button className="bp-claim-btn" onClick={() => handleClaim(lvl.level, false)}
@@ -81,7 +81,7 @@ export default function BattlePass({ onGemsChanged }) {
               <div className={`bp-reward bp-reward--premium${lvl.premium.claimed ? ' bp-reward--claimed' : ''}${!data.premium ? ' bp-reward--locked' : ''}`}>
                 <span>⭐ {REWARD_ICON[lvl.premium.type] || '🎁'}</span>
                 <span className="bp-reward-label">
-                  {lvl.premium.amount ? `${lvl.premium.amount}` : lvl.premium.skin || lvl.premium.type}
+                  {lvl.premium.amount ? `${lvl.premium.amount}` : lvl.premium.skin ? (t('bp_reward_skin') || lvl.premium.skin) : (t('bp_reward_type_' + lvl.premium.type) || lvl.premium.type)}
                 </span>
                 {lvl.premium.canClaim && (
                   <button className="bp-claim-btn" onClick={() => handleClaim(lvl.level, true)}

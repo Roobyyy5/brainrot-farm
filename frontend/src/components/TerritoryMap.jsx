@@ -17,6 +17,17 @@ export default function TerritoryMap() {
     onMessage: (msg) => { if (msg.type === 'territory_update') load(); },
   });
 
+  const formatBonus = (bonus) => {
+    const parts = [];
+    if (bonus.tapMultiplier) parts.push(`+${Math.round(bonus.tapMultiplier * 100)}% ${t('ter_bonus_tap')}`);
+    if (bonus.energyMax)    parts.push(`+${bonus.energyMax} ${t('ter_bonus_energy')}`);
+    if (bonus.passiveIncome)parts.push(`+${Math.round(bonus.passiveIncome * 100)}% ${t('ter_bonus_passive')}`);
+    if (bonus.gemBonus)     parts.push(`+${Math.round(bonus.gemBonus * 100)}% ${t('ter_bonus_gems')}`);
+    if (bonus.xpBonus)      parts.push(`+${Math.round(bonus.xpBonus * 100)}% ${t('ter_bonus_xp')}`);
+    if (bonus.energyRegen)  parts.push(`+${Math.round(bonus.energyRegen * 100)}% ${t('ter_bonus_regen')}`);
+    return parts.join(', ') || '—';
+  };
+
   const tap = async (territoryId) => {
     setLoading(true);
     try { await api.territories.tap(territoryId, 100); await load(); }
@@ -101,13 +112,3 @@ export default function TerritoryMap() {
   );
 }
 
-function formatBonus(bonus) {
-  const parts = [];
-  if (bonus.tapMultiplier) parts.push(`+${Math.round(bonus.tapMultiplier * 100)}% tap`);
-  if (bonus.energyMax)    parts.push(`+${bonus.energyMax} energy`);
-  if (bonus.passiveIncome)parts.push(`+${Math.round(bonus.passiveIncome * 100)}% passive`);
-  if (bonus.gemBonus)     parts.push(`+${Math.round(bonus.gemBonus * 100)}% gems`);
-  if (bonus.xpBonus)      parts.push(`+${Math.round(bonus.xpBonus * 100)}% XP`);
-  if (bonus.energyRegen)  parts.push(`+${Math.round(bonus.energyRegen * 100)}% regen`);
-  return parts.join(', ') || '—';
-}

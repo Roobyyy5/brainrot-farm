@@ -110,7 +110,7 @@ export default function Guilds({ onGemsChanged }) {
               <div key={g.id} className="guild-search-row">
                 <div>
                   <strong>[{g.tag}] {g.name}</strong>
-                  <div style={{ fontSize: 11, opacity: 0.6 }}>{g.member_count}/10 · Lv.{g.level}</div>
+                  <div style={{ fontSize: 11, opacity: 0.6 }}>{g.member_count}/10 · {t('guild_lv_prefix')}{g.level}</div>
                 </div>
                 <button className="guild-join-btn" onClick={() => handleJoin(g.id)} disabled={acting}>
                   {t('guild_join')}
@@ -127,7 +127,7 @@ export default function Guilds({ onGemsChanged }) {
     <div className="guild-section">
       <div className="guild-header">
         <span className="guild-title">🏰 [{guild.tag}] {guild.name}</span>
-        <span className="guild-level">Lv.{guild.level}</span>
+        <span className="guild-level">{t('guild_lv_prefix')}{guild.level}</span>
       </div>
 
       {guild.boss ? (
