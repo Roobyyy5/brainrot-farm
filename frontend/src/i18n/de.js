@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 Deine Punktzahl: {n}',olympics_rewards_title:'🏆 Gildenpreise',olympics_guild_lb_title:'Gildenrangliste',
   olympics_empty:'Noch keine Teilnehmer. Sei der Erste!',
   common_loading:'Laden...',common_max:'MAX',common_locked:'Gesperrt',common_info:'Info',common_close:'Schließen',common_go:'Los',common_score:'Punktzahl',common_weekly:'Wöchentlich',
+  champ_round_of:'Runde von {n}',champ_player1:'S1',champ_player2:'S2',champ_vs:'vs',
+  bonus_tap:'Tap',bonus_energy:'Energie',bonus_regen:'Regen',bonus_cost:'Kosten',bonus_combo:'Combo',bonus_passive:'Passiv',bonus_gems:'Gems',bonus_crit:'Krit',bonus_all:'Alles',
+  guild_tap_power_label:'Tap-Kraft',guild_max_energy_label:'Max-Energie',guild_gem_drop_label:'Gem-Drop',guild_boss_damage_label:'Boss-Schaden',guild_offline_income_label:'Offline-Einnahmen',guild_war_damage_label:'Kriegsschaden',
+  mentor_teaching_xp:'Lehr-XP: {n}',auction_expired:'Abgelaufen',ranked_wl:'S {w} / N {l}',common_season:'Saison',
 };

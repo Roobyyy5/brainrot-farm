@@ -939,6 +939,9 @@ export const LANGS = {
     mentor_teaching_xp: 'Teaching XP: {n}',
     // AuctionHouse
     auction_expired: 'Expired',
+    // RankedDuels
+    ranked_wl:       'W {w} / L {l}',
+    common_season:   'season',
   },
 
   uk: {
@@ -1774,6 +1777,8 @@ export const LANGS = {
     guild_war_damage_label:    'Пошкодження у війні',
     mentor_teaching_xp: 'XP навчання: {n}',
     auction_expired: 'Прострочено',
+    ranked_wl:       'П {w} / П {l}',
+    common_season:   'сезон',
   },
 
   ru: {
@@ -2609,6 +2614,8 @@ export const LANGS = {
     guild_war_damage_label:    'Урон в войне',
     mentor_teaching_xp: 'XP обучения: {n}',
     auction_expired: 'Истёк',
+    ranked_wl:       'П {w} / П {l}',
+    common_season:   'сезон',
   },
 };
 

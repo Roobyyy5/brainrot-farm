@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 आपका स्कोर: {n}',olympics_rewards_title:'🏆 गिल्ड पुरस्कार',olympics_guild_lb_title:'गिल्ड रैंकिंग',
   olympics_empty:'अभी कोई प्रतिभागी नहीं। पहले बनें!',
   common_loading:'लोड हो रहा है...',common_max:'MAX',common_locked:'लॉक्ड',common_info:'जानकारी',common_close:'बंद',common_go:'जाएं',common_score:'स्कोर',common_weekly:'साप्ताहिक',
+  champ_round_of:'{n} का राउंड',champ_player1:'खि1',champ_player2:'खि2',champ_vs:'बनाम',
+  bonus_tap:'टैप',bonus_energy:'ऊर्जा',bonus_regen:'पुनर्जनन',bonus_cost:'लागत',bonus_combo:'कॉम्बो',bonus_passive:'निष्क्रिय',bonus_gems:'रत्न',bonus_crit:'क्रिट',bonus_all:'सब',
+  guild_tap_power_label:'टैप शक्ति',guild_max_energy_label:'अधिकतम ऊर्जा',guild_gem_drop_label:'रत्न ड्रॉप',guild_boss_damage_label:'बॉस क्षति',guild_offline_income_label:'ऑफलाइन आय',guild_war_damage_label:'युद्ध क्षति',
+  mentor_teaching_xp:'शिक्षण XP: {n}',auction_expired:'समाप्त',ranked_wl:'जी {w} / ह {l}',common_season:'सीज़न',
 };

@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 Votre score: {n}',olympics_rewards_title:'🏆 Prix de Guilde',olympics_guild_lb_title:'Classement des Guildes',
   olympics_empty:'Aucun participant. Soyez le premier!',
   common_loading:'Chargement...',common_max:'MAX',common_locked:'Verrouillé',common_info:'Info',common_close:'Fermer',common_go:'Aller',common_score:'Score',common_weekly:'Hebdomadaire',
+  champ_round_of:'Tour de {n}',champ_player1:'J1',champ_player2:'J2',champ_vs:'vs',
+  bonus_tap:'Tap',bonus_energy:'Énergie',bonus_regen:'Regen',bonus_cost:'Coût',bonus_combo:'Combo',bonus_passive:'Passif',bonus_gems:'Gemmes',bonus_crit:'Crit',bonus_all:'Tout',
+  guild_tap_power_label:'Puissance Tap',guild_max_energy_label:'Énergie Max',guild_gem_drop_label:'Drop Gemmes',guild_boss_damage_label:'Dégâts Boss',guild_offline_income_label:'Revenus Hors-ligne',guild_war_damage_label:'Dégâts Guerre',
+  mentor_teaching_xp:'XP Enseignement: {n}',auction_expired:'Expiré',ranked_wl:'V {w} / D {l}',common_season:'saison',
 };

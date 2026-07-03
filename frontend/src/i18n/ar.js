@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 نتيجتك: {n}',olympics_rewards_title:'🏆 جوائز الجيلد',olympics_guild_lb_title:'ترتيب الجيلدات',
   olympics_empty:'لا مشاركون بعد. كن الأول!',
   common_loading:'جار التحميل...',common_max:'الحد الأقصى',common_locked:'مقفل',common_info:'معلومات',common_close:'إغلاق',common_go:'انطلق',common_score:'النقاط',common_weekly:'أسبوعي',
+  champ_round_of:'جولة من {n}',champ_player1:'ل1',champ_player2:'ل2',champ_vs:'ضد',
+  bonus_tap:'نقر',bonus_energy:'طاقة',bonus_regen:'تجدد',bonus_cost:'تكلفة',bonus_combo:'كومبو',bonus_passive:'سلبي',bonus_gems:'جواهر',bonus_crit:'ضربة حرجة',bonus_all:'الكل',
+  guild_tap_power_label:'قوة النقر',guild_max_energy_label:'أقصى طاقة',guild_gem_drop_label:'إسقاط جواهر',guild_boss_damage_label:'ضرر البوس',guild_offline_income_label:'دخل غير متصل',guild_war_damage_label:'ضرر الحرب',
+  mentor_teaching_xp:'XP التعليم: {n}',auction_expired:'منتهي',ranked_wl:'ف {w} / خ {l}',common_season:'موسم',
 };

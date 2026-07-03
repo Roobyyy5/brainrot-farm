@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 あなたのスコア：{n}',olympics_rewards_title:'🏆 ギルド賞品',olympics_guild_lb_title:'ギルドランキング',
   olympics_empty:'まだ参加者がいません。最初になろう！',
   common_loading:'読み込み中...',common_max:'最大',common_locked:'ロック済み',common_info:'情報',common_close:'閉じる',common_go:'行く',common_score:'スコア',common_weekly:'週間',
+  champ_round_of:'{n}人枠',champ_player1:'P1',champ_player2:'P2',champ_vs:'対',
+  bonus_tap:'タップ',bonus_energy:'エネルギー',bonus_regen:'再生',bonus_cost:'コスト',bonus_combo:'コンボ',bonus_passive:'パッシブ',bonus_gems:'ジェム',bonus_crit:'クリット',bonus_all:'全部',
+  guild_tap_power_label:'タップ力',guild_max_energy_label:'最大エネルギー',guild_gem_drop_label:'ジェムドロップ',guild_boss_damage_label:'ボスダメージ',guild_offline_income_label:'オフライン収入',guild_war_damage_label:'戦争ダメージ',
+  mentor_teaching_xp:'教育XP：{n}',auction_expired:'期限切れ',ranked_wl:'勝 {w} / 敗 {l}',common_season:'シーズン',
 };

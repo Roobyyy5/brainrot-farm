@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 Tu puntuación: {n}',olympics_rewards_title:'🏆 Premios del Gremio',olympics_guild_lb_title:'Clasificación de Gremios',
   olympics_empty:'Sin participantes aún. ¡Sé el primero!',
   common_loading:'Cargando...',common_max:'MÁX',common_locked:'Bloqueado',common_info:'Info',common_close:'Cerrar',common_go:'Ir',common_score:'Puntuación',common_weekly:'Semanal',
+  champ_round_of:'Ronda de {n}',champ_player1:'J1',champ_player2:'J2',champ_vs:'vs',
+  bonus_tap:'Tap',bonus_energy:'Energía',bonus_regen:'Regen',bonus_cost:'Coste',bonus_combo:'Combo',bonus_passive:'Pasivo',bonus_gems:'Gemas',bonus_crit:'Crit',bonus_all:'Todo',
+  guild_tap_power_label:'Poder Tap',guild_max_energy_label:'Energía Máx',guild_gem_drop_label:'Drop Gemas',guild_boss_damage_label:'Daño Jefe',guild_offline_income_label:'Ingresos Offline',guild_war_damage_label:'Daño Guerra',
+  mentor_teaching_xp:'XP Enseñanza: {n}',auction_expired:'Caducado',ranked_wl:'V {w} / D {l}',common_season:'temporada',
 };

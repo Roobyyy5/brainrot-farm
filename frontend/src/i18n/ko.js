@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 내 점수: {n}',olympics_rewards_title:'🏆 길드 상품',olympics_guild_lb_title:'길드 순위',
   olympics_empty:'아직 참가자 없음. 첫 번째가 되세요!',
   common_loading:'로딩 중...',common_max:'최대',common_locked:'잠금',common_info:'정보',common_close:'닫기',common_go:'이동',common_score:'점수',common_weekly:'주간',
+  champ_round_of:'{n}강',champ_player1:'P1',champ_player2:'P2',champ_vs:'대',
+  bonus_tap:'탭',bonus_energy:'에너지',bonus_regen:'재생',bonus_cost:'비용',bonus_combo:'콤보',bonus_passive:'패시브',bonus_gems:'젬',bonus_crit:'크리트',bonus_all:'전체',
+  guild_tap_power_label:'탭 파워',guild_max_energy_label:'최대 에너지',guild_gem_drop_label:'젬 드롭',guild_boss_damage_label:'보스 피해',guild_offline_income_label:'오프라인 수입',guild_war_damage_label:'전쟁 피해',
+  mentor_teaching_xp:'교육 XP: {n}',auction_expired:'만료됨',ranked_wl:'승 {w} / 패 {l}',common_season:'시즌',
 };

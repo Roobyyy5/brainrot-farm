@@ -84,7 +84,7 @@ export default function RankedDuels() {
             <div>
               <div className="ranked-league-name">{data.league}</div>
               <div className="ranked-elo">{data.elo} ELO</div>
-              <div className="ranked-wl">W {data.wins} / L {data.losses}</div>
+              <div className="ranked-wl">{t('ranked_wl', { w: data.wins, l: data.losses })}</div>
             </div>
           </div>
 
@@ -93,7 +93,7 @@ export default function RankedDuels() {
               <div key={l.name} className={`ranked-league-row ${data.league === l.name ? 'current' : ''}`}>
                 <span>{l.icon} {l.name}</span>
                 <span>{l.minElo}+ ELO</span>
-                <span>💎 {l.gemReward}/season</span>
+                <span>💎 {l.gemReward}/{t('common_season')}</span>
               </div>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default function RankedDuels() {
               <span className="ranked-lb-icon">{leagueIcon(r.league)}</span>
               <span className="ranked-lb-name">{r.username}</span>
               <span className="ranked-lb-elo">{r.elo}</span>
-              <span className="ranked-lb-wl">{r.wins}W/{r.losses}L</span>
+              <span className="ranked-lb-wl">{t('ranked_wl', { w: r.wins, l: r.losses })}</span>
             </div>
           ))}
         </div>

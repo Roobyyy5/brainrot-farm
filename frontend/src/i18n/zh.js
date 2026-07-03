@@ -260,4 +260,8 @@ export default {
   olympics_score_alert:'📊 你的分数：{n}',olympics_rewards_title:'🏆 公会奖品',olympics_guild_lb_title:'公会排名',
   olympics_empty:'还没有参与者。成为第一个！',
   common_loading:'加载中...',common_max:'满级',common_locked:'已锁定',common_info:'信息',common_close:'关闭',common_go:'开始',common_score:'分数',common_weekly:'每周',
+  champ_round_of:'{n}强赛',champ_player1:'P1',champ_player2:'P2',champ_vs:'对战',
+  bonus_tap:'点击',bonus_energy:'能量',bonus_regen:'回复',bonus_cost:'消耗',bonus_combo:'连击',bonus_passive:'被动',bonus_gems:'宝石',bonus_crit:'暴击',bonus_all:'全部',
+  guild_tap_power_label:'点击力量',guild_max_energy_label:'最大能量',guild_gem_drop_label:'宝石掉落',guild_boss_damage_label:'Boss伤害',guild_offline_income_label:'离线收入',guild_war_damage_label:'战争伤害',
+  mentor_teaching_xp:'教学XP：{n}',auction_expired:'已过期',ranked_wl:'胜 {w} / 负 {l}',common_season:'赛季',
 };
