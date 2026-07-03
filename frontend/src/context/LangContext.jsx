@@ -18,7 +18,10 @@ export function LangProvider({ children }) {
 
   const setLang = useCallback((code) => {
     const resolved = resolveLang(code);
-    if (resolved && resolved !== lang) setLangState(resolved);
+    if (resolved && resolved !== lang) {
+      setLangState(resolved);
+      try { localStorage.setItem('figabrain_lang', resolved); } catch {}
+    }
   }, [lang]);
 
   return (

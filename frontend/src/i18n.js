@@ -1,4 +1,15 @@
+import es from './i18n/es.js';
+import fr from './i18n/fr.js';
+import de from './i18n/de.js';
+import pt from './i18n/pt.js';
+import zh from './i18n/zh.js';
+import ar from './i18n/ar.js';
+import hi from './i18n/hi.js';
+import ja from './i18n/ja.js';
+import ko from './i18n/ko.js';
+
 export const LANGS = {
+  es, fr, de, pt, zh, ar, hi, ja, ko,
   en: {
     // Tabs
     tab_home:  'Home',
@@ -2535,6 +2546,8 @@ export const LANGS = {
 
 export function getLang() {
   try {
+    const saved = localStorage.getItem('figabrain_lang');
+    if (saved && LANGS[saved]) return saved;
     const sources = [
       window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code,
       navigator?.language,

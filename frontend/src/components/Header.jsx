@@ -1,4 +1,5 @@
 import { useT } from '../context/LangContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header() {
   const t = useT();
@@ -11,6 +12,7 @@ export default function Header() {
         <div className="header-title">Brainrot Farm</div>
         <div className="header-subtitle">{t('header_sub')}</div>
       </div>
+      <LanguageSwitcher />
     </div>
   );
 }
