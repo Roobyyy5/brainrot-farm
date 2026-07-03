@@ -63,12 +63,12 @@ export default function GuildSkillTree() {
 
       {tab === 'bonuses' && (
         <div className="gskilltree-bonuses">
-          {bonuses.tapPctBonus > 0    && <div className="gskilltree-bonus-row">⚡ Tap Power <span>+{bonuses.tapPctBonus}%</span></div>}
-          {bonuses.energyBonus > 0    && <div className="gskilltree-bonus-row">🔋 Max Energy <span>+{bonuses.energyBonus.toLocaleString()}</span></div>}
-          {bonuses.gemDropPct > 0     && <div className="gskilltree-bonus-row">💎 Gem Drop <span>+{(bonuses.gemDropPct * 100).toFixed(1)}%</span></div>}
-          {bonuses.bossDamagePct > 0  && <div className="gskilltree-bonus-row">💣 Boss Damage <span>+{bonuses.bossDamagePct}%</span></div>}
-          {bonuses.offlinePct > 0     && <div className="gskilltree-bonus-row">🤖 Offline Income <span>+{bonuses.offlinePct}%</span></div>}
-          {bonuses.bracketDmgPct > 0  && <div className="gskilltree-bonus-row">🥁 War Damage <span>+{bonuses.bracketDmgPct}%</span></div>}
+          {bonuses.tapPctBonus > 0    && <div className="gskilltree-bonus-row">⚡ {t('guild_tap_power_label')} <span>+{bonuses.tapPctBonus}%</span></div>}
+          {bonuses.energyBonus > 0    && <div className="gskilltree-bonus-row">🔋 {t('guild_max_energy_label')} <span>+{bonuses.energyBonus.toLocaleString()}</span></div>}
+          {bonuses.gemDropPct > 0     && <div className="gskilltree-bonus-row">💎 {t('guild_gem_drop_label')} <span>+{(bonuses.gemDropPct * 100).toFixed(1)}%</span></div>}
+          {bonuses.bossDamagePct > 0  && <div className="gskilltree-bonus-row">💣 {t('guild_boss_damage_label')} <span>+{bonuses.bossDamagePct}%</span></div>}
+          {bonuses.offlinePct > 0     && <div className="gskilltree-bonus-row">🤖 {t('guild_offline_income_label')} <span>+{bonuses.offlinePct}%</span></div>}
+          {bonuses.bracketDmgPct > 0  && <div className="gskilltree-bonus-row">🥁 {t('guild_war_damage_label')} <span>+{bonuses.bracketDmgPct}%</span></div>}
           {Object.values(bonuses).every(v => v === 0) && (
             <div style={{ color: 'var(--text-faint)', fontSize: '0.8rem', textAlign: 'center', padding: 12 }}>{t('gst_no_bonuses')}</div>
           )}

@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
 
-const BONUS_LABELS = {
-  tapMult:       v => `+${Math.round(v*100)}% Tap`,
-  energyMax:     v => `+${v} Energy`,
-  energyRegen:   v => `+${Math.round(v*100)}% Regen`,
-  energyCostMult:v => `${Math.round(v*100)}% Cost`,
-  comboMult:     v => `+${Math.round(v*100)}% Combo`,
-  passiveMult:   v => `+${Math.round(v*100)}% Passive`,
-  gemMult:       v => `+${Math.round(v*100)}% Gems`,
-  critChance:    v => `+${Math.round(v*100)}% Crit`,
-  allMult:       v => `+${Math.round(v*100)}% All`,
-};
-
 export default function NeuralTree() {
   const t = useT();
+  const BONUS_LABELS = {
+    tapMult:       v => `+${Math.round(v*100)}% ${t('bonus_tap')}`,
+    energyMax:     v => `+${v} ${t('bonus_energy')}`,
+    energyRegen:   v => `+${Math.round(v*100)}% ${t('bonus_regen')}`,
+    energyCostMult:v => `${Math.round(v*100)}% ${t('bonus_cost')}`,
+    comboMult:     v => `+${Math.round(v*100)}% ${t('bonus_combo')}`,
+    passiveMult:   v => `+${Math.round(v*100)}% ${t('bonus_passive')}`,
+    gemMult:       v => `+${Math.round(v*100)}% ${t('bonus_gems')}`,
+    critChance:    v => `+${Math.round(v*100)}% ${t('bonus_crit')}`,
+    allMult:       v => `+${Math.round(v*100)}% ${t('bonus_all')}`,
+  };
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);

@@ -27,7 +27,7 @@ export default function AuctionHouse() {
   const ing = data.myIngredients || {};
   const timeLeft = (expiresAt) => {
     const ms = expiresAt - Date.now();
-    if (ms <= 0) return 'Expired';
+    if (ms <= 0) return t('auction_expired');
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
     return `${h}h ${m}m`;
@@ -61,7 +61,7 @@ export default function AuctionHouse() {
       {view === 'market' && (
         <div className="auction-market">
           <div className="auction-gems-row">
-            <span className="auction-gems">💎 {data.myGems} gems</span>
+            <span className="auction-gems">{t('gems_balance', { n: data.myGems })}</span>
           </div>
           {data.auctions.length === 0 && (
             <div className="auction-empty">{t('auction_empty')}</div>

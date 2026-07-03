@@ -83,7 +83,7 @@ export default function MentorSystem() {
       {data.apprentices.length > 0 && (
         <div className="mentor-progress">
           <div className="mentor-progress-top">
-            <span className="mentor-progress-label">Teaching XP: {data.totalTeachingXp}</span>
+            <span className="mentor-progress-label">{t('mentor_teaching_xp', { n: data.totalTeachingXp })}</span>
             {data.nextMilestone && <span className="mentor-next">{t('mentor_next', { name: data.nextMilestone.name })}</span>}
           </div>
           <div className="mentor-progress-bar">

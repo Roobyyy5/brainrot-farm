@@ -37,12 +37,12 @@ export default function Championship() {
 
       {data.status === 'bracket' && data.bracket?.matches && (
         <div className="champ-bracket">
-          <div className="champ-bracket-title">Round of {data.bracket.matches.length * 2}</div>
+          <div className="champ-bracket-title">{t('champ_round_of', { n: data.bracket.matches.length * 2 })}</div>
           {data.bracket.matches.slice(0, 8).map(m => (
             <div key={m.id} className="champ-match">
-              <span className={`champ-match-player ${m.winner === m.p1 ? 'winner' : ''}`}>P1</span>
-              <span className="champ-match-vs">vs</span>
-              <span className={`champ-match-player ${m.winner === m.p2 ? 'winner' : ''}`}>P2</span>
+              <span className={`champ-match-player ${m.winner === m.p1 ? 'winner' : ''}`}>{t('champ_player1')}</span>
+              <span className="champ-match-vs">{t('champ_vs')}</span>
+              <span className={`champ-match-player ${m.winner === m.p2 ? 'winner' : ''}`}>{t('champ_player2')}</span>
               {m.score1 !== null && <span className="champ-match-score">{m.score1} : {m.score2}</span>}
             </div>
           ))}

@@ -2,19 +2,18 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
 
-const BONUS_LABELS = {
-  tapMult:     v => `+${Math.round(v*100)}% Tap`,
-  gemMult:     v => `+${Math.round(v*100)}% Gems`,
-  passiveMult: v => `+${Math.round(v*100)}% Passive`,
-  comboMult:   v => `+${Math.round(v*100)}% Combo`,
-  energyMax:   v => `+${v} Energy`,
-  energyRegen: v => `+${Math.round(v*100)}% Regen`,
-  critChance:  v => `+${Math.round(v*100)}% Crit`,
-  allMult:     v => `+${Math.round(v*100)}% All`,
-};
-
 export default function Constellation() {
   const t = useT();
+  const BONUS_LABELS = {
+    tapMult:     v => `+${Math.round(v*100)}% ${t('bonus_tap')}`,
+    gemMult:     v => `+${Math.round(v*100)}% ${t('bonus_gems')}`,
+    passiveMult: v => `+${Math.round(v*100)}% ${t('bonus_passive')}`,
+    comboMult:   v => `+${Math.round(v*100)}% ${t('bonus_combo')}`,
+    energyMax:   v => `+${v} ${t('bonus_energy')}`,
+    energyRegen: v => `+${Math.round(v*100)}% ${t('bonus_regen')}`,
+    critChance:  v => `+${Math.round(v*100)}% ${t('bonus_crit')}`,
+    allMult:     v => `+${Math.round(v*100)}% ${t('bonus_all')}`,
+  };
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
