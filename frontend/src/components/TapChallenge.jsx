@@ -116,7 +116,7 @@ export default function TapChallenge() {
                   )}
                 </div>
                 <div className="tapchallenge-card-right">
-                  <span className="tapchallenge-diff" style={{ color: DIFF_COLOR[c.difficulty] }}>{c.difficulty}</span>
+                  <span className="tapchallenge-diff" style={{ color: DIFF_COLOR[c.difficulty] }}>{t('diff_' + c.difficulty)}</span>
                   <span className="tapchallenge-gems">💎 {c.rewardGems}</span>
                 </div>
               </div>

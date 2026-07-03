@@ -45,7 +45,7 @@ export default function AchievementGallery() {
       <div className="gallery-filters">
         {categories.map(c => (
           <button key={c} className={`gallery-filter ${filter === c ? 'active' : ''}`} onClick={() => setFilter(c)}>
-            {c === 'all' ? t('gallery_filter_all') : c.charAt(0).toUpperCase() + c.slice(1)}
+            {c === 'all' ? t('gallery_filter_all') : t('gallery_cat_' + c)}
           </button>
         ))}
       </div>

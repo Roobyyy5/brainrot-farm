@@ -22,7 +22,7 @@ export default function DivisionLeague() {
     },
   });
 
-  if (!data) return null;
+  if (!data || !data.me) return null;
 
   const { me, division, tierDef, tiers, timeUntilEndMs } = data;
   const color = TIER_COLOR[me.tier] || '#888';
@@ -36,7 +36,7 @@ export default function DivisionLeague() {
       <div className="divleague-my-tier" style={{ borderColor: color }}>
         <span className="divleague-tier-icon">{tierDef?.icon}</span>
         <div className="divleague-tier-info">
-          <div className="divleague-tier-name" style={{ color }}>{me.tier} Division</div>
+          <div className="divleague-tier-name" style={{ color }}>{me.tier} {t('div_division_label')}</div>
           <div className="divleague-tier-sub">{t('div_tier_sub', { rank: me.rank, total: division.length, score: me.tapScore.toLocaleString() })}</div>
         </div>
         <div className="divleague-timer">
@@ -47,7 +47,7 @@ export default function DivisionLeague() {
 
       <div className="divleague-rules">
         <span className="divleague-rule promote">⬆ {t('div_promote', { n: tierDef?.promote })}</span>
-        <span className="divleague-reward">💎 {tierDef?.gemReward} gems</span>
+        <span className="divleague-reward">💎 {tierDef?.gemReward} {t('common_gems_label')}</span>
         {tierDef?.relegate > 0 && <span className="divleague-rule relegate">{t('div_relegate', { n: tierDef?.relegate })}</span>}
       </div>
 

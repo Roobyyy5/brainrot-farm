@@ -10,10 +10,13 @@ function msToCountdown(ms) {
   return h > 0 ? `${h}h ${m}m` : `${m}m ${sec}s`;
 }
 
-const SKIN_LABELS = { skin_fire: '🔥 Fire Brain', skin_diamond: '💎 Diamond Brain', skin_crown: '👑 Crown Brain' };
-
 export default function Tournament() {
   const t = useT();
+  const skinLabels = {
+    skin_fire:    `🔥 ${t('skin_fire_name')}`,
+    skin_diamond: `💎 ${t('skin_diamond_name')}`,
+    skin_crown:   `👑 ${t('skin_crown_name')}`,
+  };
   const [data, setData] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
 
@@ -35,14 +38,14 @@ export default function Tournament() {
     <div className="tourney-section">
       <div className="tourney-header">🏆 {tournament.name}</div>
       <div className="tourney-meta">
-        {t('div_weekly')} <strong>{timeLeft}</strong> · {t('tourn_prize')}: {SKIN_LABELS[tournament.prizeSkin] || tournament.prizeSkin}
+        {t('div_weekly')} <strong>{timeLeft}</strong> · {t('tourn_prize')}: {skinLabels[tournament.prizeSkin] || tournament.prizeSkin}
       </div>
       {myScore > 0 && <div className="tourney-myscore">{t('olym_your_score')}: {myScore.toLocaleString()} BP</div>}
       <div className="tourney-rewards-row">
         {topGems.slice(0, 5).map((g, i) => (
           <div key={i} className="tourney-reward-chip">#{i + 1} 💎{g}</div>
         ))}
-        <div className="tourney-reward-chip">#1 {SKIN_LABELS[tournament.prizeSkin]?.split(' ')[0]}</div>
+        <div className="tourney-reward-chip">#1 {skinLabels[tournament.prizeSkin]?.split(' ')[0]}</div>
       </div>
       <div className="tourney-list">
         {leaderboard.length === 0 && (
