@@ -113,7 +113,7 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
               className={`skin-card${skin.unlocked ? ' skin-card--unlocked' : ''}${data.selectedSkin === skin.key ? ' skin-card--selected' : ''}`}
             >
               <div className="skin-emoji">{SKIN_EMOJIS[skin.key] || '🧠'}</div>
-              <div className="skin-name">{skin.name}</div>
+              <div className="skin-name">{t(skin.key + '_name')}</div>
               <div className="skin-unlock-hint">
                 {!skin.unlocked && skin.unlock === 'gem_shop' && t('gems_buy_shop')}
                 {!skin.unlocked && skin.unlock === 'prestige' && t('gems_prestige_n', { n: skin.minPrestige })}
