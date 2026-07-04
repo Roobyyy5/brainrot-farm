@@ -20,7 +20,10 @@ router.post(
 
     const existing = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
     if (existing.rows[0]) {
-      return res.json({ user: existing.rows[0], alreadyRegistered: true, bot_username: process.env.BOT_USERNAME || '' });
+      if (language_code && existing.rows[0].language_code !== language_code) {
+        await pool.query('UPDATE users SET language_code = $1 WHERE telegram_id = $2', [language_code, telegramId]);
+      }
+      return res.json({ user: existing.rows[0], alreadyRegistered: true, tg_lang: language_code || null, bot_username: process.env.BOT_USERNAME || '' });
     }
 
     let referredBy = null;
@@ -43,11 +46,11 @@ router.post(
     // instead of throwing a unique-violation that would 500 one of them.
     const inserted = await withTransaction(async (client) => {
       const insertResult = await client.query(
-        `INSERT INTO users (telegram_id, username, coins, level, last_farm_at, last_daily_at, daily_streak, referral_code, referred_by, has_farmed_once, created_at)
-         VALUES ($1, $2, 0, 'NPC', 0, 0, 0, $3, $4, FALSE, $5)
+        `INSERT INTO users (telegram_id, username, language_code, coins, level, last_farm_at, last_daily_at, daily_streak, referral_code, referred_by, has_farmed_once, created_at)
+         VALUES ($1, $2, $3, 0, 'NPC', 0, 0, 0, $4, $5, FALSE, $6)
          ON CONFLICT (telegram_id) DO NOTHING
          RETURNING telegram_id`,
-        [telegramId, username, referralCode, referredBy, now]
+        [telegramId, username, language_code || null, referralCode, referredBy, now]
       );
 
       if (insertResult.rows[0] && referredBy) {
