@@ -127,7 +127,7 @@ export default function App() {
   const handleGemsChanged = (delta) => setUser((u) => u ? { ...u, gems: Math.max(0, (u.gems || 0) + delta) } : u);
 
   if (loading) return <div className="loading-screen">{t('loading')}</div>;
-  if (error)   return <div className="error-screen">Error: {error}</div>;
+  if (error)   return <div className="error-screen">⚠️ {error}</div>;
 
   return (
     <div className="app">

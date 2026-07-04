@@ -241,7 +241,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
         </div>
         {streak > 0 && (
           <div className="streak-badge">
-            🔥 {streak}d {streakBonus > 0 && <span>+{streakBonus}%</span>}
+            🔥 {streak}{t('time_d')} {streakBonus > 0 && <span>+{streakBonus}%</span>}
           </div>
         )}
         {boostSecsLeft > 0 && (
