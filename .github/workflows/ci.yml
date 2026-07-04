@@ -1,0 +1,163 @@
+name: CI — FIGABRAIN
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Social Backend ──────────────────────────────────────────────────────────
+  backend-typecheck:
+    name: Backend — TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figabrain-social/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: figabrain-social/backend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  backend-test:
+    name: Backend — Tests
+    runs-on: ubuntu-latest
+    needs: backend-typecheck
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: figabrain
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: figabrain_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    defaults:
+      run:
+        working-directory: figabrain-social/backend
+    env:
+      DATABASE_URL: postgresql://figabrain:test_password@localhost:5432/figabrain_test
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: test_jwt_access_secret_at_least_32_chars_long
+      JWT_REFRESH_SECRET: test_jwt_refresh_secret_at_least_32_chars_long
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 7d
+      WALLET_ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      CORS_ORIGIN: http://localhost:5174
+      PORT: 3001
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: figabrain-social/backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm test
+
+  # ─── Social Frontend ─────────────────────────────────────────────────────────
+  frontend-typecheck:
+    name: Frontend — TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figabrain-social/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: figabrain-social/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  frontend-build:
+    name: Frontend — Build
+    runs-on: ubuntu-latest
+    needs: frontend-typecheck
+    defaults:
+      run:
+        working-directory: figabrain-social/frontend
+    env:
+      VITE_API_URL: https://api.figabrain.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: figabrain-social/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: figabrain-social/frontend/dist
+          retention-days: 7
+
+  # ─── Wallet PWA ─────────────────────────────────────────────────────────────
+  wallet-build:
+    name: Wallet — Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Figabrain Wallet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: "Figabrain Wallet/package-lock.json"
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wallet-dist
+          path: "Figabrain Wallet/dist"
+          retention-days: 7
+
+  # ─── Security scan ───────────────────────────────────────────────────────────
+  security-scan:
+    name: Security — npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Audit backend
+        working-directory: figabrain-social/backend
+        run: npm audit --audit-level=high || true
+      - name: Audit frontend
+        working-directory: figabrain-social/frontend
+        run: npm audit --audit-level=high || true
+      - name: Audit wallet
+        working-directory: "Figabrain Wallet"
+        run: npm audit --audit-level=high || true
