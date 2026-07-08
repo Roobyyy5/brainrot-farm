@@ -17,8 +17,8 @@ export default function TapLeaderboard({ currentUserId }) {
       api.leaderboard('weekly'),
     ]).then(([tap, weekly]) => {
       setTapData(tap);
-      setWeeklyData(weekly);
-    }).finally(() => setLoading(false));
+      setWeeklyData(weekly?.leaderboard || []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="tap-loading">{t('tap_lb_loading')}</div>;

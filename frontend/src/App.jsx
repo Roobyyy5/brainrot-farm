@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 import { useT, useSetLang } from './context/LangContext';
 import { initTelegram, getStartParam } from './telegram';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import Onboarding from './components/Onboarding';
 import Balance from './components/Balance';
@@ -149,6 +150,7 @@ export default function App() {
         ))}
       </div>
 
+      <ErrorBoundary key={tab}>
       {tab === 'home' && (
         <>
           <WeatherSystem />
@@ -252,6 +254,7 @@ export default function App() {
           <Leaderboard currentUserId={user?.telegram_id} />
         </>
       )}
+      </ErrorBoundary>
     </div>
   );
 }

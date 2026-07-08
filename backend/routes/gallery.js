@@ -44,30 +44,32 @@ router.get('/', asyncHandler(async (req, res) => {
       bossKills: bossKillRow?.n || 0,
     };
 
-    const categories = {};
-    for (const ach of ACHIEVEMENT_GALLERY) {
-      const unlocked = ach.check(profile || {}, ctx);
-      const entry = {
-        key: ach.key,
-        name: ach.name,
-        icon: ach.icon,
-        desc: ach.desc,
-        tier: ach.tier,
-        tierColor: TIER_COLOR[ach.tier],
-        reward: ach.reward,
-        unlocked,
-        claimed: claimed.has(ach.key),
-        claimable: unlocked && !claimed.has(ach.key),
+    const achievements = ACHIEVEMENT_GALLERY.map(ach => {
+      const completed = ach.check(profile || {}, ctx);
+      return {
+        key:         ach.key,
+        name:        ach.name,
+        icon:        ach.icon,
+        description: ach.desc,
+        category:    ach.category,
+        tier:        ach.tier,
+        gems:        ach.reward?.gems || 0,
+        completed,
+        claimed:     claimed.has(ach.key),
+        progress:    null,
+        progressTarget: null,
       };
-      if (!categories[ach.category]) categories[ach.category] = [];
-      categories[ach.category].push(entry);
-    }
+    });
+
+    const totalGems = achievements
+      .filter(a => a.claimed)
+      .reduce((sum, a) => sum + a.gems, 0);
 
     // Legend badge: all platinum+ claimed
     const platinumAndAbove = ACHIEVEMENT_GALLERY.filter(a => ['platinum', 'diamond'].includes(a.tier));
     const legendUnlocked = platinumAndAbove.every(a => claimed.has(a.key));
 
-    res.json({ categories, legendUnlocked, tierOrder: TIER_ORDER, tierColors: TIER_COLOR });
+    res.json({ achievements, totalGems, legendUnlocked });
   } finally {
     client.release();
   }
