@@ -46,7 +46,8 @@ router.get('/search', asyncHandler(async (req, res) => {
 
 router.post('/create', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const { name, tag, description } = req.body;
+  const { name, tag } = req.body;
+  const description = String(req.body.description || '').slice(0, 200);
   if (!name || !tag || name.length > 30 || tag.length > 6) {
     return res.status(400).json({ error: 'Name ≤30 chars, tag ≤6 chars required' });
   }
@@ -55,7 +56,7 @@ router.post('/create', asyncHandler(async (req, res) => {
     if (ex[0]) return { error: 'Already in a guild' };
     const { rows: g } = await client.query(
       'INSERT INTO guilds (name,tag,owner_id,description,created_at) VALUES($1,$2,$3,$4,$5) RETURNING id',
-      [name, tag.toUpperCase(), telegramId, description || '', Date.now()]
+      [name, tag.toUpperCase(), telegramId, description, Date.now()]
     );
     const guildId = g[0].id;
     await client.query('INSERT INTO guild_members (guild_id,telegram_id,role,joined_at) VALUES($1,$2,$3,$4)',

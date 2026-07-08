@@ -216,17 +216,17 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
           <div className="talent-modal">
             <div className="talent-modal-title">{t('tap_talent_title')}</div>
             <div className="talent-modal-sub">{t('tap_talent_sub')}</div>
-            {talentChoices.map((t) => (
+            {talentChoices.map((talent) => (
               <button
-                key={t.key}
+                key={talent.key}
                 className="talent-choice-btn"
-                onClick={() => handleChooseTalent(t.key)}
+                onClick={() => handleChooseTalent(talent.key)}
                 disabled={!!choosingTalent}
               >
-                <span className="talent-choice-icon">{t.icon}</span>
+                <span className="talent-choice-icon">{talent.icon}</span>
                 <div>
-                  <div className="talent-choice-name">{(() => { const k = 'talent_' + t.key + '_name'; const v2 = t(k); return v2 === k ? t.name : v2; })()}</div>
-                  <div className="talent-choice-desc">{(() => { const k = 'talent_' + t.key + '_desc'; const v2 = t(k); return v2 === k ? t.desc : v2; })()}</div>
+                  <div className="talent-choice-name">{(() => { const k = 'talent_' + talent.key + '_name'; const v = t(k); return v === k ? talent.name : v; })()}</div>
+                  <div className="talent-choice-desc">{(() => { const k = 'talent_' + talent.key + '_desc'; const v = t(k); return v === k ? talent.desc : v; })()}</div>
                 </div>
               </button>
             ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
@@ -15,8 +15,12 @@ export default function DivisionLeague() {
   const load = () => api.divisionleague.status().then(setData).catch(() => {});
   useEffect(() => { load(); }, []);
 
+  const rooms = useMemo(
+    () => (data?.me?.divisionId != null ? [`division:${data.me.divisionId}`] : []),
+    [data?.me?.divisionId],
+  );
   useWebSocket({
-    rooms: data ? [`division:${data.me?.divisionId}`] : [],
+    rooms,
     onMessage: (msg) => {
       if (msg.type === 'division_score') load();
     },

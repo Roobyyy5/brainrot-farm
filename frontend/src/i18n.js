@@ -517,7 +517,6 @@ export const LANGS = {
     // ActiveAbilities
     abilities_title: '⚡ Active Abilities',
     abilities_activate: 'Activate',
-    abilities_active: 'Active',
     abilities_cooldown: 'Cooldown: {n}s',
     // TapAlchemy
     alchemy_title:   '⚗️ Tap Alchemy',
@@ -1684,7 +1683,6 @@ export const LANGS = {
     pshop_pp:        'ПП',
     abilities_title: '⚡ Активні здібності',
     abilities_activate: 'Активувати',
-    abilities_active: 'Активна',
     abilities_cooldown: 'Відновлення: {n}с',
     alchemy_title:   '⚗️ Алхімія тапу',
     alchemy_brew:    'Варити',
@@ -2827,7 +2825,6 @@ export const LANGS = {
     pshop_pp:        'ОП',
     abilities_title: '⚡ Активные способности',
     abilities_activate: 'Активировать',
-    abilities_active: 'Активна',
     abilities_cooldown: 'Откат: {n}с',
     alchemy_title:   '⚗️ Алхимия тапа',
     alchemy_brew:    'Варить',

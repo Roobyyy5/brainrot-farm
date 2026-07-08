@@ -84,7 +84,16 @@ const olympicsRoute       = require('./routes/olympics');
 const app = express();
 const httpServer = http.createServer(app);
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '64kb' }));
+
+// Security headers — prevent the API from being framed or sniffed as a web page
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 
 // Anti-cheat: server-side cooldowns are the main defense, this is a backstop
 // against scripted abuse hammering the API faster than any human could.
