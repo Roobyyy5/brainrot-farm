@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
 
 export default function BossCard({ boss, tapPower, multiTap, energy, onDamage }) {
   const t = useT();
   const [floats, setFloats] = useState([]);
-  const floatId = { current: 0 };
+  const floatId = useRef(0);
 
   const hpPct = Math.max(0, Math.min(100, (boss.hp / boss.maxHp) * 100));
   const timeLeft = Math.max(0, boss.endsAt - Date.now());
@@ -13,8 +13,10 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
   const mins = Math.floor((timeLeft % 3_600_000) / 60_000);
 
   const handleBossTap = (e) => {
-    if (energy < 1) return;
-    const clicks = Math.min(multiTap || 1, energy);
+    e.preventDefault();
+    const floorEnergy = Math.floor(energy);
+    if (floorEnergy < 1) return;
+    const clicks = Math.min(multiTap || 1, floorEnergy);
 
     const id = ++floatId.current;
     const dmg = clicks * (tapPower || 1);
@@ -50,9 +52,10 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
 
       <div className="boss-fight-area">
         <button
+          type="button"
           className="boss-tap-btn"
-          onPointerDown={handleBossTap}
-          disabled={energy < 1}
+          onClick={handleBossTap}
+          disabled={Math.floor(energy) < 1}
         >
           <span className="boss-tap-icon">⚔️</span>
           <span>{t('bosscard_attack')}</span>
