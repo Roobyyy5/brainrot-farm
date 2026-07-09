@@ -211,7 +211,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const canPrestige = (profile?.totalTaps || 0) >= 1_000_000;
   const SKIN_EMOJIS = {
     default: '🧠', prestige1: '⭐🧠', prestige2: '💫🧠', prestige3: '🌟🧠',
-    skin_fire: '🔥🧠', skin_diamond: '💎🧠', skin_crown: '👑🧠',
+    skin_fire: '🔥🧠', skin_diamond: '🧠', skin_crown: '👑🧠',
   };
   const brainEmoji = SKIN_EMOJIS[profile?.selectedSkin || 'default'] || '🧠';
   const streak = profile?.tapStreak || 0;
