@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function PrestigeShop() {
   const t = useT();
@@ -16,7 +17,7 @@ export default function PrestigeShop() {
     try {
       await api.prestigeshop.buy(upgradeKey);
       await load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setBuying(null); }
   };
 

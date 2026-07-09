@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const CHALLENGE_DURATION = 30;
 
@@ -43,7 +44,7 @@ export default function ShadowRival() {
       setResult(res);
       setView('result');
       load();
-    } catch (err) { alert(err.message); setView('menu'); }
+    } catch (err) { toastError(err.message); setView('menu'); }
     finally { setLoading(false); }
   };
 
@@ -134,7 +135,7 @@ function RivalUpgrades({ shards, onBack, t }) {
   const buy = async (key) => {
     setLoading(true);
     try { await api.shadowrival.upgrade(key); api.shadowrival.upgrades().then(setData); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

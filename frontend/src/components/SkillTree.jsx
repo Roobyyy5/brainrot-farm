@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function SkillTree() {
   const t = useT();
@@ -20,7 +21,7 @@ export default function SkillTree() {
     try {
       await api.skills.upgrade(skillKey);
       load();
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setUpgrading(null); }
   };
 

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const SLOT_ICONS = ['⚔️', '🛡️', '⚡'];
 
@@ -25,14 +26,14 @@ export default function BuildPresets() {
       await api.buildpresets.save(slot, editName || `Preset ${slot}`);
       setEditSlot(null);
       await load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
   const deletePreset = async (slot) => {
     setLoading(true);
     try { await api.buildpresets.delete(slot); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

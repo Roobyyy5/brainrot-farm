@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function WorldMap() {
   const t = useT();
@@ -21,7 +22,7 @@ export default function WorldMap() {
       const res = await api.worlds.advance();
       setCurrentZone(res.zone.zone);
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setAdvancing(false); }
   };
 

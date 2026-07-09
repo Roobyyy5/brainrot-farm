@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const REWARD_ICON = { coins: '💰', gems: '💎', energy_refill: '⚡', skill_points: '🧪', '2x_boost': '🔥', skin: '🎨' };
 
@@ -20,7 +21,7 @@ export default function BattlePass({ onGemsChanged }) {
     try {
       await api.battlepass.claim(level, premium);
       load();
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setClaiming(null); }
   };
 
@@ -31,7 +32,7 @@ export default function BattlePass({ onGemsChanged }) {
       await api.battlepass.buyPremium();
       onGemsChanged?.(-data.premiumCost);
       load();
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setBuying(false); }
   };
 

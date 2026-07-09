@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function ClanBracket() {
   const t = useT();
@@ -11,7 +12,7 @@ export default function ClanBracket() {
   const load = () => api.clanbracket.status().then(setData).catch(() => {});
   useEffect(() => { load(); }, []);
 
-  const act = async (fn) => { setLoading(true); try { await fn(); load(); } catch (err) { alert(err.message); } finally { setLoading(false); } };
+  const act = async (fn) => { setLoading(true); try { await fn(); load(); } catch (err) { toastError(err.message); } finally { setLoading(false); } };
 
   const myGuildId = data?.myGuildId;
   const bracket = data?.bracket;

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function BossRush() {
   const t = useT();
@@ -53,7 +54,7 @@ export default function BossRush() {
   const handleStart = async () => {
     if (acting) return;
     setActing(true);
-    try { await api.bossrush.start(); load(); } catch (err) { alert(err.message); }
+    try { await api.bossrush.start(); load(); } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 

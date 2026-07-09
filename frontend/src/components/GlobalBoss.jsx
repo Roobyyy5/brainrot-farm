@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function GlobalBoss() {
   const t = useT();
@@ -53,9 +54,9 @@ export default function GlobalBoss() {
         event: { ...prev.event, currentHp: r.newHp },
         myDamage: (prev.myDamage || 0) + r.damage,
       } : prev);
-      if (r.defeated) { alert(t('gboss_defeated')); load(); }
+      if (r.defeated) { toastSuccess(t('gboss_defeated')); load(); }
       if (r.newMilestones?.length > 0) { load(); }
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

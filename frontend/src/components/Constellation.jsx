@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function Constellation() {
   const t = useT();
@@ -24,7 +25,7 @@ export default function Constellation() {
   const unlock = async (nodeId) => {
     setLoading(true);
     try { await api.constellation.unlock(nodeId); await load(); setSelected(null); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function TapOracle() {
   const t = useT();
@@ -31,8 +32,8 @@ export default function TapOracle() {
 
   const act = async (fn, msg) => {
     setLoading(true);
-    try { const r = await fn(); if (msg) alert(msg(r)); await load(); }
-    catch (err) { alert(err.message); }
+    try { const r = await fn(); if (msg) toastSuccess(msg(r)); await load(); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function DailyShop({ onGemsChanged }) {
   const t = useT();
@@ -19,7 +20,7 @@ export default function DailyShop({ onGemsChanged }) {
       onGemsChanged?.(-cost);
       if (res.lootResult) setLootResult(res.lootResult);
       load();
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setBuying(null); }
   };
 

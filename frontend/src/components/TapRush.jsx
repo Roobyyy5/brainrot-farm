@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const RUSH_DURATION = 30;
 
@@ -47,7 +48,7 @@ export default function TapRush() {
   const handleStart = async () => {
     setStarting(true);
     try { await api.taprush.start(); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setStarting(false); }
   };
 

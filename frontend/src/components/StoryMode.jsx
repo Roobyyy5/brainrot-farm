@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const MECHANIC_ICON = {
   standard: '⚔️', no_stop: '🏃', burst: '💥', regen_boss: '💚',
@@ -21,7 +22,7 @@ export default function StoryMode() {
   const start = async () => {
     setLoading(true);
     try { await api.campaign.start(); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -29,7 +30,7 @@ export default function StoryMode() {
     try {
       const r = await api.campaign.tap(n);
       if (r.defeated) {
-        alert(t('story_completed', { n: r.chapterId, gems: r.reward?.gems || 0 }));
+        toastSuccess(t('story_completed', { n: r.chapterId, gems: r.reward?.gems || 0 }));
         await load();
       } else {
         setData(prev => prev ? { ...prev, bossHp: r.newHp } : prev);

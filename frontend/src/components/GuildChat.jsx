@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function GuildChat({ currentUsername }) {
   const t = useT();
@@ -29,7 +30,7 @@ export default function GuildChat({ currentUsername }) {
       await api.guilds.sendMessage(text.trim());
       setText('');
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setSending(false); }
   };
 

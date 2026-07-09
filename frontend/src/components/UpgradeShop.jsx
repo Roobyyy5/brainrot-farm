@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function UpgradeShop({ userCoins, onCoinsSpent }) {
   const t = useT();
@@ -22,7 +23,7 @@ export default function UpgradeShop({ userCoins, onCoinsSpent }) {
       setUpgrades(res.upgrades);
       onCoinsSpent?.(cost);
     } catch (err) {
-      alert(err.message || t('upgrade_err'));
+      toastError(err.message || t('upgrade_err'));
     } finally {
       setBuying(null);
     }

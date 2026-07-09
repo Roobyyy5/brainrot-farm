@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function CoopRaid() {
   const t = useT();
@@ -56,7 +57,7 @@ export default function CoopRaid() {
     return () => clearInterval(timerRef.current);
   }, [activeLobby?.endsAt]);
 
-  const act = async (fn) => { setLoading(true); try { await fn(); await load(); } catch (err) { alert(err.message); } finally { setLoading(false); } };
+  const act = async (fn) => { setLoading(true); try { await fn(); await load(); } catch (err) { toastError(err.message); } finally { setLoading(false); } };
   const bossName = (key) => { const k = 'coop_boss_' + key; const v = t(k); return v === k ? key?.replace(/_/g, ' ').toUpperCase() : v; };
 
   const create = async (bossKey) => {
@@ -66,7 +67,7 @@ export default function CoopRaid() {
       setActiveLobby({ lobbyId: r.lobbyId, bossKey, hp: data.bossDefs.find(b => b.key === bossKey)?.hp || 0, maxHp: data.bossDefs.find(b => b.key === bossKey)?.hp || 0, status: 'waiting' });
       setView('raid');
       await load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -75,8 +76,8 @@ export default function CoopRaid() {
     try {
       const r = await api.coopraid.tap(activeLobby.lobbyId, 25);
       setActiveLobby(prev => prev ? { ...prev, hp: r.newHp } : prev);
-      if (r.lootEarned) { alert(t('coop_cleared')); load(); }
-    } catch (err) { alert(err.message); }
+      if (r.lootEarned) { toastSuccess(t('coop_cleared')); load(); }
+    } catch (err) { toastError(err.message); }
   };
 
   if (!data) return null;

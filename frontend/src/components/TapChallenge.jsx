@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const DIFF_COLOR = { easy: '#34d399', medium: '#f59e0b', hard: '#ef4444', legend: '#a78bfa' };
 
@@ -50,7 +51,7 @@ export default function TapChallenge() {
       await api.tapchallenge.start(key);
       await load();
       setTab('active');
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -64,9 +65,9 @@ export default function TapChallenge() {
         setTab('list');
         await load();
         if (result.status === 'completed') {
-          alert(t('challenge_done', { n: result.gemsEarned }));
+          toastSuccess(t('challenge_done', { n: result.gemsEarned }));
         } else {
-          alert(t('challenge_timeout'));
+          toastSuccess(t('challenge_timeout'));
         }
       }
     } catch { /* ignore */ }

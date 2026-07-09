@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const TYPE_COLOR = {
   fire:      '#ef4444',
@@ -53,9 +54,9 @@ export default function BossEcosystem() {
     try {
       const r = await api.bossecosystem.tap(key, 30);
       await load();
-      if (r.lootEarned) alert(t('beco_slain'));
-      else if (r.hasWeakness) alert(t('beco_weakness_hit', { n: r.damageMult }));
-    } catch (err) { alert(err.message); }
+      if (r.lootEarned) toastSuccess(t('beco_slain'));
+      else if (r.hasWeakness) toastSuccess(t('beco_weakness_hit', { n: r.damageMult }));
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

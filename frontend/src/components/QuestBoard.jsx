@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const TIER_COLOR = { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', platinum: '#00e5ff' };
 
@@ -16,7 +17,7 @@ export default function QuestBoard() {
   const claim = async (questKey, periodKey) => {
     setLoading(true);
     try { await api.questboard.claim(questKey, periodKey); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -25,8 +26,8 @@ export default function QuestBoard() {
     try {
       const r = await api.questboard.chest();
       await load();
-      alert(t('quest_chest_alert', { gems: r.gems }) + (r.artifactGranted ? t('quest_chest_artifact', { name: r.artifactGranted }) : ''));
-    } catch (err) { alert(err.message); }
+      toastSuccess(t('quest_chest_alert', { gems: r.gems }) + (r.artifactGranted ? t('quest_chest_artifact', { name: r.artifactGranted }) : ''));
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

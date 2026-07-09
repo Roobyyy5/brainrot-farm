@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function WorldBoss() {
   const t = useT();
@@ -80,7 +81,7 @@ export default function WorldBoss() {
     if (tapping) return;
     setTapping(true);
     try { await api.worldboss.tap(10); }
-    catch (err) { if (err.status !== 400) alert(err.message); }
+    catch (err) { if (err.status !== 400) toastError(err.message); }
     finally { setTapping(false); }
   };
 

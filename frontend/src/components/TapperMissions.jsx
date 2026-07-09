@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function TapperMissions({ onEarned }) {
   const t = useT();
@@ -19,7 +20,7 @@ export default function TapperMissions({ onEarned }) {
       onEarned?.(reward);
       load();
     } catch (err) {
-      alert(err.message || t('upgrade_err'));
+      toastError(err.message || t('upgrade_err'));
     } finally {
       setClaiming(null);
     }

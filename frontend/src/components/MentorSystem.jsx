@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function MentorSystem() {
   const t = useT();
@@ -13,8 +14,8 @@ export default function MentorSystem() {
 
   const act = async (fn, msg) => {
     setLoading(true);
-    try { await fn(); if (msg) alert(msg); await load(); }
-    catch (err) { alert(err.message); }
+    try { await fn(); if (msg) toastSuccess(msg); await load(); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

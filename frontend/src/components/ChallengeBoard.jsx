@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function ChallengeBoard() {
   const t = useT();
@@ -18,9 +19,9 @@ export default function ChallengeBoard() {
       const parts = [];
       if (r.reward?.gems) parts.push(t('cb_reward_gems', { n: r.reward.gems }));
       if (r.reward?.bp)   parts.push(t('cb_reward_bp',   { n: r.reward.bp }));
-      alert(t('cb_claimed') + parts.join(', '));
+      toastSuccess(t('cb_claimed') + parts.join(', '));
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setClaiming(null); }
   };
 

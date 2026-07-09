@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function RelicsPanel() {
   const t = useT();
@@ -13,7 +14,7 @@ export default function RelicsPanel() {
   const act = async (fn) => {
     setLoading(true);
     try { await fn(); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

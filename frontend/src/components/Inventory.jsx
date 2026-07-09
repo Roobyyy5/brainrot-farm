@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const RARITY_COLOR = { common: '#9ca3af', uncommon: '#34d399', rare: '#60a5fa' };
 
@@ -21,7 +22,7 @@ export default function Inventory() {
       setEffect(res.effect);
       setTimeout(() => setEffect(null), 2000);
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setUsing(null); }
   };
 

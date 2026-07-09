@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function TapStreakCalendar() {
   const t = useT();
@@ -14,9 +15,9 @@ export default function TapStreakCalendar() {
     setLoading(true);
     try {
       const r = await api.tapstreakcal.claim(day);
-      alert(`+${r.reward.gems} 💎${r.reward.title ? ` + "${r.reward.title}"` : ''}`);
+      toastSuccess(`+${r.reward.gems} 💎${r.reward.title ? ` + "${r.reward.title}"` : ''}`);
       await load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

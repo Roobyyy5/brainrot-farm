@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const BRANCH_COLOR = { offense: '#ef4444', defense: '#60a5fa', economy: '#34d399', war: '#f59e0b' };
 
@@ -16,7 +17,7 @@ export default function GuildSkillTree() {
   const act = async (fn) => {
     setLoading(true);
     try { await fn(); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

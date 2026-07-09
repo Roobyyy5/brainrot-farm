@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const REWARD_ICON = { coins: '💰', gems: '💎', energy_refill: '⚡' };
 
@@ -20,7 +21,7 @@ export default function LoginStreak({ onEarned, onGemsChanged }) {
       if (res.reward.type === 'coins') onEarned?.(res.reward.amount);
       if (res.reward.type === 'gems') onGemsChanged?.(res.reward.amount);
       load();
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setClaiming(false); }
   };
 

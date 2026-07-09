@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function Wardrobe() {
   const t = useT();
@@ -19,7 +20,7 @@ export default function Wardrobe() {
     if (equipping) return;
     setEquipping(skinKey);
     try { await api.wardrobe.equip(skinKey); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setEquipping(null); }
   };
 

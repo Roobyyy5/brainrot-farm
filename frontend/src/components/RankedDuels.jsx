@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function RankedDuels() {
   const t = useT();
@@ -54,7 +55,7 @@ export default function RankedDuels() {
   const findMatch = async () => {
     setLoading(true);
     try { await api.rankedduels.find(); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

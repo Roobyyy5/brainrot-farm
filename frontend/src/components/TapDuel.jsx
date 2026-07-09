@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function TapDuel({ currentUserId }) {
   const t = useT();
@@ -66,7 +67,7 @@ export default function TapDuel({ currentUserId }) {
       await api.duels.challenge(challengeUsername, stakeGems);
       setChallengeUsername('');
       loadDuels();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 
@@ -79,13 +80,13 @@ export default function TapDuel({ currentUserId }) {
         const d = duels.find((d) => d.id === duelId);
         if (d) enterDuel({ ...d, status: 'active', ends_at: res.endsAt, challenger_bp: 0, opponent_bp: 0 });
       }
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 
   const handleDecline = async (duelId) => {
     setActing(true);
-    try { await api.duels.decline(duelId); loadDuels(); } catch (err) { alert(err.message); }
+    try { await api.duels.decline(duelId); loadDuels(); } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 

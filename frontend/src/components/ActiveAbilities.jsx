@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function ActiveAbilities({ onActivate }) {
   const t = useT();
@@ -23,7 +24,7 @@ export default function ActiveAbilities({ onActivate }) {
       await load();
       if (onActivate) onActivate(key);
     } catch (err) {
-      alert(err.message);
+      toastError(err.message);
     } finally {
       setActivating(null);
     }

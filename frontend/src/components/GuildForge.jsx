@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const TIER_COLOR = { 1: '#9ca3af', 2: '#3b82f6', 3: '#f59e0b' };
 
@@ -18,8 +19,8 @@ export default function GuildForge() {
     try {
       const r = await api.guildforge.forge(recipeKey);
       await load();
-      alert(t('forge_forged', { name: r.recipe, time: new Date(r.expiresAt).toLocaleTimeString() }));
-    } catch (err) { alert(err.message); }
+      toastSuccess(t('forge_forged', { name: r.recipe, time: new Date(r.expiresAt).toLocaleTimeString() }));
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -28,7 +29,7 @@ export default function GuildForge() {
     if (!amt || amt <= 0) return;
     setLoading(true);
     try { await api.guildforge.contribute(amt); await load(); setContributeAmt(''); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

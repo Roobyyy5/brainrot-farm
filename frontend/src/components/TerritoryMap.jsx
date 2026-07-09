@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function TerritoryMap() {
   const t = useT();
@@ -31,7 +32,7 @@ export default function TerritoryMap() {
   const tap = async (territoryId) => {
     setLoading(true);
     try { await api.territories.tap(territoryId, 100); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

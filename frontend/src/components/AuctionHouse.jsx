@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const ITEM_ICONS = { tap_shard: '🔷', energy_crystal: '💠', combo_dust: '✨', prestige_essence: '🌀' };
 const ITEM_NAMES = { tap_shard: 'Tap Shard', energy_crystal: 'Energy Crystal', combo_dust: 'Combo Dust', prestige_essence: 'Prestige Essence' };
@@ -17,8 +18,8 @@ export default function AuctionHouse() {
 
   const act = async (fn, msg) => {
     setLoading(true);
-    try { const r = await fn(); if (msg) alert(msg(r)); await load(); }
-    catch (err) { alert(err.message); }
+    try { const r = await fn(); if (msg) toastSuccess(msg(r)); await load(); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

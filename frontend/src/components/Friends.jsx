@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function Friends() {
   const t = useT();
@@ -20,20 +21,20 @@ export default function Friends() {
       await api.friends.add(addId.trim());
       setAddId('');
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 
   const handleAccept = async (friendId) => {
     setActing(true);
     try { await api.friends.accept(friendId); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 
   const handleRemove = async (friendId) => {
     if (!window.confirm(t('friends_remove_confirm'))) return;
-    try { await api.friends.remove(friendId); } catch (err) { alert(err.message); }
+    try { await api.friends.remove(friendId); } catch (err) { toastError(err.message); }
     load();
   };
 

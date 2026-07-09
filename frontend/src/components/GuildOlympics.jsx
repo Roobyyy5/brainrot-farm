@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 export default function GuildOlympics() {
   const t = useT();
@@ -15,9 +16,9 @@ export default function GuildOlympics() {
     setLoading(true);
     try {
       const r = await api.olympics.submit(eventKey);
-      alert(t('olympics_score_alert', { n: r.score.toLocaleString() }));
+      toastSuccess(t('olympics_score_alert', { n: r.score.toLocaleString() }));
       await load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

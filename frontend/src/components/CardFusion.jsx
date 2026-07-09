@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError, toastSuccess } from '../toast';
 
 const RARITY_COLOR = { common: '#9ca3af', rare: '#3b82f6', epic: '#8b5cf6', legendary: '#f59e0b' };
 
@@ -23,7 +24,7 @@ export default function CardFusion() {
         await api.cardfusion.fuse(selected.cardKey, targetSlot);
         await load();
         setSelected(null); setTargetSlot(null);
-      } catch (err) { alert(err.message); }
+      } catch (err) { toastError(err.message); }
       finally { setFusing(false); }
     }, data?.config?.fusionAnimDurationMs || 1500);
   };
@@ -32,7 +33,7 @@ export default function CardFusion() {
     if (!confirm(t('fusion_destroy_confirm'))) return;
     setLoading(true);
     try { await api.cardfusion.destroy(slot); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
