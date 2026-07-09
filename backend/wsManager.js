@@ -82,7 +82,7 @@ function attachToServer(httpServer) {
   // Heartbeat every 30s to drop dead connections
   setInterval(() => {
     wss.clients.forEach(ws => {
-      if (!ws.isAlive) { ws.terminate(); leave(ws); return; }
+      if (!ws.isAlive) { ws.terminate(); return; }
       ws.isAlive = false;
       ws.ping();
     });
