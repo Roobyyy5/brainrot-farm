@@ -47,5 +47,7 @@ services:
         sync: false
       - key: ADMIN_KEY
         sync: false
+      - key: ADMIN_CHAT_ID
+        sync: false
       - key: PGSSL
         value: true

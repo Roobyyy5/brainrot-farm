@@ -83,7 +83,10 @@ const olympicsRoute       = require('./routes/olympics');
 
 const app = express();
 const httpServer = http.createServer(app);
-app.use(cors());
+
+// Restrict CORS to the Mini App origin only
+const allowedOrigin = process.env.MINI_APP_URL ? new URL(process.env.MINI_APP_URL).origin : '*';
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json({ limit: '64kb' }));
 
 // Security headers — prevent the API from being framed or sniffed as a web page
@@ -111,8 +114,45 @@ const actionLimiter = rateLimit({
 
 const botStatus = { configured: false, started: false, error: null };
 
-app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/health', (req, res) => res.json({ ok: true, uptime: Math.floor(process.uptime()), ts: Date.now() }));
 app.get('/bot-status', (req, res) => res.json(botStatus));
+
+app.get('/privacy', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Figabrain</title>
+<style>body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;padding:0 20px;color:#1a1a1a;line-height:1.7}h1{font-size:1.6rem}h2{font-size:1.1rem;margin-top:2rem}a{color:#8b5cf6}</style>
+</head><body>
+<h1>Privacy Policy</h1>
+<p><strong>Last updated: ${new Date().toISOString().slice(0,10)}</strong></p>
+<p>Figabrain ("the Game") is a Telegram Mini App. This policy describes what data we collect and how we use it.</p>
+
+<h2>Data We Collect</h2>
+<ul>
+  <li><strong>Telegram user data</strong>: user ID, first name, username — provided by Telegram when you open the app.</li>
+  <li><strong>Gameplay data</strong>: tap counts, coins, gems, progress, achievements, guild membership.</li>
+  <li><strong>Language preference</strong>: stored to deliver the app in your language.</li>
+  <li><strong>Referral data</strong>: if you join via a referral link, the referrer's ID is stored.</li>
+</ul>
+
+<h2>How We Use Your Data</h2>
+<ul>
+  <li>To run the game and synchronise your progress across sessions.</li>
+  <li>To display leaderboards (username and score only).</li>
+  <li>To send optional in-app Telegram notifications (reminders, events). You can stop them via /stop in the bot.</li>
+</ul>
+
+<h2>Data Sharing</h2>
+<p>We do not sell or share your data with third parties. Your Telegram user ID and username may be visible to other players on public leaderboards.</p>
+
+<h2>Data Retention</h2>
+<p>Your data is kept for as long as you play. You may request deletion by contacting us via Telegram.</p>
+
+<h2>Contact</h2>
+<p>Questions? Message us on Telegram: <a href="https://t.me/${process.env.BOT_USERNAME || 'figabrain_bot'}">${process.env.BOT_USERNAME || 'figabrain_bot'}</a></p>
+</body></html>`);
+});
 
 app.use('/leaderboard', leaderboardRoute); // public, no auth
 app.use('/admin', adminRoute); // protected by its own x-admin-key check
@@ -199,11 +239,28 @@ app.use('/constellation',   telegramAuthMiddleware, actionLimiter, constellation
 app.use('/tapstreakcal',    telegramAuthMiddleware, actionLimiter, tapStreakCalRoute);
 app.use('/olympics',        telegramAuthMiddleware, actionLimiter, olympicsRoute);
 
+// Telegram alert to admin on critical server errors (requires ADMIN_CHAT_ID env var)
+let _alertCooldown = 0;
+function alertAdmin(text) {
+  const chatId = process.env.ADMIN_CHAT_ID;
+  const token  = process.env.BOT_TOKEN;
+  if (!chatId || !token) return;
+  const now = Date.now();
+  if (now - _alertCooldown < 60_000) return; // max 1 alert per minute
+  _alertCooldown = now;
+  const msg = encodeURIComponent(`🚨 Figabrain server error:\n${String(text).slice(0, 500)}`);
+  require('https').get(
+    `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${msg}`,
+    (r) => r.resume()
+  ).on('error', () => {});
+}
+
 // Global error handler — every route is wrapped in asyncHandler so thrown
 // errors land here instead of becoming an unhandled rejection that would
 // crash the whole process for every connected user.
 app.use((err, req, res, next) => {
   console.error('Request error:', err);
+  if (err.status !== 400 && err.status !== 403 && err.status !== 404) alertAdmin(err.message || err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
@@ -233,6 +290,16 @@ async function main() {
   httpServer.listen(PORT, () => {
     console.log(`Brainrot Farm backend running on http://localhost:${PORT} (WebSocket on /ws)`);
   });
+
+  // Keep-alive: ping own /health every 10 min so Render free tier never sleeps.
+  // RENDER_EXTERNAL_URL is set automatically by Render on all services.
+  const selfUrl = process.env.RENDER_EXTERNAL_URL;
+  if (selfUrl) {
+    setInterval(() => {
+      require('https').get(`${selfUrl}/health`, (r) => r.resume()).on('error', () => {});
+    }, 10 * 60 * 1000);
+    console.log('Keep-alive ping enabled →', selfUrl);
+  }
 
   // On free hosting tiers (e.g. Render) only a single Web Service is free —
   // background workers are a paid add-on. Running the bot's long-polling loop
@@ -267,4 +334,5 @@ main().catch((err) => {
 // transient DB blip doesn't take the whole service down.
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled rejection:', err);
+  alertAdmin(`Unhandled rejection: ${err?.message || err}`);
 });
