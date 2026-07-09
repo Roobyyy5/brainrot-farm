@@ -44,7 +44,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [talentChoices, setTalentChoices] = useState(null);
   const [choosingTalent, setChoosingTalent] = useState(null);
   const [comboTier, setComboTier] = useState({ name: 'Bronze', color: '#cd7f32', icon: '🥉', mult: 1 });
-  const [extraTaps, setExtraTaps] = useState(0);
+  const [tapCount, setTapCount] = useState(0);
 
   const pendingTaps = useRef(0);
   const pendingBP = useRef(0);
@@ -65,6 +65,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setProfile(data);
       setEnergy(data.energy);
       setEnergyMax(data.energyMax);
+      setTapCount(data.totalTaps || 0);
       if (data.offlineBP > 0) setOfflineBP(data.offlineBP);
     }).finally(() => setLoading(false));
   }, []);
@@ -163,7 +164,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     setTimeout(() => setParticles((p) => p.filter((pt) => !newParticles.some((np) => np.id === pt.id))), 650);
 
     setEnergy((e) => Math.max(0, e - energyCost));
-    setExtraTaps((n) => n + energyCost);
+    setTapCount((n) => n + energyCost);
     pendingTaps.current += energyCost;
     setTapping(true);
     setTimeout(() => setTapping(false), 80);
@@ -188,7 +189,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setProfile(fresh);
       setEnergy(fresh.energy);
       setEnergyMax(fresh.energyMax);
-      setExtraTaps(0);
+      setTapCount(fresh.totalTaps || 0);
     } catch (err) { toastError(err.message || t('tap_no_prestige')); }
     finally { setPrestiging(false); }
   };
@@ -324,7 +325,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       {/* Stats */}
       <div className="tap-stats">
         <div className="tap-stat">
-          <span className="tap-stat-value">{((profile?.totalTaps || 0) + extraTaps).toLocaleString()}</span>
+          <span className="tap-stat-value">{tapCount.toLocaleString()}</span>
           <span className="tap-stat-label">{t('tap_total')}</span>
         </div>
         <div className="tap-stat">
@@ -353,7 +354,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
             haptic('heavy');
             if (dmg > 0) {
               setEnergy((e) => Math.max(0, e - dmg));
-              setExtraTaps((n) => n + dmg);
+              setTapCount((n) => n + dmg);
             }
             setProfile((p) => p ? {
               ...p,
