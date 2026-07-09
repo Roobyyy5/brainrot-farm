@@ -44,6 +44,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [talentChoices, setTalentChoices] = useState(null);
   const [choosingTalent, setChoosingTalent] = useState(null);
   const [comboTier, setComboTier] = useState({ name: 'Bronze', color: '#cd7f32', icon: '🥉', mult: 1 });
+  const [extraTaps, setExtraTaps] = useState(0);
 
   const pendingTaps = useRef(0);
   const pendingBP = useRef(0);
@@ -162,6 +163,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     setTimeout(() => setParticles((p) => p.filter((pt) => !newParticles.some((np) => np.id === pt.id))), 650);
 
     setEnergy((e) => Math.max(0, e - energyCost));
+    setExtraTaps((n) => n + energyCost);
     pendingTaps.current += energyCost;
     setTapping(true);
     setTimeout(() => setTapping(false), 80);
@@ -186,6 +188,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setProfile(fresh);
       setEnergy(fresh.energy);
       setEnergyMax(fresh.energyMax);
+      setExtraTaps(0);
     } catch (err) { toastError(err.message || t('tap_no_prestige')); }
     finally { setPrestiging(false); }
   };
@@ -321,7 +324,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       {/* Stats */}
       <div className="tap-stats">
         <div className="tap-stat">
-          <span className="tap-stat-value">{(profile?.totalTaps || 0).toLocaleString()}</span>
+          <span className="tap-stat-value">{((profile?.totalTaps || 0) + extraTaps).toLocaleString()}</span>
           <span className="tap-stat-label">{t('tap_total')}</span>
         </div>
         <div className="tap-stat">
@@ -348,10 +351,12 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
           energy={energy}
           onDamage={(dmg, killed) => {
             haptic('heavy');
-            if (dmg > 0) setEnergy((e) => Math.max(0, e - dmg));
+            if (dmg > 0) {
+              setEnergy((e) => Math.max(0, e - dmg));
+              setExtraTaps((n) => n + dmg);
+            }
             setProfile((p) => p ? {
               ...p,
-              totalTaps: (p.totalTaps || 0) + (dmg > 0 ? dmg : 0),
               boss: killed ? null : { ...p.boss, hp: Math.max(0, (p.boss?.hp ?? 0) - dmg * (p.tapPower || 1)) },
             } : p);
             if (killed) onCoinsRef.current?.(profile.boss?.reward ?? 0);
