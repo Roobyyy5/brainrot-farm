@@ -80,6 +80,7 @@ const auctionRoute        = require('./routes/auction');
 const constellationRoute  = require('./routes/constellation');
 const tapStreakCalRoute    = require('./routes/tapstreakcal');
 const olympicsRoute       = require('./routes/olympics');
+const walletRoute         = require('./routes/wallet');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -238,6 +239,7 @@ app.use('/auction',         telegramAuthMiddleware, actionLimiter, auctionRoute)
 app.use('/constellation',   telegramAuthMiddleware, actionLimiter, constellationRoute);
 app.use('/tapstreakcal',    telegramAuthMiddleware, actionLimiter, tapStreakCalRoute);
 app.use('/olympics',        telegramAuthMiddleware, actionLimiter, olympicsRoute);
+app.use('/wallet',          telegramAuthMiddleware, actionLimiter, walletRoute);
 
 // Telegram alert to admin on critical server errors (requires ADMIN_CHAT_ID env var)
 let _alertCooldown = 0;

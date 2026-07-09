@@ -46,6 +46,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const [comboTier, setComboTier] = useState({ name: 'Bronze', color: '#cd7f32', icon: '🥉', mult: 1 });
 
   const pendingTaps = useRef(0);
+  const pendingBP = useRef(0);
   const lastTapAt = useRef(0);
   const comboTimer = useRef(null);
   const flushTimer = useRef(null);
@@ -90,10 +91,13 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
   const flush = () => {
     const count = pendingTaps.current;
     if (!count) return;
+    const sentBP = pendingBP.current;
     pendingTaps.current = 0;
+    pendingBP.current = 0;
     api.tapper.tap(count, combo).then((res) => {
       setEnergy(res.energy);
-      if (res.bpEarned > 0) onCoinsRef.current?.(res.bpEarned);
+      const bpDiff = res.bpEarned - sentBP;
+      if (bpDiff !== 0) onCoinsRef.current?.(bpDiff);
       if (res.unlockedAchievements?.length) onAchRef.current?.(res.unlockedAchievements);
       if (res.comboTier) setComboTier(res.comboTier);
       if (res.isCrit) {
@@ -127,8 +131,10 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     const cx = rect ? e.clientX - rect.left : 110;
     const cy = rect ? e.clientY - rect.top : 110;
 
-    // Floating number
+    // Floating number + optimistic balance update
     const bp = Math.floor(energyCost * tapPower * newCombo);
+    pendingBP.current += bp;
+    onCoinsRef.current?.(bp);
     const fid = ++floatId.current;
     setFloats((f) => [...f, { id: fid, x: cx + (Math.random() - 0.5) * 50, y: cy + (Math.random() - 0.5) * 20, bp }]);
     setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== fid)), 900);

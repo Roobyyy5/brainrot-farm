@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'タップ',ter_bonus_energy:'エネルギー',ter_bonus_passive:'パッシブ',ter_bonus_gems:'ジェム',ter_bonus_xp:'XP',ter_bonus_regen:'リジェン',
   bp_reward_skin:'スキン',bp_reward_type_coins:'コイン',bp_reward_type_gems:'ジェム',
   bp_reward_type_energy_refill:'エネルギー',bp_reward_type_skill_points:'スキルポイント',bp_reward_type_2x_boost:'×2ブースト',
+  tab_wallet:'ウォレット',wallet_title:'💰 トークンウォレット',wallet_total_earned:'あなたのトークン',
+  wallet_supply_title:'マイニング供給',wallet_supply_pct:'{pct}% 残り',wallet_rate:'~{n} トークン/タップ',
+  wallet_connect_title:'TONウォレット',wallet_connect:'ウォレット接続',wallet_connected:'✓ 接続済み:',
+  wallet_disconnect:'切断',wallet_addr_ph:'TONアドレス (EQ... または UQ...)',wallet_save:'保存',
+  wallet_withdraw:'💸 FGB 出金',wallet_soon:'⏳ 出金は近日公開',
+  wallet_soon_desc:'TGE後にトークンの出金が可能になります。トークンは追跡されています。',
+  wallet_invalid:'無効なTONアドレス。EQ...またはUQ...形式を使用してください。',
+  wallet_saved:'✓ ウォレット接続完了！',wallet_disconnected:'ウォレット切断',
+  wallet_no_wallet:'将来のエアドロップのためにTONウォレットを接続してください。',
 };

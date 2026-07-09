@@ -411,4 +411,10 @@ export const api = {
     status: () => request('/neuraltree'),
     unlock: (nodeId) => request('/neuraltree/unlock', { method: 'POST', body: { nodeId } }),
   },
+
+  wallet: {
+    get:        () => request('/wallet'),
+    connect:    (address) => request('/wallet/connect',    { method: 'POST', body: { address } }),
+    disconnect: () => request('/wallet/disconnect', { method: 'POST' }),
+  },
 };

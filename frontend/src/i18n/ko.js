@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'탭',ter_bonus_energy:'에너지',ter_bonus_passive:'패시브',ter_bonus_gems:'젬',ter_bonus_xp:'XP',ter_bonus_regen:'재생',
   bp_reward_skin:'스킨',bp_reward_type_coins:'코인',bp_reward_type_gems:'젬',
   bp_reward_type_energy_refill:'에너지',bp_reward_type_skill_points:'스킬 포인트',bp_reward_type_2x_boost:'×2 부스트',
+  tab_wallet:'지갑',wallet_title:'💰 토큰 지갑',wallet_total_earned:'내 토큰',
+  wallet_supply_title:'채굴 공급량',wallet_supply_pct:'{pct}% 남음',wallet_rate:'~{n} 토큰/탭 현재',
+  wallet_connect_title:'TON 지갑',wallet_connect:'지갑 연결',wallet_connected:'✓ 연결됨:',
+  wallet_disconnect:'연결 해제',wallet_addr_ph:'TON 주소 (EQ... 또는 UQ...)',wallet_save:'저장',
+  wallet_withdraw:'💸 FGB 출금',wallet_soon:'⏳ 출금 곧 가능',
+  wallet_soon_desc:'TGE 이후 토큰 출금이 가능해집니다. 토큰이 추적되고 있습니다.',
+  wallet_invalid:'유효하지 않은 TON 주소. EQ... 또는 UQ... 형식을 사용하세요.',
+  wallet_saved:'✓ 지갑 연결 완료!',wallet_disconnected:'지갑 연결 해제',
+  wallet_no_wallet:'미래 에어드랍을 위해 TON 지갑을 연결하세요.',
 };

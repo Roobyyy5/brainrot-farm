@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'टैप',ter_bonus_energy:'ऊर्जा',ter_bonus_passive:'निष्क्रिय',ter_bonus_gems:'रत्न',ter_bonus_xp:'XP',ter_bonus_regen:'रीजन',
   bp_reward_skin:'स्किन',bp_reward_type_coins:'कॉइन',bp_reward_type_gems:'रत्न',
   bp_reward_type_energy_refill:'ऊर्जा',bp_reward_type_skill_points:'कौशल अंक',bp_reward_type_2x_boost:'×2 बूस्ट',
+  tab_wallet:'वॉलेट',wallet_title:'💰 टोकन वॉलेट',wallet_total_earned:'आपके टोकन',
+  wallet_supply_title:'माइनिंग सप्लाई',wallet_supply_pct:'{pct}% शेष',wallet_rate:'~{n} टोकन/टैप अभी',
+  wallet_connect_title:'आपका TON वॉलेट',wallet_connect:'वॉलेट कनेक्ट करें',wallet_connected:'✓ कनेक्टेड:',
+  wallet_disconnect:'डिस्कनेक्ट',wallet_addr_ph:'TON पता (EQ... या UQ...)',wallet_save:'सहेजें',
+  wallet_withdraw:'💸 FGB निकालें',wallet_soon:'⏳ निकासी जल्द उपलब्ध',
+  wallet_soon_desc:'TGE के बाद टोकन निकासी उपलब्ध होगी। आपके टोकन ट्रैक किए जा रहे हैं।',
+  wallet_invalid:'अमान्य TON पता। EQ... या UQ... प्रारूप उपयोग करें।',
+  wallet_saved:'✓ वॉलेट कनेक्ट हो गया!',wallet_disconnected:'वॉलेट डिस्कनेक्ट हुआ',
+  wallet_no_wallet:'भविष्य के एयरड्रॉप के लिए अपना TON वॉलेट कनेक्ट करें।',
 };

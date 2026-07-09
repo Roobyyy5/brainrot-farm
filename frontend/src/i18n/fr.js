@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'tap',ter_bonus_energy:'énergie',ter_bonus_passive:'passif',ter_bonus_gems:'gemmes',ter_bonus_xp:'XP',ter_bonus_regen:'regen',
   bp_reward_skin:'Skin',bp_reward_type_coins:'Pièces',bp_reward_type_gems:'Gemmes',
   bp_reward_type_energy_refill:'Énergie',bp_reward_type_skill_points:'Pts Compétence',bp_reward_type_2x_boost:'×2 Boost',
+  tab_wallet:'Portefeuille',wallet_title:'💰 Portefeuille Token',wallet_total_earned:'Tes Tokens',
+  wallet_supply_title:'Réserve de Minage',wallet_supply_pct:'{pct}% restant',wallet_rate:'~{n} tokens/tap maintenant',
+  wallet_connect_title:'Ton Portefeuille TON',wallet_connect:'Connecter Portefeuille',wallet_connected:'✓ Connecté:',
+  wallet_disconnect:'Déconnecter',wallet_addr_ph:'Adresse TON (EQ... ou UQ...)',wallet_save:'Sauvegarder',
+  wallet_withdraw:'💸 Retirer FGB',wallet_soon:'⏳ Retraits bientôt disponibles',
+  wallet_soon_desc:'Les retraits seront disponibles après le TGE. Vos tokens sont suivis.',
+  wallet_invalid:'Adresse TON invalide. Utilise le format EQ... ou UQ...',
+  wallet_saved:'✓ Portefeuille connecté!',wallet_disconnected:'Portefeuille déconnecté',
+  wallet_no_wallet:'Connecte ton portefeuille TON pour sécuriser ton futur airdrop.',
 };

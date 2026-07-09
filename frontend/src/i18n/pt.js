@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'tap',ter_bonus_energy:'energia',ter_bonus_passive:'passivo',ter_bonus_gems:'gemas',ter_bonus_xp:'XP',ter_bonus_regen:'regen',
   bp_reward_skin:'Skin',bp_reward_type_coins:'Moedas',bp_reward_type_gems:'Gemas',
   bp_reward_type_energy_refill:'Energia',bp_reward_type_skill_points:'Pts Habilidade',bp_reward_type_2x_boost:'×2 Boost',
+  tab_wallet:'Carteira',wallet_title:'💰 Carteira de Tokens',wallet_total_earned:'Seus Tokens',
+  wallet_supply_title:'Fornecimento de Mineração',wallet_supply_pct:'{pct}% restante',wallet_rate:'~{n} tokens/tap agora',
+  wallet_connect_title:'Tua Carteira TON',wallet_connect:'Conectar Carteira',wallet_connected:'✓ Conectado:',
+  wallet_disconnect:'Desconectar',wallet_addr_ph:'Endereço TON (EQ... ou UQ...)',wallet_save:'Salvar',
+  wallet_withdraw:'💸 Retirar FGB',wallet_soon:'⏳ Saques disponíveis em breve',
+  wallet_soon_desc:'Saques estarão disponíveis após o TGE. Seus tokens estão sendo rastreados.',
+  wallet_invalid:'Endereço TON inválido. Use o formato EQ... ou UQ...',
+  wallet_saved:'✓ Carteira conectada!',wallet_disconnected:'Carteira desconectada',
+  wallet_no_wallet:'Conecta tua carteira TON para garantir seu futuro airdrop.',
 };

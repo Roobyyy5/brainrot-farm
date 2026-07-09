@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'点击',ter_bonus_energy:'能量',ter_bonus_passive:'被动',ter_bonus_gems:'宝石',ter_bonus_xp:'XP',ter_bonus_regen:'回复',
   bp_reward_skin:'皮肤',bp_reward_type_coins:'货币',bp_reward_type_gems:'宝石',
   bp_reward_type_energy_refill:'能量',bp_reward_type_skill_points:'技能点',bp_reward_type_2x_boost:'×2加速',
+  tab_wallet:'钱包',wallet_title:'💰 代币钱包',wallet_total_earned:'我的代币',
+  wallet_supply_title:'挖矿供应',wallet_supply_pct:'{pct}% 剩余',wallet_rate:'~{n} 代币/点击',
+  wallet_connect_title:'你的 TON 钱包',wallet_connect:'连接钱包',wallet_connected:'✓ 已连接:',
+  wallet_disconnect:'断开连接',wallet_addr_ph:'TON 地址 (EQ... 或 UQ...)',wallet_save:'保存',
+  wallet_withdraw:'💸 提取 FGB',wallet_soon:'⏳ 提款即将开放',
+  wallet_soon_desc:'TGE 之后将可以提款。您的代币正在被追踪。',
+  wallet_invalid:'无效的 TON 地址。使用 EQ... 或 UQ... 格式。',
+  wallet_saved:'✓ 钱包已连接！',wallet_disconnected:'钱包已断开',
+  wallet_no_wallet:'连接您的 TON 钱包以确保未来空投。',
 };

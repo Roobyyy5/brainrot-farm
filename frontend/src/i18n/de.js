@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'Tap',ter_bonus_energy:'Energie',ter_bonus_passive:'Passiv',ter_bonus_gems:'Edelst.',ter_bonus_xp:'XP',ter_bonus_regen:'Regen',
   bp_reward_skin:'Skin',bp_reward_type_coins:'Münzen',bp_reward_type_gems:'Edelsteine',
   bp_reward_type_energy_refill:'Energie',bp_reward_type_skill_points:'Fähigkeitspunkte',bp_reward_type_2x_boost:'×2 Boost',
+  tab_wallet:'Geldbörse',wallet_title:'💰 Token Geldbörse',wallet_total_earned:'Deine Tokens',
+  wallet_supply_title:'Mining-Vorrat',wallet_supply_pct:'{pct}% verbleibend',wallet_rate:'~{n} Token/Tap jetzt',
+  wallet_connect_title:'Deine TON-Geldbörse',wallet_connect:'Geldbörse verbinden',wallet_connected:'✓ Verbunden:',
+  wallet_disconnect:'Trennen',wallet_addr_ph:'TON-Adresse (EQ... oder UQ...)',wallet_save:'Speichern',
+  wallet_withdraw:'💸 FGB abheben',wallet_soon:'⏳ Auszahlungen bald verfügbar',
+  wallet_soon_desc:'Auszahlungen werden nach dem TGE verfügbar sein. Deine Token werden verfolgt.',
+  wallet_invalid:'Ungültige TON-Adresse. Format EQ... oder UQ...',
+  wallet_saved:'✓ Geldbörse verbunden!',wallet_disconnected:'Geldbörse getrennt',
+  wallet_no_wallet:'Verbinde deine TON-Geldbörse für deinen zukünftigen Airdrop.',
 };

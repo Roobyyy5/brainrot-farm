@@ -1010,3 +1010,8 @@ CREATE TABLE IF NOT EXISTS olympics_scores (
   UNIQUE (season_id, telegram_id, event_key)
 );
 CREATE INDEX IF NOT EXISTS idx_olympics_scores ON olympics_scores(season_id, event_key, score DESC);
+
+-- ── Token System (Play-to-Earn) ───────────────────────────────────────────────
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tokens BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_address TEXT;
+INSERT INTO app_state (key, value) VALUES ('token_supply', 10000000000) ON CONFLICT DO NOTHING;

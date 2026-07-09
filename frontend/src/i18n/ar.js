@@ -465,4 +465,13 @@ export default {
   ter_bonus_tap:'نقر',ter_bonus_energy:'طاقة',ter_bonus_passive:'سلبي',ter_bonus_gems:'جواهر',ter_bonus_xp:'XP',ter_bonus_regen:'تجدد',
   bp_reward_skin:'مظهر',bp_reward_type_coins:'عملات',bp_reward_type_gems:'جواهر',
   bp_reward_type_energy_refill:'طاقة',bp_reward_type_skill_points:'نقاط مهارة',bp_reward_type_2x_boost:'تعزيز ×2',
+  tab_wallet:'المحفظة',wallet_title:'💰 محفظة الرموز',wallet_total_earned:'رموزك',
+  wallet_supply_title:'إمداد التعدين',wallet_supply_pct:'{pct}% متبقي',wallet_rate:'~{n} رموز/نقرة الآن',
+  wallet_connect_title:'محفظة TON الخاصة بك',wallet_connect:'ربط المحفظة',wallet_connected:'✓ متصل:',
+  wallet_disconnect:'قطع الاتصال',wallet_addr_ph:'عنوان TON (EQ... أو UQ...)',wallet_save:'حفظ',
+  wallet_withdraw:'💸 سحب FGB',wallet_soon:'⏳ السحب قريباً',
+  wallet_soon_desc:'ستتوفر عمليات السحب بعد TGE. يتم تتبع رموزك.',
+  wallet_invalid:'عنوان TON غير صالح. استخدم تنسيق EQ... أو UQ...',
+  wallet_saved:'✓ تم ربط المحفظة!',wallet_disconnected:'تم فصل المحفظة',
+  wallet_no_wallet:'اربط محفظة TON الخاصة بك لتأمين إيردروبك المستقبلي.',
 };

@@ -83,14 +83,16 @@ import Constellation from './components/Constellation';
 import TapStreakCalendar from './components/TapStreakCalendar';
 import GuildOlympics from './components/GuildOlympics';
 import Toast from './components/Toast';
+import WalletPage from './components/WalletPage';
 
 const TAB_IDS = [
-  { id: 'home',  icon: '🏠', key: 'tab_home'  },
-  { id: 'tap',   icon: '🧠', key: 'tab_tap'   },
-  { id: 'cards', icon: '🃏', key: 'tab_cards' },
-  { id: 'boost', icon: '⚡', key: 'tab_boost' },
-  { id: 'club',  icon: '🏰', key: 'tab_club'  },
-  { id: 'board', icon: '🏆', key: 'tab_board' },
+  { id: 'home',   icon: '🏠', key: 'tab_home'   },
+  { id: 'tap',    icon: '🧠', key: 'tab_tap'    },
+  { id: 'cards',  icon: '🃏', key: 'tab_cards'  },
+  { id: 'boost',  icon: '⚡', key: 'tab_boost'  },
+  { id: 'club',   icon: '🏰', key: 'tab_club'   },
+  { id: 'board',  icon: '🏆', key: 'tab_board'  },
+  { id: 'wallet', icon: '💰', key: 'tab_wallet' },
 ];
 
 export default function App() {
@@ -254,6 +256,8 @@ export default function App() {
           <Leaderboard currentUserId={user?.telegram_id} />
         </>
       )}
+
+      {tab === 'wallet' && <WalletPage />}
       </ErrorBoundary>
       <Toast />
     </div>

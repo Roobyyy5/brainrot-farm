@@ -309,6 +309,8 @@ router.get('/', asyncHandler(async (req, res) => {
        ORDER BY b.starts_at DESC LIMIT 1`,
       [telegramId, now]
     );
+    const { rows: userTokenRows } = await client.query('SELECT tokens FROM users WHERE telegram_id=$1', [telegramId]);
+    const { rows: tokenSupplyRows } = await client.query("SELECT value FROM app_state WHERE key='token_supply'");
 
     return {
       energy,
@@ -351,6 +353,8 @@ router.get('/', asyncHandler(async (req, res) => {
         endsAt:   boss.rows[0].ends_at,
         myDamage: boss.rows[0].my_damage || 0,
       } : null,
+      tokens: Number(userTokenRows[0]?.tokens || 0),
+      tokenSupplyRemaining: Number(tokenSupplyRows[0]?.value || 10_000_000_000),
     };
   });
 
@@ -499,6 +503,17 @@ router.post('/tap', asyncHandler(async (req, res) => {
     // Battle Pass XP (with weekly event multiplier)
     const bpXpEarned = Math.floor(energyUsed * BATTLE_PASS_XP_PER_ENERGY * bpXpMultWeekly);
 
+    // Token reward (CITRO-style: rate decreases linearly as supply depletes)
+    const TOKEN_TOTAL = 10_000_000_000;
+    const TOKEN_BASE_RATE = 100;
+    const { rows: tsRows } = await client.query(
+      "SELECT value FROM app_state WHERE key='token_supply' FOR UPDATE"
+    );
+    const tokenSupplyNow = Number(tsRows[0]?.value || 0);
+    const tokensEarned = tokenSupplyNow > 0
+      ? Math.max(0, Math.floor(effectiveClicks * TOKEN_BASE_RATE * tokenSupplyNow / TOKEN_TOTAL))
+      : 0;
+
     // Schedule energy-full notification
     const energyNotifAt  = newEnergy < energyMax
       ? now + Math.ceil((energyMax - newEnergy) / regenRate) * 1000
@@ -524,6 +539,10 @@ router.post('/tap', asyncHandler(async (req, res) => {
       'UPDATE users SET coins = coins + $1, weekly_coins = weekly_coins + $1 WHERE telegram_id = $2',
       [bpEarned, telegramId]
     );
+    if (tokensEarned > 0) {
+      await client.query("UPDATE app_state SET value=GREATEST(0,value-$1) WHERE key='token_supply'", [tokensEarned]);
+      await client.query('UPDATE users SET tokens=tokens+$1 WHERE telegram_id=$2', [tokensEarned, telegramId]);
+    }
     await client.query(
       'INSERT INTO tap_batches (telegram_id, tap_count, bp_earned, created_at) VALUES ($1, $2, $3, $4)',
       [telegramId, energyUsed, bpEarned, now]
@@ -561,6 +580,7 @@ router.post('/tap', asyncHandler(async (req, res) => {
       gemDrop, skillPtsEarned, rankUp,
       combo: comboMult, comboBatches: newComboBatches,
       comboTier: { name: comboTier.name, color: comboTier.color, icon: comboTier.icon, mult: comboTier.mult },
+      tokensEarned,
     };
   });
 
