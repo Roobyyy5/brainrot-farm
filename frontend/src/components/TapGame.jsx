@@ -348,12 +348,13 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
           energy={energy}
           onDamage={(dmg, killed) => {
             haptic('heavy');
-            setEnergy((e) => Math.max(0, e - dmg));
+            if (dmg > 0) setEnergy((e) => Math.max(0, e - dmg));
             setProfile((p) => p ? {
               ...p,
-              boss: killed ? null : { ...p.boss, hp: Math.max(0, p.boss.hp - dmg * (profile.tapPower || 1)) },
+              totalTaps: (p.totalTaps || 0) + (dmg > 0 ? dmg : 0),
+              boss: killed ? null : { ...p.boss, hp: Math.max(0, (p.boss?.hp ?? 0) - dmg * (p.tapPower || 1)) },
             } : p);
-            if (killed) onCoinsRef.current?.(profile.boss.reward);
+            if (killed) onCoinsRef.current?.(profile.boss?.reward ?? 0);
           }}
         />
       )}

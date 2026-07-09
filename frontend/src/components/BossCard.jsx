@@ -4,7 +4,6 @@ import { useT } from '../context/LangContext';
 
 export default function BossCard({ boss, tapPower, multiTap, energy, onDamage }) {
   const t = useT();
-  const [tapping, setTapping] = useState(false);
   const [floats, setFloats] = useState([]);
   const floatId = { current: 0 };
 
@@ -13,21 +12,19 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
   const hours = Math.floor(timeLeft / 3_600_000);
   const mins = Math.floor((timeLeft % 3_600_000) / 60_000);
 
-  const handleBossTap = async () => {
-    if (tapping || energy < 1) return;
+  const handleBossTap = (e) => {
+    if (energy < 1) return;
     const clicks = Math.min(multiTap || 1, energy);
-    setTapping(true);
 
     const id = ++floatId.current;
     const dmg = clicks * (tapPower || 1);
-    setFloats((f) => [...f, { id, dmg }]);
+    setFloats((f) => [...f.slice(-3), { id, dmg }]);
     setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 900);
 
-    try {
-      const res = await api.tapper.bossTap(boss.id, clicks);
-      onDamage?.(clicks, res.killed, res.reward);
-    } catch {}
-    setTapping(false);
+    onDamage?.(clicks, false);
+    api.tapper.bossTap(boss.id, clicks).then((res) => {
+      if (res.killed) onDamage?.(0, true, res.reward);
+    }).catch(() => {});
   };
 
   return (
@@ -53,8 +50,8 @@ export default function BossCard({ boss, tapPower, multiTap, energy, onDamage })
 
       <div className="boss-fight-area">
         <button
-          className={`boss-tap-btn${tapping ? ' boss-tap-btn--active' : ''}`}
-          onClick={handleBossTap}
+          className="boss-tap-btn"
+          onPointerDown={handleBossTap}
           disabled={energy < 1}
         >
           <span className="boss-tap-icon">⚔️</span>

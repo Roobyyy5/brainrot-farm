@@ -938,6 +938,7 @@ body {
   font-size: 110px;
   line-height: 1;
   text-align: center;
+  white-space: nowrap;
   display: flex;
   justify-content: center;
   align-items: center;
