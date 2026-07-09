@@ -600,7 +600,7 @@ router.post('/upgrade', asyncHandler(async (req, res) => {
     if (currentLevel >= cfg.maxLevel) return { error: 'Already at max level' };
 
     const cost = cfg.costs[currentLevel + 1];
-    const user = await client.query('SELECT coins FROM users WHERE telegram_id = $1', [telegramId]);
+    const user = await client.query('SELECT coins FROM users WHERE telegram_id = $1 FOR UPDATE', [telegramId]);
     if (user.rows[0].coins < cost) return { error: 'Not enough coins' };
 
     await client.query('UPDATE users SET coins = coins - $1 WHERE telegram_id = $2', [cost, telegramId]);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
@@ -27,8 +27,14 @@ export default function BossEcosystem() {
 
   useEffect(() => { load(); }, [load]);
 
+  const rooms = useMemo(
+    () => bosses.filter(b => b.alive).map(b => `bosseco:${b.key}`),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [bosses.map(b => b.key + b.alive).join(',')]
+  );
+
   useWebSocket({
-    rooms: bosses.filter(b => b.alive).map(b => `bosseco:${b.key}`),
+    rooms,
     onMessage: (msg) => {
       if (msg.type === 'boss_eco_hp') {
         setBosses(prev => prev.map(b => b.key === msg.bossKey

@@ -50,7 +50,7 @@ router.post('/upgrade', asyncHandler(async (req, res) => {
 
   const result = await withTransaction(async (client) => {
     const { rows: prof } = await client.query(
-      'SELECT skill_points FROM tapper_profiles WHERE telegram_id = $1', [telegramId]
+      'SELECT skill_points FROM tapper_profiles WHERE telegram_id = $1 FOR UPDATE', [telegramId]
     );
     if (!prof[0]) return { error: 'Profile not found' };
 

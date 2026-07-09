@@ -2,6 +2,8 @@ const { pool } = require('./db');
 const { FARM_COOLDOWN_MS, DAILY_COOLDOWN_MS } = require('./gameConfig');
 
 const CHECK_INTERVAL_MS = 60 * 1000;
+const BROADCAST_DELAY_MS = 40; // stay under Telegram's 30 msg/sec limit
+let lastShopNotifDate = ''; // prevent duplicate shop notif on server restart
 
 const MSGS = {
   farm: {
@@ -43,10 +45,23 @@ function resolveLang(code) {
   return 'en';
 }
 
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function sendMsg(bot, telegramId, text) {
   try {
     await bot.api.sendMessage(telegramId, text, { parse_mode: 'HTML' });
-  } catch {}
+  } catch (err) {
+    const code = err?.error_code;
+    if (code !== 403 && code !== 400) console.error(`sendMsg ${telegramId}:`, err.message);
+  }
+}
+
+async function broadcast(bot, recipients, msgFn) {
+  for (const r of recipients) {
+    const lang = resolveLang(r.language_code);
+    await sendMsg(bot, r.telegram_id, typeof msgFn === 'function' ? msgFn(lang, r) : msgFn[lang]);
+    await delay(BROADCAST_DELAY_MS);
+  }
 }
 
 async function checkReminders(bot) {
@@ -105,10 +120,7 @@ async function checkReminders(bot) {
        WHERE tp.last_seen_at >= $1`,
       [now - 7 * 24 * 60 * 60 * 1000]
     );
-    for (const t of tappers) {
-      const lang = resolveLang(t.language_code);
-      await sendMsg(bot, t.telegram_id, MSGS.boss[lang](boss.name));
-    }
+    await broadcast(bot, tappers, (lang, r) => MSGS.boss[lang](boss.name));
   }
 
   // Duel pending notifications (sent once, ~1 min after creation)
@@ -125,10 +137,11 @@ async function checkReminders(bot) {
     await sendMsg(bot, duel.opponent_id, MSGS.duel[lang](duel.challenger_name, duel.stake_gems));
   }
 
-  // Daily shop refresh notification (at midnight UTC ±1 min window)
-  const utcHour = new Date(now).getUTCHours();
-  const utcMin  = new Date(now).getUTCMinutes();
-  if (utcHour === 0 && utcMin < 2) {
+  // Daily shop refresh notification (at midnight UTC, once per day)
+  const d = new Date(now);
+  const todayKey = d.toISOString().slice(0, 10);
+  if (d.getUTCHours() === 0 && d.getUTCMinutes() < 2 && lastShopNotifDate !== todayKey) {
+    lastShopNotifDate = todayKey;
     const { rows: active } = await pool.query(
       `SELECT tp.telegram_id, u.language_code
        FROM tapper_profiles tp
@@ -136,10 +149,7 @@ async function checkReminders(bot) {
        WHERE tp.last_seen_at >= $1`,
       [now - 3 * 24 * 60 * 60 * 1000]
     );
-    for (const t of active) {
-      const lang = resolveLang(t.language_code);
-      await sendMsg(bot, t.telegram_id, MSGS.shop[lang]);
-    }
+    await broadcast(bot, active, (lang) => MSGS.shop[lang]);
   }
 }
 

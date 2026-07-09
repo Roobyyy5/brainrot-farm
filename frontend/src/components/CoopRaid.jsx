@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '../api';
 import { useWebSocket } from '../useWebSocket';
 import { useT } from '../context/LangContext';
@@ -22,8 +22,13 @@ export default function CoopRaid() {
 
   useEffect(() => { load(); }, []);
 
+  const rooms = useMemo(
+    () => activeLobby ? [`coopraid:${activeLobby.lobbyId}`] : [],
+    [activeLobby?.lobbyId]
+  );
+
   useWebSocket({
-    rooms: activeLobby ? [`coopraid:${activeLobby.lobbyId}`] : [],
+    rooms,
     onMessage: (msg) => {
       if (msg.type === 'raid_hp') {
         setActiveLobby(prev => prev ? { ...prev, hp: msg.hp } : prev);

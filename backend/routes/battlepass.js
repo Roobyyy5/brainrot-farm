@@ -99,7 +99,7 @@ router.post('/claim', asyncHandler(async (req, res) => {
 router.post('/buy-premium', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
   const result = await withTransaction(async (client) => {
-    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1', [telegramId]);
+    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1 FOR UPDATE', [telegramId]);
     if (!u[0] || u[0].gems < BATTLE_PASS_PREMIUM_COST) return { error: `Need ${BATTLE_PASS_PREMIUM_COST} gems` };
     const { rows: tp } = await client.query('SELECT bp_premium FROM tapper_profiles WHERE telegram_id=$1', [telegramId]);
     if (tp[0]?.bp_premium) return { error: 'Already have premium' };

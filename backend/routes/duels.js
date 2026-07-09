@@ -33,7 +33,7 @@ router.post('/challenge', asyncHandler(async (req, res) => {
     if (!op[0]) return { error: 'User not found' };
     if (op[0].telegram_id === telegramId) return { error: 'Cannot duel yourself' };
 
-    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1', [telegramId]);
+    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1 FOR UPDATE', [telegramId]);
     if (!u[0] || u[0].gems < stake) return { error: `Need ${stake} gems` };
 
     await client.query('UPDATE users SET gems=gems-$1 WHERE telegram_id=$2', [stake, telegramId]);
@@ -59,7 +59,7 @@ router.post('/accept', asyncHandler(async (req, res) => {
       await client.query('UPDATE users SET gems=gems+$1 WHERE telegram_id=$2', [d[0].stake_gems, d[0].challenger_id]);
       return { error: 'Challenge expired' };
     }
-    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1', [telegramId]);
+    const { rows: u } = await client.query('SELECT gems FROM users WHERE telegram_id=$1 FOR UPDATE', [telegramId]);
     if (!u[0] || u[0].gems < d[0].stake_gems) return { error: `Need ${d[0].stake_gems} gems` };
     await client.query('UPDATE users SET gems=gems-$1 WHERE telegram_id=$2', [d[0].stake_gems, telegramId]);
     const now = Date.now();

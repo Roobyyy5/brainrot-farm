@@ -67,7 +67,7 @@ router.post('/buy', asyncHandler(async (req, res) => {
   if (!item) return res.status(400).json({ error: 'Unknown item' });
 
   const result = await withTransaction(async (client) => {
-    const user = await client.query('SELECT gems FROM users WHERE telegram_id = $1', [telegramId]);
+    const user = await client.query('SELECT gems FROM users WHERE telegram_id = $1 FOR UPDATE', [telegramId]);
     if ((user.rows[0]?.gems || 0) < item.cost) return { error: 'Not enough gems' };
 
     await client.query('UPDATE users SET gems = gems - $1 WHERE telegram_id = $2', [item.cost, telegramId]);
