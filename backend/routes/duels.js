@@ -91,7 +91,7 @@ router.post('/decline', asyncHandler(async (req, res) => {
 router.post('/tap', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
   const duelId = parseInt(req.body.duelId, 10);
-  const bp = Math.max(0, parseInt(req.body.bp, 10) || 0);
+  const bp = Math.min(100_000, Math.max(0, parseInt(req.body.bp, 10) || 0));
   if (!duelId) return res.status(400).json({ error: 'Invalid params' });
 
   const result = await withTransaction(async (client) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError } from '../toast';
 
 const RARITY_COLOR = {
   common: '#9ca3af',
@@ -25,21 +26,21 @@ export default function Artifacts() {
   const equip = async (id) => {
     setLoading(true);
     try { await api.artifacts.equip(id); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
   const unequip = async (slot) => {
     setLoading(true);
     try { await api.artifacts.unequip(slot); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
   const combine = async (key, rarity) => {
     setLoading(true);
     try { await api.artifacts.combine(key, rarity); load(); setCombineTarget(null); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

@@ -35,13 +35,20 @@ router.get('/', asyncHandler(async (req, res) => {
 // POST /gauntlet/submit
 router.post('/submit', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const { waves, totalDamage } = req.body;
-  if (typeof waves !== 'number' || waves < 0) return res.status(400).json({ error: 'Invalid waves' });
+  const waves = Math.min(100, Math.max(0, typeof req.body.waves === 'number' ? req.body.waves : 0));
+  const totalDamage = Math.min(1_000_000_000, Math.max(0, Number(req.body.totalDamage) || 0));
+  if (!Number.isFinite(waves)) return res.status(400).json({ error: 'Invalid waves' });
 
   return withTransaction(async (client) => {
+    // get previous best to only award gems once per milestone
+    const { rows: prev } = await client.query(
+      'SELECT COALESCE(MAX(waves),0) AS best FROM gauntlet_runs WHERE telegram_id=$1', [telegramId]
+    );
+    const prevBest = Number(prev[0].best);
+
     await client.query(
       'INSERT INTO gauntlet_runs (telegram_id, waves, total_damage, played_at) VALUES ($1,$2,$3,$4)',
-      [telegramId, waves, totalDamage || 0, Date.now()]
+      [telegramId, waves, totalDamage, Date.now()]
     );
 
     const earned = [];
@@ -55,7 +62,8 @@ router.post('/submit', asyncHandler(async (req, res) => {
             earned.push(ms.reward.title);
           }
         }
-        gems = Math.max(gems, ms.reward.gems);
+        // only pay gems for milestones above previous best run
+        if (ms.wave > prevBest) gems = Math.max(gems, ms.reward.gems);
       }
     }
     if (gems > 0) {

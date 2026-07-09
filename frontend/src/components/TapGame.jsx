@@ -4,6 +4,7 @@ import BossCard from './BossCard';
 import OfflineModal from './OfflineModal';
 import RankUpModal from './RankUpModal';
 import { useT } from '../context/LangContext';
+import { toastError } from '../toast';
 
 const PARTICLE_COLORS = ['#ff4fa3', '#8b5cf6', '#00e5ff', '#f5c344', '#34d399'];
 const RANK_DATA = [
@@ -173,7 +174,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setProfile(fresh);
       setEnergy(fresh.energy);
       setEnergyMax(fresh.energyMax);
-    } catch (err) { alert(err.message || t('tap_no_prestige')); }
+    } catch (err) { toastError(err.message || t('tap_no_prestige')); }
     finally { setPrestiging(false); }
   };
 
@@ -185,7 +186,7 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       setTalentChoices(null);
       const fresh = await api.tapper.me();
       setProfile(fresh);
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setChoosingTalent(null); }
   };
 
@@ -256,7 +257,6 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
 
       {showCombo && (
         <div className="combo-meter" style={{ borderColor: comboTier.color }}>
-          <span className="combo-tier-icon">{comboTier.icon}</span>
           <span className="combo-label" style={{ color: comboTier.color }}>{comboTier.name}</span>
           <span className="combo-value" style={{ color: comboTier.color }}>×{comboTier.mult}</span>
         </div>

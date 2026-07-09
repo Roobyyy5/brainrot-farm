@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError } from '../toast';
 
 export default function Crafting() {
   const t = useT();
@@ -19,7 +20,7 @@ export default function Crafting() {
       setFlash(t('crafting_crafted', { icon: r.crafted.icon, name: r.crafted.name }));
       setTimeout(() => setFlash(null), 2000);
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setCrafting(null); }
   };
 

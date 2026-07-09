@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
 
@@ -30,6 +30,8 @@ export default function ProfilePage({ currentUserId }) {
     e.preventDefault();
     if (searchId.trim()) loadProfile(searchId.trim());
   };
+
+  useEffect(() => { if (currentUserId) loadProfile(currentUserId); }, [currentUserId]);
 
   const loadMyProfile = () => {
     if (currentUserId) loadProfile(currentUserId);

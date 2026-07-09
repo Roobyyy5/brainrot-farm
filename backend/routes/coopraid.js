@@ -89,7 +89,7 @@ router.post('/create', asyncHandler(async (req, res) => {
 // POST /coopraid/join
 router.post('/join', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const lobbyId = parseInt(req.body.lobbyId);
+  const lobbyId = parseInt(req.body.lobbyId, 10);
 
   const result = await withTransaction(async (client) => {
     const { rows: [lobby] } = await client.query(
@@ -127,7 +127,7 @@ router.post('/join', asyncHandler(async (req, res) => {
 // POST /coopraid/start — creator starts the raid
 router.post('/start', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const lobbyId = parseInt(req.body.lobbyId);
+  const lobbyId = parseInt(req.body.lobbyId, 10);
 
   const result = await withTransaction(async (client) => {
     const { rows: [lobby] } = await client.query(
@@ -154,8 +154,8 @@ router.post('/start', asyncHandler(async (req, res) => {
 // POST /coopraid/tap
 router.post('/tap', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const lobbyId = parseInt(req.body.lobbyId);
-  const count = Math.min(Math.max(1, parseInt(req.body.count) || 20), 100);
+  const lobbyId = parseInt(req.body.lobbyId, 10);
+  const count = Math.min(Math.max(1, parseInt(req.body.count, 10) || 1), 100);
 
   const result = await withTransaction(async (client) => {
     const { rows: [lobby] } = await client.query(
@@ -216,7 +216,7 @@ router.post('/tap', asyncHandler(async (req, res) => {
 // POST /coopraid/leave
 router.post('/leave', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
-  const lobbyId = parseInt(req.body.lobbyId);
+  const lobbyId = parseInt(req.body.lobbyId, 10);
   await pool.query('DELETE FROM coop_raid_members WHERE lobby_id=$1 AND telegram_id=$2', [lobbyId, telegramId]);
   broadcast(`coopraid:${lobbyId}`, { type: 'member_left', telegramId });
   res.json({ ok: true });

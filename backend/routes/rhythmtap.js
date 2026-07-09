@@ -43,7 +43,7 @@ router.post('/submit', asyncHandler(async (req, res) => {
   const telegramId = req.tgUser.id;
   const { score, perfect, good, miss } = req.body;
 
-  if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
+  if (typeof score !== 'number' || score < 0 || score > 200_000) return res.status(400).json({ error: 'Invalid score' });
 
   const total = (perfect || 0) + (good || 0) + (miss || 0);
   const accuracy = total > 0 ? Math.round((((perfect || 0) + (good || 0)) / total) * 10000) / 100 : 0;

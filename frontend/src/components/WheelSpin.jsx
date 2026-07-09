@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toast, toastError } from '../toast';
 
 const PRIZES_BASE = [
   { labelKey: null, label: '50 BP',   color: '#f5c344', emoji: '🪙' },
@@ -25,8 +26,7 @@ export default function WheelSpin({ onEarned }) {
   useEffect(() => {
     api.wheel.status().then((d) => {
       setCanSpin(d.canSpin);
-      setLoading(false);
-    });
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const handleSpin = async () => {
@@ -61,7 +61,7 @@ export default function WheelSpin({ onEarned }) {
       }, 3200);
     } catch (err) {
       setSpinning(false);
-      alert(err.message || 'Spin failed');
+      toastError(err.message || 'Spin failed');
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toast, toastError } from '../toast';
 
 const SKIN_EMOJIS = {
   default:      '🧠',
@@ -32,7 +33,7 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
       if (res.bonusCoins) onCoinsChanged?.(res.bonusCoins);
       load();
     } catch (err) {
-      alert(err.message || t('upgrade_err'));
+      toastError(err.message || t('upgrade_err'));
     } finally {
       setBuying(null);
     }
@@ -45,7 +46,7 @@ export default function GemShop({ onGemsChanged, onCoinsChanged }) {
       await api.gemshop.equipSkin(skinKey);
       load();
     } catch (err) {
-      alert(err.message || t('upgrade_err'));
+      toastError(err.message || t('upgrade_err'));
     } finally {
       setEquipping(null);
     }

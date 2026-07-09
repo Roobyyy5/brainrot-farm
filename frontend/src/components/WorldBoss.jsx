@@ -84,7 +84,7 @@ export default function WorldBoss() {
     finally { setTapping(false); }
   };
 
-  if (!data) return null;
+  if (!data) return <div className="tap-loading">{t('loading')}</div>;
   const { boss, myDamage, topHitters, topGems } = data;
   const hp  = liveHp  ?? boss?.hp;
   const pct = livePct ?? boss?.pct;

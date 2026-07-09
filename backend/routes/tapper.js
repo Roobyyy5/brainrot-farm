@@ -483,7 +483,7 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const gemDrop = Math.random() < gemDropChanceFinal ? 1 : 0;
 
     // Track max combo for leaderboard (combo sent from client)
-    const clientCombo = parseFloat(req.body?.combo) || 1.0;
+    const clientCombo = Math.min(5.0, Math.max(1.0, parseFloat(req.body?.combo) || 1.0));
     const weekKey = new Date().toISOString().slice(0, 7);
     if (clientCombo > parseFloat(profile.max_combo || 1)) {
       await client.query(

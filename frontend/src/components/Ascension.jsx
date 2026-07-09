@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError } from '../toast';
 
 export default function Ascension() {
   const t = useT();
@@ -20,14 +21,14 @@ export default function Ascension() {
     if (!confirm(t('asc_confirm'))) return;
     setLoading(true);
     try { await api.ascension.ascend(); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 
   const doUpgrade = async (key) => {
     setLoading(true);
     try { await api.ascension.upgrade(key); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

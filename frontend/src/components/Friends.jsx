@@ -33,7 +33,7 @@ export default function Friends() {
 
   const handleRemove = async (friendId) => {
     if (!window.confirm(t('friends_remove_confirm'))) return;
-    await api.friends.remove(friendId);
+    try { await api.friends.remove(friendId); } catch (err) { alert(err.message); }
     load();
   };
 

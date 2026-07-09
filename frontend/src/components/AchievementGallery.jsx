@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toast, toastError } from '../toast';
 
 const TIER_COLOR = { bronze: '#cd7f32', silver: '#c0c5ce', gold: '#f5c344', diamond: '#00e5ff' };
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'diamond'];
@@ -19,8 +20,8 @@ export default function AchievementGallery() {
     try {
       const r = await api.gallery.claim(achKey);
       await load();
-      alert(t('gallery_claim_alert', { n: r.gems }));
-    } catch (err) { alert(err.message); }
+      toast(t('gallery_claim_alert', { n: r.gems }), 'success');
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

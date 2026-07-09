@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toast, toastError } from '../toast';
 
 const RARITY_COLOR = { common: '#9ca3af', rare: '#3b82f6', legendary: '#f59e0b' };
 const ING_ICONS = { tap_shard: '🔷', energy_crystal: '💠', combo_dust: '✨', prestige_essence: '🌀' };
@@ -21,8 +22,8 @@ export default function TapAlchemy() {
       await load();
       let msg = t('alch_brewed', { name: r.recipe });
       if (r.expiresAt) msg += t('alch_brewed_until', { time: new Date(r.expiresAt).toLocaleTimeString() });
-      alert(msg);
-    } catch (err) { alert(err.message); }
+      toast(msg, 'success');
+    } catch (err) { toastError(err.message); }
     finally { setLoading(false); }
   };
 

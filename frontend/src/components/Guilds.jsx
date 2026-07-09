@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useT } from '../context/LangContext';
+import { toastError } from '../toast';
 
 export default function Guilds({ onGemsChanged }) {
   const t = useT();
@@ -16,8 +17,10 @@ export default function Guilds({ onGemsChanged }) {
   useEffect(() => { loadGuild(); }, []);
 
   const handleSearch = async () => {
-    const res = await api.guilds.search(search);
-    setSearchResults(res.guilds);
+    try {
+      const res = await api.guilds.search(search);
+      setSearchResults(res.guilds || []);
+    } catch { setSearchResults([]); }
   };
 
   const handleCreate = async (e) => {
@@ -31,7 +34,7 @@ export default function Guilds({ onGemsChanged }) {
       await api.guilds.create(name, tag, description);
       loadGuild();
       setView('main');
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setActing(false); }
   };
 
@@ -42,14 +45,14 @@ export default function Guilds({ onGemsChanged }) {
       await api.guilds.join(guildId);
       loadGuild();
       setView('main');
-    } catch (err) { alert(err.message || t('upgrade_err')); }
+    } catch (err) { toastError(err.message || t('upgrade_err')); }
     finally { setActing(false); }
   };
 
   const handleLeave = async () => {
     if (!window.confirm(t('guild_leave') + '?')) return;
     setActing(true);
-    try { await api.guilds.leave(); loadGuild(); } catch (err) { alert(err.message); }
+    try { await api.guilds.leave(); loadGuild(); } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 
@@ -60,7 +63,7 @@ export default function Guilds({ onGemsChanged }) {
       const res = await api.guilds.bossTap(bossCount);
       if (res.gemReward > 0) onGemsChanged?.(res.gemReward);
       loadGuild();
-    } catch (err) { alert(err.message); }
+    } catch (err) { toastError(err.message); }
     finally { setActing(false); }
   };
 

@@ -10,7 +10,7 @@ export default function BattlePass({ onGemsChanged }) {
   const [claiming, setClaiming] = useState(null);
   const [buying, setBuying] = useState(false);
 
-  const load = () => api.battlepass.status().then(setData);
+  const load = () => api.battlepass.status().then(setData).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const handleClaim = async (level, premium) => {

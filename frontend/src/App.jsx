@@ -58,7 +58,6 @@ import GuildSkillTree from './components/GuildSkillTree';
 import WorldEvents from './components/WorldEvents';
 import BuildPresets from './components/BuildPresets';
 import BossEcosystem from './components/BossEcosystem';
-import GhostRace from './components/GhostRace';
 import QuestBoard from './components/QuestBoard';
 import CoopRaid from './components/CoopRaid';
 import RelicsPanel from './components/RelicsPanel';
@@ -83,6 +82,7 @@ import AuctionHouse from './components/AuctionHouse';
 import Constellation from './components/Constellation';
 import TapStreakCalendar from './components/TapStreakCalendar';
 import GuildOlympics from './components/GuildOlympics';
+import Toast from './components/Toast';
 
 const TAB_IDS = [
   { id: 'home',  icon: '🏠', key: 'tab_home'  },
@@ -255,6 +255,7 @@ export default function App() {
         </>
       )}
       </ErrorBoundary>
+      <Toast />
     </div>
   );
 }

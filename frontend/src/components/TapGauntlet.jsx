@@ -85,7 +85,7 @@ export default function TapGauntlet() {
     return v === key ? title : v;
   };
 
-  if (!data) return null;
+  if (!data) return <div className="tap-loading">{t('loading')}</div>;
 
   const hpPct = bossMaxHp > 0 ? (bossHp / bossMaxHp) * 100 : 0;
   const waveColor = getWaveColor(wave);
