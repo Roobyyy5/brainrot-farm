@@ -136,11 +136,14 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
     pendingBP.current += bp;
     onCoinsRef.current?.(bp);
     const fid = ++floatId.current;
-    setFloats((f) => [...f, { id: fid, x: cx + (Math.random() - 0.5) * 50, y: cy + (Math.random() - 0.5) * 20, bp }]);
+    setFloats((f) => {
+      const trimmed = f.length >= 5 ? f.slice(-4) : f;
+      return [...trimmed, { id: fid, x: cx + (Math.random() - 0.5) * 50, y: cy + (Math.random() - 0.5) * 20, bp }];
+    });
     setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== fid)), 900);
 
-    // Particles burst
-    const newParticles = Array.from({ length: 8 }, () => {
+    // Particles burst (4 per tap, cap at 16 total)
+    const newParticles = Array.from({ length: 4 }, () => {
       const angle = Math.random() * Math.PI * 2;
       const speed = 40 + Math.random() * 70;
       const pid = ++particleId.current;
@@ -152,7 +155,10 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
         color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
       };
     });
-    setParticles((p) => [...p, ...newParticles]);
+    setParticles((p) => {
+      const trimmed = p.length >= 12 ? p.slice(-12) : p;
+      return [...trimmed, ...newParticles];
+    });
     setTimeout(() => setParticles((p) => p.filter((pt) => !newParticles.some((np) => np.id === pt.id))), 650);
 
     setEnergy((e) => Math.max(0, e - energyCost));
@@ -272,12 +278,11 @@ export default function TapGame({ user, onCoinsEarned, onAchievements }) {
       <div
         ref={tapAreaRef}
         className={`tap-area${noEnergy ? ' tap-area--empty' : ''}`}
-        onClick={handleTap}
+        onPointerDown={handleTap}
       >
         <div className={`tap-brain${tapping ? ' tap-brain--active' : ''}${noEnergy ? ' tap-brain--dark' : ''}`}>
           {brainEmoji}
         </div>
-        <div className="tap-brain-ring" />
 
         {/* Floating BP numbers */}
         {floats.map((fl) => (

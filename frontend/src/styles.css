@@ -926,6 +926,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  touch-action: none;
 }
 
 .tap-area--empty {
@@ -962,19 +963,6 @@ body {
   filter: grayscale(0.6) drop-shadow(0 0 10px rgba(139, 92, 246, 0.2)) !important;
 }
 
-.tap-brain-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(139, 92, 246, 0.2);
-  animation: ringPulse 2.5s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes ringPulse {
-  0%, 100% { transform: scale(0.85); opacity: 0; }
-  50% { transform: scale(1.05); opacity: 0.6; }
-}
 
 /* Floating rewards */
 .tap-float {
