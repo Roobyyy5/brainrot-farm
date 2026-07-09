@@ -77,12 +77,13 @@ export default function WorldBoss() {
     return () => clearInterval(vulnTimerRef.current);
   }, [liveVulnUntil]);
 
-  const handleTap = async () => {
+  const handleTap = () => {
     if (tapping) return;
     setTapping(true);
-    try { await api.worldboss.tap(10); }
-    catch (err) { if (err.status !== 400) toastError(err.message); }
-    finally { setTapping(false); }
+    setTimeout(() => setTapping(false), 200);
+    api.worldboss.tap(10).catch((err) => {
+      if (err.status !== 404 && err.status !== 400) toastError(err.message);
+    });
   };
 
   if (!data) return <div className="tap-loading">{t('loading')}</div>;
@@ -96,7 +97,7 @@ export default function WorldBoss() {
     <div className="worldboss-section">
       <div className="worldboss-header">{t('wboss_title')}</div>
 
-      {boss.hp <= 0 ? (
+      {(liveHp ?? boss.hp) <= 0 ? (
         <div className="worldboss-dead">{t('wboss_dead')}</div>
       ) : (
         <>
