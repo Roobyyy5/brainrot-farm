@@ -10,8 +10,11 @@ router.get(
   asyncHandler(async (req, res) => {
     const weekly = req.query.period === 'weekly';
     const column = weekly ? 'weekly_coins' : 'coins';
+    // NOTE: telegram_id is intentionally NOT selected/returned. It is a
+    // sensitive account identifier and this endpoint is public (no auth),
+    // so exposing it would leak every player's raw Telegram id.
     const result = await pool.query(`
-      SELECT telegram_id, username, coins, level, ${column} AS score
+      SELECT username, coins, level, ${column} AS score
       FROM users
       ORDER BY ${column} DESC
       LIMIT 50

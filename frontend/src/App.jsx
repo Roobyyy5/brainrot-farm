@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
-import { useT, useSetLang } from './context/LangContext';
+import { useT, useSetDetectedLang } from './context/LangContext';
 import { initTelegram, getStartParam } from './telegram';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
@@ -97,7 +97,7 @@ const TAB_IDS = [
 
 export default function App() {
   const t = useT();
-  const setLang = useSetLang();
+  const setDetectedLang = useSetDetectedLang();
   const [user, setUser] = useState(null);
   const [botUsername, setBotUsername] = useState('');
   const [error, setError] = useState('');
@@ -112,7 +112,7 @@ export default function App() {
     api.register(ref)
       .then((data) => {
         setUser(data.user);
-        if (data.tg_lang) setLang(data.tg_lang);
+        if (data.tg_lang) setDetectedLang(data.tg_lang);
         if (data.bot_username) setBotUsername(data.bot_username);
       })
       .catch((err) => setError(err.message))

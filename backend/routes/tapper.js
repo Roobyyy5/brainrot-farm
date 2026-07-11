@@ -486,13 +486,16 @@ router.post('/tap', asyncHandler(async (req, res) => {
     const gemDropChanceFinal = (bonuses.gemDropChance + (petB2.gemDropPct || 0) + (pBonuses2.extraGemDrop || 0)) * gemMultWeekly;
     const gemDrop = Math.random() < gemDropChanceFinal ? 1 : 0;
 
-    // Track max combo for leaderboard (combo sent from client)
-    const clientCombo = Math.min(5.0, Math.max(1.0, parseFloat(req.body?.combo) || 1.0));
+    // Track max combo for leaderboard using the SERVER-computed combo
+    // multiplier, not the client-sent value. Trusting req.body.combo let
+    // anyone post a maxed combo (up to 5.0) to the combo leaderboard without
+    // actually achieving it.
+    const achievedCombo = Math.min(5.0, Math.max(1.0, Number(comboMult) || 1.0));
     const weekKey = new Date().toISOString().slice(0, 7);
-    if (clientCombo > parseFloat(profile.max_combo || 1)) {
+    if (achievedCombo > parseFloat(profile.max_combo || 1)) {
       await client.query(
         'UPDATE tapper_profiles SET max_combo=$1, max_combo_week=$2 WHERE telegram_id=$3',
-        [clientCombo, weekKey, telegramId]
+        [achievedCombo, weekKey, telegramId]
       ).catch(() => {});
     }
 

@@ -1,3 +1,4 @@
+import './utils/numberLocale'; // must run before any component formats numbers
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
